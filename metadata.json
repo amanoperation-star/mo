@@ -1,0 +1,6 @@
+{
+  "name": "منظومة مستر أشرف السقا الأكاديمية",
+  "description": "نظام الإدارة الأكاديمية والمالية المتكامل والربط السحابي والواتساب لمنصة مستر أشرف السقا 2025",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

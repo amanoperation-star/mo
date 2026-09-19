@@ -1,0 +1,261 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, #0b1524);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #1e3a5f);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #2d4f7c);
+}
+
+/* ============================================================
+   LIGHT THEME ADAPTATION
+   When html or body has .light class
+   ============================================================ */
+html.light,
+body.light {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  --scrollbar-track: #e2e8f0;
+  --scrollbar-thumb: #94a3b8;
+  --scrollbar-thumb-hover: #64748b;
+}
+
+/* Base background overrides for light mode */
+html.light #root-system-container,
+html.light .bg-\[\#070d17\] {
+  background-color: #f1f5f9 !important;
+}
+
+html.light #main-app-header,
+html.light .bg-\[\#0a111c\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light #system-navigation-sidebar,
+html.light .bg-\[\#0d1522\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
+}
+
+html.light .bg-\[\#0b1320\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
+}
+
+html.light .bg-\[\#080f1a\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#0d1726\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-\[\#122033\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html.light .bg-\[\#132032\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html.light .bg-\[\#132238\] {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html.light .bg-\[\#152336\] {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html.light .bg-\[\#0f172a\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#1a2639\] {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#101b2a\] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Card hover and table rows in light mode */
+html.light .hover\:bg-\[\#0c1524\]:hover,
+html.light .hover\:bg-\[\#152336\]:hover,
+html.light .hover\:bg-\[\#1a2d48\]:hover,
+html.light .hover\:bg-\[\#1b2d47\]:hover,
+html.light .hover\:bg-\[\#122033\]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Border overrides in light mode */
+html.light .border-\[\#16253b\],
+html.light .border-\[\#17273f\],
+html.light .border-\[\#192b42\],
+html.light .border-\[\#1a2b42\],
+html.light .border-\[\#1b2f48\],
+html.light .border-\[\#1c2e47\],
+html.light .border-\[\#1e293b\],
+html.light .border-\[\#1e3452\],
+html.light .border-\[\#1e3a5f\],
+html.light .border-\[\#1f3350\],
+html.light .border-\[\#1f3654\],
+html.light .border-\[\#132238\],
+html.light .border-\[\#223a5d\] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Inputs, Textareas, Selects in light mode */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* Headings and primary text in light mode */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light .text-white:not(button.bg-blue-600 *):not(button.bg-emerald-600 *):not(button.bg-\[\#1da851\] *):not(button.bg-\[\#2563eb\] *):not(.bg-blue-600):not(.bg-emerald-600):not(.bg-\[\#1da851\]):not(.bg-\[\#2563eb\]):not(.bg-gradient-to-tr *) {
+  color: #0f172a !important;
+}
+
+/* Secondary & muted text in light mode */
+html.light .text-slate-200 {
+  color: #1e293b !important;
+}
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Badges and subtle blue elements in light mode */
+html.light .bg-blue-950\/60 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+html.light .text-blue-300,
+html.light .text-blue-400 {
+  color: #1d4ed8 !important;
+}
+
+/* Badges and subtle emerald elements in light mode */
+html.light .bg-emerald-950\/60 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+/* Preserve bright button text on colored buttons */
+html.light button.bg-blue-600,
+html.light button.bg-emerald-600,
+html.light button.bg-\[\#1da851\],
+html.light button.bg-\[\#2563eb\],
+html.light .bg-blue-600,
+html.light .bg-emerald-600,
+html.light .bg-\[\#1da851\],
+html.light .bg-\[\#2563eb\] {
+  color: #ffffff !important;
+}
+
+html.light button.bg-blue-600 *,
+html.light button.bg-emerald-600 *,
+html.light button.bg-\[\#1da851\] *,
+html.light button.bg-\[\#2563eb\] *,
+html.light .bg-blue-600 *,
+html.light .bg-emerald-600 *,
+html.light .bg-\[\#1da851\] *,
+html.light .bg-\[\#2563eb\] * {
+  color: #ffffff !important;
+}
+
+/* Theme appearance banner & toggle in light mode */
+html.light #theme-appearance-card,
+html.light .bg-\[\#14191d\] {
+  background-color: #fefce8 !important;
+  border-color: #fde047 !important;
+}
+html.light #theme-appearance-card .text-amber-300 {
+  color: #854d0e !important;
+}
+html.light #theme-appearance-toggle-btn,
+html.light .bg-\[\#20272c\] {
+  background-color: #fef08a !important;
+  color: #713f12 !important;
+  border-color: #eab308 !important;
+}
+
+/* Local storage pill in light mode */
+html.light #local-storage-indicator-button,
+html.light .bg-\[\#0c1b18\] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+/* Theme toggle header button in light mode */
+html.light #theme-toggle-header-button,
+html.light .bg-\[\#1b1a13\] {
+  background-color: #fef9c3 !important;
+  border-color: #fde047 !important;
+  color: #854d0e !important;
+}
+
+/* Modals in light mode */
+html.light .bg-black\/80,
+html.light .bg-black\/85 {
+  background-color: rgba(15, 23, 42, 0.65) !important;
+}
+html.light .bg-\[\#0c1421\] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+

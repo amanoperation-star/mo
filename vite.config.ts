@@ -20,3 +20,10 @@ export default defineConfig(() => {
     },
   };
 });
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  base: '/mo/', // أضف هذا السطر مع اسم مستودعك بالضبط
+})

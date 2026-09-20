@@ -1,5 +1,6 @@
 import React from 'react';
-import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare, Phone, Globe, ExternalLink } from 'lucide-react';
+import { CenterSettings } from '../types';
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -8,6 +9,7 @@ interface HeaderProps {
   onOpenStorageInfo?: () => void;
   isWhatsConnected?: boolean;
   onOpenWhatsAppScreen?: () => void;
+  centerSettings?: CenterSettings;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,44 +19,86 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenStorageInfo,
   isWhatsConnected = true,
   onOpenWhatsAppScreen,
+  centerSettings,
 }) => {
+  const currentCenterName = centerSettings?.centerName || 'منظومة مستر أشرف السقا';
+  const currentPhone = centerSettings?.phoneNumber || '01029847561';
+  const currentUrl = centerSettings?.platformUrl || 'https://el-saqqa-chem.online';
+  const currentYear = centerSettings?.academicYear || 'v5.0 أونلاين 2025';
+  const currentDesc = centerSettings?.systemDescription || 'نظام الإدارة الأكاديمية والمالية المتكامل والربط السحابي والواتساب';
+  const currentManager = centerSettings?.managerName || 'أك. محمود عزت';
+
+  // Manager initials
+  const managerInitials = currentManager.split(' ').slice(0, 2).map((w) => w[0]).join('.') || 'أ.س';
+
   return (
     <header
       id="main-app-header"
       className="w-full bg-[#0a111c] border-b border-[#16253b] px-4 md:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 transition-colors"
     >
-      {/* Right side: Branding & System Name */}
+      {/* Right side: Branding & Center Name */}
       <div className="flex items-center gap-3.5">
         <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-600/25 ring-1 ring-blue-400/30">
           <Send className="w-5 h-5 text-white -rotate-45 translate-x-0.5 -translate-y-0.5" />
         </div>
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-lg md:text-xl font-extrabold text-white tracking-wide">
-              منظومة مستر أشرف السقا
+            <h1 id="header-center-name" className="text-lg md:text-xl font-extrabold text-white tracking-wide">
+              {currentCenterName}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#132238] text-blue-400 border border-blue-500/30 shadow-inner">
-              v5.0 أونلاين 2025
+              {currentYear}
             </span>
           </div>
           <p className="text-xs text-slate-400 font-medium mt-0.5">
-            نظام الإدارة الأكاديمية والمالية المتكامل والربط السحابي والواتساب
+            {currentDesc}
           </p>
         </div>
       </div>
 
-      {/* Left side: Quick User Profile & Status Badges */}
+      {/* Left side: Center Quick Info, Profile & Badges */}
       <div className="flex flex-wrap items-center gap-2.5">
+        {/* Platform URL Pill in Header */}
+        {currentUrl && (
+          <a
+            id="header-platform-url-link"
+            href={currentUrl.startsWith('http') ? currentUrl : `https://${currentUrl}`}
+            target="_blank"
+            rel="noreferrer"
+            title={`الانتقال إلى المنصة الرسمية: ${currentUrl}`}
+            className="flex items-center gap-1.5 bg-[#082029] border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 text-xs px-3 py-1.5 rounded-full font-bold transition-all shadow-sm hover:shadow-cyan-500/10"
+          >
+            <Globe className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span dir="ltr" className="font-mono text-[11px] tracking-tight truncate max-w-[140px] sm:max-w-[180px]">
+              {currentUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            </span>
+            <ExternalLink className="w-3 h-3 text-cyan-400/70 shrink-0" />
+          </a>
+        )}
+
+        {/* Center Phone Number Pill in Header */}
+        {currentPhone && (
+          <a
+            id="header-phone-contact-link"
+            href={`tel:${currentPhone.replace(/\s+/g, '')}`}
+            title={`رقم التواصل بالمركز: ${currentPhone}`}
+            className="flex items-center gap-1.5 bg-[#0b1c2e] border border-blue-500/40 hover:border-blue-400 text-blue-300 text-xs px-3 py-1.5 rounded-full font-bold transition-all shadow-sm hover:shadow-blue-500/10"
+          >
+            <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span dir="ltr" className="font-mono text-[11px] tracking-tight">{currentPhone}</span>
+          </a>
+        )}
+
         {/* User Pill */}
         <div
           id="user-profile-badge"
           className="flex items-center gap-2.5 bg-[#0f172a] border border-[#1e293b] rounded-full px-3 py-1.5 shadow-sm"
         >
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 font-black flex items-center justify-center text-[11px] shadow-sm">
-            أ.س
+            {managerInitials}
           </div>
           <div className="flex flex-col leading-tight pl-1">
-            <span className="text-xs font-bold text-white">أك. محمود عزت</span>
+            <span className="text-xs font-bold text-white">{currentManager}</span>
             <span className="text-[10px] text-amber-400 font-semibold">المدير الإداري والمالي</span>
           </div>
         </div>

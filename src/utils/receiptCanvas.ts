@@ -1,4 +1,5 @@
-import { Student } from '../types';
+import { Student, CenterSettings } from '../types';
+import { getStoredCenterSettings } from './storage';
 
 /**
  * Utility to generate an ultra-professional official receipt image on an HTML5 Canvas.
@@ -6,7 +7,8 @@ import { Student } from '../types';
  */
 export async function generateProfessionalReceipt(
   student: Student,
-  scheduleText?: string
+  scheduleText?: string,
+  centerSettings?: CenterSettings
 ): Promise<{ dataUrl: string; blob: Blob }> {
   const canvas = document.createElement('canvas');
   // High-DPI canvas (1000 x 1420 px)
@@ -16,6 +18,14 @@ export async function generateProfessionalReceipt(
   if (!ctx) {
     throw new Error('Canvas 2D context not available');
   }
+
+  const effectiveSettings = centerSettings || getStoredCenterSettings();
+  const effectiveCenterName = effectiveSettings.centerName || 'منظومة الأستاذ أشرف السقا';
+  const effectiveTeacherName = effectiveSettings.teacherName || 'أ. أشرف السقا';
+  const effectiveSystemTitle = effectiveSettings.receiptSystemTitle || 'منظومة الامتياز في الكيمياء للثانوية العامة';
+  const effectivePlatformUrl = effectiveSettings.platformUrl || 'https://el-saqqa-chem.online';
+  const effectivePhone = effectiveSettings.phoneNumber || '01029847561';
+  const effectiveFooterText = effectiveSettings.receiptFooterText || `حقوق الطبع والنشر محفوظة © 2025 سنتر ومنظومة ${effectiveTeacherName} - جميع الحقوق محفوظة`;
 
   const effectiveSchedule =
     scheduleText ||
@@ -85,7 +95,7 @@ export async function generateProfessionalReceipt(
   // Center Name
   ctx.font = 'bold 36px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('منظومة الأستاذ أشرف السقا', 500, 95);
+  ctx.fillText(effectiveCenterName, 500, 95);
 
   // Subtitle
   ctx.font = 'bold 18px "Segoe UI", Tahoma, Arial, sans-serif';
@@ -305,13 +315,13 @@ export async function generateProfessionalReceipt(
   ctx.stroke();
 
   // Draw Official Stamp Seal (Right Side)
-  drawOfficialStamp(ctx, 750, qrSectionY + 130, 95);
+  drawOfficialStamp(ctx, 750, qrSectionY + 130, 95, effectiveTeacherName);
 
   // Middle Text: Official Declaration
   ctx.textAlign = 'right';
   ctx.font = 'bold 18px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('منظومة الامتياز في الكيمياء للثانوية العامة', 610, qrSectionY + 65);
+  ctx.fillText(effectiveSystemTitle, 610, qrSectionY + 65);
 
   ctx.font = '14px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#94a3b8';
@@ -321,7 +331,7 @@ export async function generateProfessionalReceipt(
 
   ctx.font = 'bold 15px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#10b981';
-  ctx.fillText('توقيع واعتماد المنظومة: أ. أشرف السقا', 610, qrSectionY + 215);
+  ctx.fillText(`توقيع واعتماد المنظومة: ${effectiveTeacherName}`, 610, qrSectionY + 215);
 
   // Left Side: Scannable Activation Box & QR Emulation
   const qrBoxX = 90;
@@ -342,11 +352,11 @@ export async function generateProfessionalReceipt(
   ctx.textAlign = 'center';
   ctx.font = 'bold 15px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#38bdf8';
-  ctx.fillText('المنصة الرسمية: https://el-saqqa-chem.online  •  الواتساب: 01029847561', 500, 1290);
+  ctx.fillText(`المنصة الرسمية: ${effectivePlatformUrl}  •  الواتساب: ${effectivePhone}`, 500, 1290);
 
   ctx.font = '12px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#64748b';
-  ctx.fillText('حقوق الطبع والنشر محفوظة © 2025 سنتر ومنظومة الأستاذ أشرف السقا - جميع الحقوق محفوظة', 500, 1320);
+  ctx.fillText(effectiveFooterText, 500, 1320);
 
   // Barcode representation at very bottom
   drawBarcodeGraphic(ctx, 300, 1335, 400, 20);
@@ -429,7 +439,8 @@ function drawOfficialStamp(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
-  r: number
+  r: number,
+  teacherName: string = 'أ. أشرف السقا'
 ) {
   ctx.save();
   // Stamp tilt
@@ -471,7 +482,7 @@ function drawOfficialStamp(
 
   ctx.font = 'bold 16px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('أ. أشرف السقا', 0, -10);
+  ctx.fillText(teacherName, 0, -10);
 
   ctx.font = 'bold 13px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#34d399';

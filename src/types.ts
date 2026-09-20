@@ -95,3 +95,24 @@ export interface AuditLog {
   details: string;
   type: 'info' | 'success' | 'warning';
 }
+
+export interface CenterSettings {
+  centerName: string;
+  phoneNumber: string;
+  platformUrl: string;
+  academicYear?: string;
+  teacherName?: string;
+  managerName?: string;
+  systemDescription?: string;
+  receiptSystemTitle?: string;
+  receiptFooterText?: string;
+}
+
+export interface SupabaseConfig {
+  projectUrl: string;
+  anonKey: string;
+  isConnected: boolean;
+  autoSync: boolean;
+  lastSyncTime?: string;
+  syncStatus?: 'connected' | 'disconnected' | 'testing' | 'error';
+}

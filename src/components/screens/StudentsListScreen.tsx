@@ -16,12 +16,18 @@ import {
   Calendar,
   AlertTriangle,
   ArrowDownLeft,
+  Edit3,
+  GraduationCap,
+  X,
+  Save,
 } from 'lucide-react';
-import { Student } from '../../types';
+import { Student, Course } from '../../types';
 import { InstallmentSettleModal } from '../modals/InstallmentSettleModal';
 
 interface StudentsListScreenProps {
   students: Student[];
+  courses?: Course[];
+  grades?: string[];
   onDeleteStudent: (id: string) => void;
   onUpdateStudent: (id: string, updatedData: Partial<Student>) => void;
   onViewReceipt: (url: string) => void;
@@ -31,6 +37,8 @@ interface StudentsListScreenProps {
 
 export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
   students,
+  courses = [],
+  grades = [],
   onDeleteStudent,
   onUpdateStudent,
   onViewReceipt,
@@ -41,6 +49,47 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
   const [selectedGrade, setSelectedGrade] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'full' | 'pending_installment' | 'paid_in_full'>('all');
   const [settleStudent, setSettleStudent] = useState<Student | null>(null);
+
+  // Edit Student Grade & Course State
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [editStudentGrade, setEditStudentGrade] = useState('');
+  const [editStudentCourse, setEditStudentCourse] = useState('');
+  const [editStudentName, setEditStudentName] = useState('');
+  const [editStudentPhone, setEditStudentPhone] = useState('');
+  const [editParentWhatsapp, setEditParentWhatsapp] = useState('');
+
+  // Collect all unique grades for filtering
+  const allFilterGrades = Array.from(
+    new Set([
+      ...grades,
+      ...students.map((s) => s.grade).filter(Boolean),
+      ...courses.map((c) => c.grade).filter(Boolean),
+    ])
+  );
+
+  const handleOpenEditStudent = (student: Student) => {
+    setEditingStudent(student);
+    setEditStudentGrade(student.grade);
+    setEditStudentCourse(student.course);
+    setEditStudentName(student.name);
+    setEditStudentPhone(student.phone);
+    setEditParentWhatsapp(student.parentWhatsapp);
+  };
+
+  const handleSaveStudentEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+
+    onUpdateStudent(editingStudent.id, {
+      name: editStudentName.trim(),
+      grade: editStudentGrade.trim(),
+      course: editStudentCourse.trim(),
+      phone: editStudentPhone.trim(),
+      parentWhatsapp: editParentWhatsapp.trim(),
+    });
+
+    setEditingStudent(null);
+  };
 
   // Installment count metrics
   const pendingInstallmentsCount = students.filter(
@@ -229,10 +278,12 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
             onChange={(e) => setSelectedGrade(e.target.value)}
             className="w-full bg-[#070d17] border border-[#1c2e47] focus:border-blue-500 rounded-xl pr-10 pl-4 py-2.5 text-xs text-white outline-none transition-all cursor-pointer"
           >
-            <option value="all">جميع الصفوف الدراسية</option>
-            <option value="الثالث">الصف الثالث الثانوي</option>
-            <option value="الثاني">الصف الثاني الثانوي</option>
-            <option value="الأول">الصف الأول الثانوي</option>
+            <option value="all">جميع الصفوف والمراحل الدراسية</option>
+            {allFilterGrades.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -414,6 +465,14 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
                           <MessageCircle className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={() => handleOpenEditStudent(s)}
+                          title="تعديل المرحلة والصف الدراسي والكورس"
+                          type="button"
+                          className="p-1.5 bg-blue-950/60 hover:bg-blue-900/60 border border-blue-700/50 text-blue-400 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => onDeleteStudent(s.id)}
                           title="حذف الطالب"
                           type="button"
@@ -438,6 +497,125 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
           onClose={() => setSettleStudent(null)}
           onSettle={handleSettleInstallment}
         />
+      )}
+
+      {/* Edit Student Stage, Grade & Course Modal */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#0b1320] border border-blue-500/40 rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col gap-4 text-right">
+            <div className="flex items-center justify-between pb-3 border-b border-[#16253b]">
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="p-1.5 hover:bg-[#152336] text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-blue-400" />
+                <h3 className="font-extrabold text-white text-base">
+                  تعديل المرحلة والصف الدراسي وبيانات الطالب
+                </h3>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveStudentEdit} className="flex flex-col gap-3.5">
+              {/* Student Name */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-slate-300 font-bold">اسم الطالب *</label>
+                <input
+                  type="text"
+                  required
+                  value={editStudentName}
+                  onChange={(e) => setEditStudentName(e.target.value)}
+                  className="bg-[#070d17] border border-[#1b2f48] focus:border-blue-500 rounded-xl px-3.5 py-2 text-xs text-white outline-none"
+                />
+              </div>
+
+              {/* Educational Stage / Grade */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-blue-300 font-bold flex items-center gap-1.5">
+                  <GraduationCap className="w-4 h-4 text-blue-400" />
+                  <span>المرحلة والصف الدراسي *</span>
+                </label>
+                <input
+                  type="text"
+                  list="grades-datalist"
+                  required
+                  value={editStudentGrade}
+                  onChange={(e) => setEditStudentGrade(e.target.value)}
+                  placeholder="اختر أو اكتب المرحلة والصف الدراسي..."
+                  className="bg-[#070d17] border border-blue-500/50 focus:border-blue-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none"
+                />
+                <datalist id="grades-datalist">
+                  {allFilterGrades.map((g) => (
+                    <option key={g} value={g} />
+                  ))}
+                </datalist>
+              </div>
+
+              {/* Course */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-slate-300 font-bold flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                  <span>الكورس أو المقرر المسجل به *</span>
+                </label>
+                <input
+                  type="text"
+                  list="courses-datalist"
+                  required
+                  value={editStudentCourse}
+                  onChange={(e) => setEditStudentCourse(e.target.value)}
+                  placeholder="اختر أو اكتب اسم الكورس..."
+                  className="bg-[#070d17] border border-[#1b2f48] focus:border-blue-500 rounded-xl px-3.5 py-2 text-xs text-white outline-none"
+                />
+                <datalist id="courses-datalist">
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.name} />
+                  ))}
+                </datalist>
+              </div>
+
+              {/* Phone numbers */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-300 font-bold">هاتف الطالب</label>
+                  <input
+                    type="text"
+                    value={editStudentPhone}
+                    onChange={(e) => setEditStudentPhone(e.target.value)}
+                    className="bg-[#070d17] border border-[#1b2f48] focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-300 font-bold">واتساب ولي الأمر</label>
+                  <input
+                    type="text"
+                    value={editParentWhatsapp}
+                    onChange={(e) => setEditParentWhatsapp(e.target.value)}
+                    className="bg-[#070d17] border border-[#1b2f48] focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#16253b]">
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="bg-[#152336] hover:bg-[#1a2d48] text-slate-300 text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-5 py-2 rounded-xl font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>حفظ التعديلات</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

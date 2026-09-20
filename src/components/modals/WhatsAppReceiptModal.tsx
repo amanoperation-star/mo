@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Student, Course } from '../../types';
 import { generateProfessionalReceipt } from '../../utils/receiptCanvas';
+import { getStoredCenterSettings } from '../../utils/storage';
 
 interface WhatsAppReceiptModalProps {
   student: Student | null;
@@ -33,6 +34,8 @@ export const WhatsAppReceiptModal: React.FC<WhatsAppReceiptModalProps> = ({
   const [copiedImage, setCopiedImage] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const centerSettings = getStoredCenterSettings();
 
   if (!student) return null;
 
@@ -58,10 +61,12 @@ export const WhatsAppReceiptModal: React.FC<WhatsAppReceiptModalProps> = ({
     : `💵 المبلغ المسدد: ${student.amountPaid} ج.م (${isInstallment ? 'تم سداد القسط بالكامل وتصفية الحساب' : 'مدفوع بالكامل ومؤكد'})
 💳 طريقة السداد: ${student.paymentMethod}`;
 
+  const cleanPlatformUrl = centerSettings.platformUrl?.replace(/\/$/, '') || 'https://el-saqqa-chem.online';
+
   const whatsappMessage = `السلام عليكم ورحمة الله وبركاته 🌟
 مرحباً ولي أمر الطالب: ${student.name}
 
-نحيطكم علماً بأنه تم تأكيد واستلام اشتراك الطالب رسمياً في منظومة الأستاذ أشرف السقا لمادة الكيمياء.
+نحيطكم علماً بأنه تم تأكيد واستلام اشتراك الطالب رسمياً في ${centerSettings.centerName || 'منظومة الأستاذ أشرف السقا'}.
 
 📅 ══════ مواعيد محاضرات الكورس ══════ 📅
 📌 المقرر: ${student.course}
@@ -71,20 +76,20 @@ ${courseSchedule}
 
 🔐 ══════ كود التفعيل وبيانات الدخول ══════ 🔐
 🔑 كود التفعيل الخاص بالطالب: ${student.code}
-🌐 رابط تسجيل ودخول المنصة: https://el-saqqa-chem.online/activate?code=${encodeURIComponent(student.code)}
+🌐 رابط تسجيل ودخول المنصة: ${cleanPlatformUrl}/activate?code=${encodeURIComponent(student.code)}
 
 💰 ══════ تفاصيل الإيصال المالي ══════ 💰
 ${paymentDetailsSection}
 🧾 رقم الإيصال المعتمد: ${receiptSerial}
 📌 تم إرفاق وتوليد صورة الإيصال الرسمي المعتمدة لهذا الاشتراك.
 
-📞 لأي استفسار أو دعم فني يرجى التواصل معنا عبر هذا الرقم مباشرة.
+📞 لأي استفسار أو دعم فني يرجى التواصل معنا عبر الرقم (${centerSettings.phoneNumber || '01029847561'}) مباشرة.
 نتمنى لأولادنا دوام التفوق والدرجات النهائية بإذن الله! 🧪✨`;
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    generateProfessionalReceipt(student, courseSchedule)
+    generateProfessionalReceipt(student, courseSchedule, centerSettings)
       .then((res) => {
         if (isMounted) {
           setDataUrl(res.dataUrl);

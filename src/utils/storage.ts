@@ -1,4 +1,4 @@
-import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig } from '../types';
+import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig, CenterSettings, SupabaseConfig } from '../types';
 import { initialStudents, initialCourses, initialExpenses, initialStaff, initialWhatsAppTemplates, initialAuditLogs } from '../data/initialData';
 
 const STORAGE_KEYS = {
@@ -10,6 +10,21 @@ const STORAGE_KEYS = {
   LOGS: 'el_saqqa_logs_v5',
   THEME: 'el_saqqa_theme_v5',
   WHATSAPP_CONFIG: 'el_saqqa_whatsapp_config_v5',
+  CENTER_SETTINGS: 'el_saqqa_center_settings_v5',
+  SUPABASE_CONFIG: 'el_saqqa_supabase_config_v5',
+  GRADES: 'el_saqqa_grades_v5',
+};
+
+export const defaultCenterSettings: CenterSettings = {
+  centerName: 'منظومة مستر أشرف السقا',
+  phoneNumber: '01029847561',
+  platformUrl: 'https://el-saqqa-chem.online',
+  academicYear: 'v5.0 أونلاين 2025',
+  teacherName: 'أ. أشرف السقا',
+  managerName: 'أك. محمود عزت',
+  systemDescription: 'نظام الإدارة الأكاديمية والمالية المتكامل والربط السحابي والواتساب',
+  receiptSystemTitle: 'منظومة الامتياز في الكيمياء للثانوية العامة',
+  receiptFooterText: 'حقوق الطبع والنشر محفوظة © 2025 سنتر ومنظومة الأستاذ أشرف السقا - جميع الحقوق محفوظة',
 };
 
 export const defaultWhatsConfig: WhatsAppIntegrationConfig = {
@@ -101,10 +116,61 @@ export function saveStoredWhatsConfig(config: WhatsAppIntegrationConfig): void {
   saveToStorage(STORAGE_KEYS.WHATSAPP_CONFIG, config);
 }
 
+export function getStoredCenterSettings(): CenterSettings {
+  return loadFromStorage<CenterSettings>(STORAGE_KEYS.CENTER_SETTINGS, defaultCenterSettings);
+}
+
+export function saveStoredCenterSettings(settings: CenterSettings): void {
+  saveToStorage(STORAGE_KEYS.CENTER_SETTINGS, settings);
+}
+
+export const defaultSupabaseConfig: SupabaseConfig = {
+  projectUrl: '',
+  anonKey: '',
+  isConnected: false,
+  autoSync: true,
+  lastSyncTime: '',
+  syncStatus: 'disconnected',
+};
+
+export function getStoredSupabaseConfig(): SupabaseConfig {
+  return loadFromStorage<SupabaseConfig>(STORAGE_KEYS.SUPABASE_CONFIG, defaultSupabaseConfig);
+}
+
+export function saveStoredSupabaseConfig(config: SupabaseConfig): void {
+  saveToStorage(STORAGE_KEYS.SUPABASE_CONFIG, config);
+}
+
+export const defaultGrades: string[] = [
+  'الصف الثالث الثانوي (علمي)',
+  'الصف الثالث الثانوي (أدبي)',
+  'الصف الثاني الثانوي',
+  'الصف الأول الثانوي',
+  'المرحلة الإعدادية - الصف الثالث',
+  'كورسات التأسيس والمراجعة النهائية',
+];
+
+export function getStoredGrades(): string[] {
+  return loadFromStorage<string[]>(STORAGE_KEYS.GRADES, defaultGrades);
+}
+
+export function saveStoredGrades(grades: string[]): void {
+  saveToStorage(STORAGE_KEYS.GRADES, grades);
+}
+
 export function exportDatabaseToJson(): void {
+  const centerSettings = getStoredCenterSettings();
+  const supabaseConfig = getStoredSupabaseConfig();
   const data = {
-    appName: 'منظومة مستر أشرف السقا v5.0',
+    appName: centerSettings.centerName || 'منظومة مستر أشرف السقا v5.0',
     exportDate: new Date().toISOString(),
+    centerSettings,
+    supabaseConfig: {
+      projectUrl: supabaseConfig.projectUrl,
+      isConnected: supabaseConfig.isConnected,
+      autoSync: supabaseConfig.autoSync,
+    },
+    grades: getStoredGrades(),
     students: getStoredStudents(),
     courses: getStoredCourses(),
     expenses: getStoredExpenses(),

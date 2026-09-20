@@ -25,6 +25,7 @@ import { WhatsAppReceiptModal } from '../modals/WhatsAppReceiptModal';
 
 interface NewStudentScreenProps {
   courses: Course[];
+  grades?: string[];
   onRegisterStudent: (newStudent: Omit<Student, 'id' | 'code' | 'createdAt' | 'status'>) => void;
   onQuickViewReceipt?: (url: string) => void;
   isWhatsConnected?: boolean;
@@ -33,6 +34,7 @@ interface NewStudentScreenProps {
 
 export const NewStudentScreen: React.FC<NewStudentScreenProps> = ({
   courses,
+  grades,
   onRegisterStudent,
   onQuickViewReceipt,
   isWhatsConnected = true,
@@ -42,13 +44,14 @@ export const NewStudentScreen: React.FC<NewStudentScreenProps> = ({
   const [studentName, setStudentName] = useState('');
   const [studentPhone, setStudentPhone] = useState('');
   const [parentWhatsapp, setParentWhatsapp] = useState('');
-  const [grade, setGrade] = useState('الصف الثالث الثانوي (علمي)');
+  const [grade, setGrade] = useState(() => (grades && grades[0]) || 'الصف الثالث الثانوي (علمي)');
   const [isCustomGrade, setIsCustomGrade] = useState(false);
   const [customGradeInput, setCustomGradeInput] = useState('');
   const [showReceiptPreview, setShowReceiptPreview] = useState(false);
 
   const availableGrades = Array.from(
     new Set([
+      ...(grades || []),
       'الصف الثالث الثانوي (علمي)',
       'الصف الثالث الثانوي (أدبي)',
       'الصف الثاني الثانوي',

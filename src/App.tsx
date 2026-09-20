@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { NavigationScreen, Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig } from './types';
+import { NavigationScreen, Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig, CenterSettings, SupabaseConfig } from './types';
 import {
   getStoredStudents,
   saveStoredStudents,
@@ -20,6 +20,15 @@ import {
   saveStoredLogs,
   getStoredWhatsConfig,
   saveStoredWhatsConfig,
+  getStoredCenterSettings,
+  saveStoredCenterSettings,
+  defaultCenterSettings,
+  getStoredSupabaseConfig,
+  saveStoredSupabaseConfig,
+  defaultSupabaseConfig,
+  getStoredGrades,
+  saveStoredGrades,
+  defaultGrades,
   exportDatabaseToJson,
   exportStudentsToExcel,
 } from './utils/storage';
@@ -52,6 +61,9 @@ export default function App() {
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>(() => getStoredTemplates());
   const [logs, setLogs] = useState<AuditLog[]>(() => getStoredLogs());
   const [whatsAppConfig, setWhatsAppConfig] = useState<WhatsAppIntegrationConfig>(() => getStoredWhatsConfig());
+  const [centerSettings, setCenterSettings] = useState<CenterSettings>(() => getStoredCenterSettings());
+  const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>(() => getStoredSupabaseConfig());
+  const [grades, setGrades] = useState<string[]>(() => getStoredGrades());
 
   // UI States - initialized from localStorage (defaults to true for dark mode)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -118,6 +130,54 @@ export default function App() {
   useEffect(() => {
     saveStoredWhatsConfig(whatsAppConfig);
   }, [whatsAppConfig]);
+
+  useEffect(() => {
+    saveStoredCenterSettings(centerSettings);
+  }, [centerSettings]);
+
+  useEffect(() => {
+    saveStoredSupabaseConfig(supabaseConfig);
+  }, [supabaseConfig]);
+
+  useEffect(() => {
+    saveStoredGrades(grades);
+  }, [grades]);
+
+  // Handler to update Supabase Config
+  const handleUpdateSupabaseConfig = (newConfig: SupabaseConfig) => {
+    setSupabaseConfig(newConfig);
+    saveStoredSupabaseConfig(newConfig);
+    setStorageNotification('تم حفظ وتحديث إعدادات Supabase بنجاح في LocalStorage');
+    setTimeout(() => setStorageNotification(null), 3500);
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'تحديث إعدادات السحابة Supabase',
+      user: centerSettings.managerName || 'أك. محمود عزت',
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم حفظ بيانات Supabase (Project URL: ${newConfig.projectUrl || 'غير محدد'})، وحالة الاتصال: (${newConfig.isConnected ? 'متصل' : 'غير متصل'})`,
+      type: 'info',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+  };
+
+  // Handler to update Center Settings
+  const handleUpdateCenterSettings = (newSettings: CenterSettings) => {
+    setCenterSettings(newSettings);
+    saveStoredCenterSettings(newSettings);
+    setStorageNotification('تم حفظ وتحديث بيانات المنظومة والترويسة بنجاح في LocalStorage');
+    setTimeout(() => setStorageNotification(null), 3500);
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'تحديث بيانات وهوية المنظومة والمركز',
+      user: newSettings.managerName || 'أك. محمود عزت',
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم تحديث اسم المركز إلى (${newSettings.centerName})، هاتف التواصل: (${newSettings.phoneNumber})، والمنصة: (${newSettings.platformUrl})`,
+      type: 'info',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+  };
 
   // Handler to update WhatsApp Gateway Settings
   const handleUpdateWhatsConfig = (newSettings: Partial<WhatsAppIntegrationConfig>) => {
@@ -351,6 +411,86 @@ export default function App() {
     );
   };
 
+  // Delete Course Handler
+  const handleDeleteCourse = (id: string) => {
+    const target = courses.find((c) => c.id === id);
+    setCourses((prev) => prev.filter((c) => c.id !== id));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'حذف كورس ومقرر دراسي',
+      user: centerSettings.managerName || 'أك. محمود عزت',
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم حذف كورس (${target?.name || 'كورس'}) الخاص بمرحلة (${target?.grade || 'غير محدد'})`,
+      type: 'warning',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+    setStorageNotification(`تم حذف كورس (${target?.name || 'الكورس'}) بنجاح`);
+    setTimeout(() => setStorageNotification(null), 3000);
+  };
+
+  // Add Grade Handler
+  const handleAddGrade = (newGrade: string) => {
+    const trimmed = newGrade.trim();
+    if (!trimmed || grades.includes(trimmed)) return;
+    setGrades((prev) => [...prev, trimmed]);
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'إضافة مرحلة وصف دراسي جديد',
+      user: centerSettings.managerName || 'أك. محمود عزت',
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تمت إضافة مرحلة دراسية جديدة: (${trimmed})`,
+      type: 'info',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+    setStorageNotification(`تمت إضافة المرحلة الدراسية (${trimmed}) بنجاح`);
+    setTimeout(() => setStorageNotification(null), 3000);
+  };
+
+  // Update Grade Name Handler (Cascades across all courses and students!)
+  const handleUpdateGradeName = (oldGrade: string, newGrade: string) => {
+    const trimmedNew = newGrade.trim();
+    if (!trimmedNew || oldGrade === trimmedNew) return;
+
+    setGrades((prev) => prev.map((g) => (g === oldGrade ? trimmedNew : g)));
+    setCourses((prev) =>
+      prev.map((c) => (c.grade === oldGrade ? { ...c, grade: trimmedNew } : c))
+    );
+    setStudents((prev) =>
+      prev.map((s) => (s.grade === oldGrade ? { ...s, grade: trimmedNew } : s))
+    );
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'تعديل وتحديث اسم المرحلة والصف الدراسي',
+      user: centerSettings.managerName || 'أك. محمود عزت',
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم تعديل المرحلة من (${oldGrade}) إلى (${trimmedNew}) وتحديث الكورسات والطلاب المرتبطين بها تلقائياً`,
+      type: 'info',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+    setStorageNotification(`تم تعديل المرحلة إلى (${trimmedNew}) وتحديث الكورسات والطلاب بنجاح`);
+    setTimeout(() => setStorageNotification(null), 3500);
+  };
+
+  // Delete Grade Handler
+  const handleDeleteGrade = (gradeToDelete: string) => {
+    setGrades((prev) => prev.filter((g) => g !== gradeToDelete));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'حذف مرحلة وصف دراسي',
+      user: centerSettings.managerName || 'أك. محمود عزت',
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم حذف المرحلة والصف الدراسي: (${gradeToDelete})`,
+      type: 'warning',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+    setStorageNotification(`تم حذف المرحلة الدراسية (${gradeToDelete})`);
+    setTimeout(() => setStorageNotification(null), 3000);
+  };
+
   // Save WhatsApp Template
   const handleSaveTemplate = (id: string, newMsg: string) => {
     setTemplates((prev) =>
@@ -366,6 +506,9 @@ export default function App() {
     setStaff(initialStaff);
     setTemplates(initialWhatsAppTemplates);
     setLogs(initialAuditLogs);
+    setCenterSettings(defaultCenterSettings);
+    setSupabaseConfig(defaultSupabaseConfig);
+    setGrades(defaultGrades);
     setStorageNotification('تمت استعادة البيانات الافتراضية بنجاح');
     setTimeout(() => setStorageNotification(null), 3000);
   };
@@ -378,6 +521,9 @@ export default function App() {
     if (data.staff) setStaff(data.staff);
     if (data.templates) setTemplates(data.templates);
     if (data.logs) setLogs(data.logs);
+    if (data.centerSettings) setCenterSettings(data.centerSettings);
+    if (data.supabaseConfig) setSupabaseConfig((prev) => ({ ...prev, ...data.supabaseConfig }));
+    if (data.grades) setGrades(data.grades);
     setStorageNotification('تم استيراد النسخة الاحتياطية بنجاح!');
     setTimeout(() => setStorageNotification(null), 3000);
   };
@@ -394,6 +540,7 @@ export default function App() {
         isDarkMode={isDarkMode}
         onToggleTheme={() => setIsDarkMode(!isDarkMode)}
         isWhatsConnected={whatsAppConfig.isConnected}
+        centerSettings={centerSettings}
         onOpenWhatsAppScreen={() => setCurrentScreen('whatsapp')}
         onOpenStorageInfo={() => {
           setStorageNotification(
@@ -434,6 +581,7 @@ export default function App() {
           {currentScreen === 'new-student' && (
             <NewStudentScreen
               courses={courses.filter((c) => c.isActive)}
+              grades={grades}
               onRegisterStudent={handleRegisterStudent}
               onQuickViewReceipt={(url) => setViewReceiptUrl(url)}
               isWhatsConnected={whatsAppConfig.isConnected}
@@ -444,6 +592,8 @@ export default function App() {
           {currentScreen === 'students-list' && (
             <StudentsListScreen
               students={students}
+              courses={courses}
+              grades={grades}
               onDeleteStudent={handleDeleteStudent}
               onUpdateStudent={handleUpdateStudent}
               onViewReceipt={(url) => setViewReceiptUrl(url)}
@@ -488,9 +638,15 @@ export default function App() {
           {currentScreen === 'courses' && (
             <CoursesManagementScreen
               courses={courses}
+              grades={grades}
+              students={students}
               onAddCourse={handleAddCourse}
               onUpdateCourse={handleUpdateCourse}
+              onDeleteCourse={handleDeleteCourse}
               onToggleCourseActive={handleToggleCourseActive}
+              onAddGrade={handleAddGrade}
+              onUpdateGradeName={handleUpdateGradeName}
+              onDeleteGrade={handleDeleteGrade}
             />
           )}
 
@@ -515,6 +671,16 @@ export default function App() {
               onExportJson={exportDatabaseToJson}
               onResetData={handleResetData}
               onImportJson={handleImportJson}
+              centerSettings={centerSettings}
+              onUpdateCenterSettings={handleUpdateCenterSettings}
+              supabaseConfig={supabaseConfig}
+              onUpdateSupabaseConfig={handleUpdateSupabaseConfig}
+              databaseStats={{
+                studentsCount: students.length,
+                coursesCount: courses.length,
+                expensesCount: expenses.length,
+                staffCount: staff.length,
+              }}
             />
           )}
         </div>

@@ -2,7 +2,7 @@ import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, What
 import { initialStudents, initialCourses, initialExpenses, initialStaff, initialWhatsAppTemplates, initialAuditLogs } from '../data/initialData';
 
 const STORAGE_KEYS = {
-  STUDENTS: 'el_saqqa_students_v5',
+  STUDENTS: 'el_saqqa_students_v6',
   COURSES: 'el_saqqa_courses_v5',
   EXPENSES: 'el_saqqa_expenses_v5',
   STAFF: 'el_saqqa_staff_v5',

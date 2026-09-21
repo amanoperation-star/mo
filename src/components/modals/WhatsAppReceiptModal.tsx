@@ -12,10 +12,13 @@ import {
   Award,
   ExternalLink,
   Share2,
+  FileText,
+  Loader2,
 } from 'lucide-react';
 import { Student, Course } from '../../types';
 import { generateProfessionalReceipt } from '../../utils/receiptCanvas';
 import { getStoredCenterSettings } from '../../utils/storage';
+import { downloadReceiptPdf, printReceiptPdf } from '../../utils/receiptPdf';
 
 interface WhatsAppReceiptModalProps {
   student: Student | null;
@@ -31,6 +34,7 @@ export const WhatsAppReceiptModal: React.FC<WhatsAppReceiptModalProps> = ({
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [copiedImage, setCopiedImage] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -134,6 +138,33 @@ ${paymentDetailsSection}
     } catch (e) {
       console.error(e);
       handleDownload();
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      const filename = await downloadReceiptPdf(student, courseSchedule, centerSettings);
+      showToast(`تم تحميل إيصال الدفع بصيغة PDF بنجاح (${filename})! 📄`);
+    } catch (e) {
+      console.error(e);
+      alert('حدث خطأ أثناء تحميل ملف PDF، جاري تنزيل صورة الإيصال كبديل.');
+      handleDownload();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handlePrintPdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      showToast('جاري تجهيز إيصال الدفع بصيغة PDF للطباعة...');
+      await printReceiptPdf(student, courseSchedule, centerSettings);
+    } catch (e) {
+      console.error(e);
+      window.print();
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -290,11 +321,11 @@ ${paymentDetailsSection}
         </div>
 
         {/* Primary Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-3 border-t border-[#162942]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 pt-3 border-t border-[#162942]">
           <button
             type="button"
             onClick={handleOpenWhatsApp}
-            className="bg-[#1da851] hover:bg-[#189144] text-white text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-black cursor-pointer shadow-lg shadow-emerald-600/20 transition-all sm:col-span-1"
+            className="bg-[#1da851] hover:bg-[#189144] text-white text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-black cursor-pointer shadow-lg shadow-emerald-600/20 transition-all"
           >
             <MessageCircle className="w-4 h-4 fill-white text-transparent" />
             <span>إرسال للواتساب</span>
@@ -302,32 +333,45 @@ ${paymentDetailsSection}
 
           <button
             type="button"
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf}
+            className="bg-red-600 hover:bg-red-500 text-white text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-extrabold cursor-pointer transition-all shadow-md shadow-red-700/30 disabled:opacity-60"
+            title="تحميل إيصال رسمي A4 بصيغة PDF"
+          >
+            {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            <span>تحميل PDF (A4)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePrintPdf}
+            disabled={isGeneratingPdf}
+            className="bg-[#132840] hover:bg-[#1a3556] border border-blue-400/40 text-blue-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all disabled:opacity-60"
+            title="طباعة إيصال الدفع بصيغة PDF"
+          >
+            <Printer className="w-4 h-4 text-blue-400" />
+            <span>طباعة PDF</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleCopyImage}
             disabled={loading || !blob}
-            className="bg-[#12253b] hover:bg-[#18314e] border border-blue-500/40 text-blue-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all"
+            className="bg-[#12253b] hover:bg-[#18314e] border border-blue-500/40 text-blue-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all disabled:opacity-60"
             title="انسخ الصورة والصقها في محادثة الواتساب مباشرة"
           >
             {copiedImage ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-blue-400" />}
-            <span>{copiedImage ? 'تم نسخ الصورة!' : 'نسخ الصورة (لصق في واتساب)'}</span>
+            <span>{copiedImage ? 'تم النسخ!' : 'نسخ الصورة'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleDownload}
             disabled={loading || !dataUrl}
-            className="bg-[#102322] hover:bg-[#173332] border border-emerald-500/40 text-emerald-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all"
+            className="bg-[#102322] hover:bg-[#173332] border border-emerald-500/40 text-emerald-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all disabled:opacity-60"
           >
             <Download className="w-4 h-4 text-emerald-400" />
-            <span>تحميل الإيصال (PNG)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="bg-[#132034] hover:bg-[#1b2c47] border border-[#1f3758] text-slate-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all"
-          >
-            <Printer className="w-4 h-4 text-blue-400" />
-            <span>طباعة الإيصال</span>
+            <span>تحميل (PNG)</span>
           </button>
         </div>
       </div>

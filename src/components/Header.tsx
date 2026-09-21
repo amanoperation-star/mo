@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare, Phone, Globe, ExternalLink } from 'lucide-react';
+import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare, Phone, Globe, ExternalLink, Bell } from 'lucide-react';
 import { CenterSettings } from '../types';
 
 interface HeaderProps {
@@ -10,6 +10,8 @@ interface HeaderProps {
   isWhatsConnected?: boolean;
   onOpenWhatsAppScreen?: () => void;
   centerSettings?: CenterSettings;
+  dueInstallmentsCount?: number;
+  onNavigateToDueInstallments?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   isWhatsConnected = true,
   onOpenWhatsAppScreen,
   centerSettings,
+  dueInstallmentsCount = 0,
+  onNavigateToDueInstallments,
 }) => {
   const currentCenterName = centerSettings?.centerName || 'منظومة مستر أشرف السقا';
   const currentPhone = centerSettings?.phoneNumber || '01029847561';
@@ -102,6 +106,24 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-[10px] text-amber-400 font-semibold">المدير الإداري والمالي</span>
           </div>
         </div>
+
+        {/* Installment Due Alert Quick Header Button */}
+        {dueInstallmentsCount > 0 && onNavigateToDueInstallments && (
+          <button
+            id="header-due-installments-pill"
+            type="button"
+            onClick={onNavigateToDueInstallments}
+            title={`يوجد ${dueInstallmentsCount} أقساط مستحقة أو متأخرة - انقر للعرض والمتابعة في السجل`}
+            className="flex items-center gap-2 bg-[#1c1017] border border-rose-500/40 hover:border-rose-400 text-rose-300 text-xs px-3.5 py-1.5 rounded-full font-bold transition-all shadow-sm cursor-pointer hover:shadow-rose-500/10"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            </span>
+            <Bell className="w-3.5 h-3.5 text-rose-400" />
+            <span>{dueInstallmentsCount} أقساط مستحقة</span>
+          </button>
+        )}
 
         {/* WhatsApp Connection Indicator Pill */}
         <button

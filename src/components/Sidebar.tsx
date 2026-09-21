@@ -16,7 +16,9 @@ import {
   Download,
   FileSpreadsheet,
 } from 'lucide-react';
-import { NavigationScreen } from '../types';
+import { NavigationScreen, Student } from '../types';
+import { InstallmentInfo } from '../utils/installmentUtils';
+import { InstallmentAlertSidebarCard } from './InstallmentAlertSidebarCard';
 
 interface SidebarProps {
   currentScreen: NavigationScreen;
@@ -28,6 +30,10 @@ interface SidebarProps {
   onExportJson: () => void;
   onExportExcel: () => void;
   isWhatsConnected?: boolean;
+  dueInstallments?: Array<{ student: Student; info: InstallmentInfo }>;
+  onOpenInstallmentSettle?: (student: Student) => void;
+  onOpenWhatsAppReminder?: (student: Student) => void;
+  onNavigateToDueInstallments?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -40,7 +46,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onExportJson,
   onExportExcel,
   isWhatsConnected = true,
+  dueInstallments = [],
+  onOpenInstallmentSettle,
+  onOpenWhatsAppReminder,
+  onNavigateToDueInstallments,
 }) => {
+  const hasDueInstallments = dueInstallments.length > 0;
+
   const navItems: {
     id: NavigationScreen;
     label: string;
@@ -57,8 +69,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'students-list',
       label: 'سجل ومدفوعات الطلاب',
       icon: Users,
-      badge: studentsCount,
-      badgeType: 'default',
+      badge: hasDueInstallments ? `⚠️ ${dueInstallments.length} مستحق` : studentsCount,
+      badgeType: hasDueInstallments ? 'urgent' : 'default',
     },
     {
       id: 'expenses',
@@ -161,6 +173,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </nav>
+
+      {/* Installment Alerts Card (Main Menu Alert Feature) */}
+      <InstallmentAlertSidebarCard
+        dueInstallments={dueInstallments}
+        onOpenSettle={onOpenInstallmentSettle}
+        onOpenWhatsAppReminder={onOpenWhatsAppReminder}
+        onViewAllInList={onNavigateToDueInstallments}
+      />
 
       {/* Spacer */}
       <div className="mt-auto flex flex-col gap-3 pt-2">

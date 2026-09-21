@@ -6,17 +6,24 @@ import { generateProfessionalReceipt } from '../../utils/receiptCanvas';
 interface DirectWhatsAppModalProps {
   student: Student | null;
   courses?: Course[];
+  initialMessageType?: 'registration' | 'installment_reminder';
   onClose: () => void;
 }
 
 export const DirectWhatsAppModal: React.FC<DirectWhatsAppModalProps> = ({
   student,
   courses = [],
+  initialMessageType = 'registration',
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedImage, setCopiedImage] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'registration' | 'installment_reminder'>(
+    initialMessageType === 'installment_reminder' && student?.paymentType === 'installment'
+      ? 'installment_reminder'
+      : 'registration'
+  );
 
   if (!student) return null;
 
@@ -65,7 +72,38 @@ ${paymentDetailsSection}
 📞 لأي استفسار أو دعم فني يرجى التواصل معنا مباشرة.
 نتمنى لأولادنا دوام التفوق والدرجات النهائية بإذن الله! 🧪✨`;
 
-  const [message, setMessage] = useState(defaultMsg);
+  const installmentReminderMsg = `السلام عليكم ورحمة الله وبركاته 🌟
+مرحباً ولي أمر الطالب: ${student.name}
+
+نود تذكير سيادتكم باقتراب موعد استحقاق القسط القادم لاشتراك الطالب في منظومة الأستاذ أشرف السقا لمادة الكيمياء:
+
+📚 المقرر الدراسي: ${student.course}
+🗓️ تاريخ التسجيل بالمنظومة: ${student.createdAt?.slice(0, 10) || 'غير محدد'}
+💰 المبلغ المسدد سابقاً: ${student.amountPaid} ج.م
+⏳ المبلغ المتبقي المستحق سداده: ${remAmount} ج.م
+📅 موعد استحقاق القسط: ${student.installmentDueDate || 'خلال الأيام القادمة'}
+
+💳 طرق السداد والتحويل المعتمدة:
+- فودافون كاش / المحافظ الذكية: 01029847561
+- إنستاباي (InstaPay) على حساب المنظومة
+
+⚠️ يرجى إرسال صورة إشعار التحويل فور السداد لتحديث حساب الطالب على المنصة وضمان استمرار تفعيل الحصص والامتحانات الدورية دون انقطاع.
+
+شاكرين لسيادتكم حسن التعاون والاهتمام الدائم 🧪✨
+إدارة منظومة الأستاذ أشرف السقا`;
+
+  const [message, setMessage] = useState(
+    initialMessageType === 'installment_reminder' ? installmentReminderMsg : defaultMsg
+  );
+
+  const switchTab = (tab: 'registration' | 'installment_reminder') => {
+    setActiveTab(tab);
+    if (tab === 'installment_reminder') {
+      setMessage(installmentReminderMsg);
+    } else {
+      setMessage(defaultMsg);
+    }
+  };
 
   const handleSend = () => {
     let cleanPhone = student.parentWhatsapp.replace(/\D/g, '');
@@ -135,6 +173,37 @@ ${paymentDetailsSection}
             </span>
           </div>
         </div>
+
+        {/* Tabs for message template selection if installment */}
+        {isInstallment && (
+          <div className="flex items-center gap-1.5 p-1 bg-[#060b13] border border-[#18263a] rounded-xl">
+            <button
+              type="button"
+              onClick={() => switchTab('installment_reminder')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === 'installment_reminder'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>تذكير بموعد القسط المستحق 🔔</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => switchTab('registration')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === 'registration'
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-blue-400" />
+              <span>إشعار التسجيل المالي والمواعيد</span>
+            </button>
+          </div>
+        )}
 
         {/* Schedule preview box */}
         <div className="bg-[#211709] border border-amber-500/40 rounded-xl p-2.5 flex items-center gap-2 text-xs text-amber-200 font-semibold">

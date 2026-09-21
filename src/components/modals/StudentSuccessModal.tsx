@@ -20,9 +20,12 @@ import {
   Award,
   CreditCard,
   Share2,
+  FileText,
+  Loader2,
 } from 'lucide-react';
 import { Student, Course } from '../../types';
 import { generateProfessionalReceipt } from '../../utils/receiptCanvas';
+import { downloadReceiptPdf, printReceiptPdf } from '../../utils/receiptPdf';
 
 interface StudentSuccessModalProps {
   student: Student | null;
@@ -42,6 +45,7 @@ export const StudentSuccessModal: React.FC<StudentSuccessModalProps> = ({
   const [copiedText, setCopiedText] = useState(false);
   const [copiedImage, setCopiedImage] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [receiptDataUrl, setReceiptDataUrl] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -112,7 +116,36 @@ ${courseSchedule}
     window.open(url, '_blank');
   };
 
-  // 2. Download HD PNG Receipt Image
+  // 2. Download Official PDF Receipt
+  const handleDownloadPdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      const filename = await downloadReceiptPdf(student, courseSchedule);
+      showToast(`تم تحميل إيصال الدفع PDF بنجاح (${filename})! 📄`);
+    } catch (e) {
+      console.error('PDF generation error:', e);
+      alert('حدث خطأ أثناء إنشاء وتنزيل ملف PDF، جاري تنزيل صورة الإيصال كبديل.');
+      handleDownloadReceiptImage();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // 3. Print Official A4 PDF Receipt
+  const handlePrintPdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      showToast('جاري تحضير وتجهيز إيصال الدفع بصيغة PDF للطباعة...');
+      await printReceiptPdf(student, courseSchedule);
+    } catch (e) {
+      console.error('PDF print error:', e);
+      window.print();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // 4. Download HD PNG Receipt Image
   const handleDownloadReceiptImage = async () => {
     try {
       setIsGeneratingImage(true);
@@ -123,7 +156,7 @@ ${courseSchedule}
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast('تم تحميل صورة الإيصال الاحترافي بنجاح! يمكنك إرسالها الآن كصورة في واتساب');
+      showToast('تم تحميل صورة الإيصال بنجاح!');
     } catch (e) {
       console.error(e);
       alert('حدث خطأ أثناء حفظ صورة الإيصال');
@@ -132,7 +165,7 @@ ${courseSchedule}
     }
   };
 
-  // 3. Copy Receipt Image to Clipboard (for 1-click paste into WhatsApp chat)
+  // 5. Copy Receipt Image to Clipboard (for 1-click paste into WhatsApp chat)
   const handleCopyReceiptImage = async () => {
     try {
       setIsGeneratingImage(true);
@@ -158,7 +191,7 @@ ${courseSchedule}
     }
   };
 
-  // 4. Copy Code
+  // 6. Copy Code
   const handleCopyCode = () => {
     navigator.clipboard.writeText(student.code);
     setCopiedCode(true);
@@ -166,7 +199,7 @@ ${courseSchedule}
     showToast('تم نسخ كود التفعيل!');
   };
 
-  // 5. Copy Message Text
+  // 7. Copy Message Text
   const handleCopyMessageText = () => {
     navigator.clipboard.writeText(whatsappMessage);
     setCopiedText(true);
@@ -326,6 +359,47 @@ ${courseSchedule}
               <span>إرسال المواعيد وتفاصيل الاشتراك لولي الأمر عبر الواتساب الآن</span>
             </button>
 
+            {/* Primary Action 2: Direct PDF Receipt Generation & Download */}
+            <div className="bg-[#0f1b2b] border border-blue-500/30 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2.5 shadow-md">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>إيصال سداد رسمي معتمد (PDF)</span>
+                    <span className="text-[10px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.2 rounded font-mono font-bold">PDF A4</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    توليد وطباعة وثيقة PDF رسمية جاهزة للتحميل المباشر وتوزيعها للطالب
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={isGeneratingPdf}
+                  className="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2.5 px-3.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-red-700/30 cursor-pointer disabled:opacity-60"
+                  title="تحميل إيصال الدفع كملف PDF على جهازك"
+                >
+                  {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  <span>تحميل PDF مباشر</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintPdf}
+                  disabled={isGeneratingPdf}
+                  className="flex-1 sm:flex-none bg-[#132840] hover:bg-[#1a3556] border border-blue-400/40 text-blue-200 text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-60"
+                  title="طباعة إيصال الدفع بتنسيق A4"
+                >
+                  <Printer className="w-4 h-4 text-blue-400" />
+                  <span>طباعة PDF</span>
+                </button>
+              </div>
+            </div>
+
             {/* Quick Actions Bar for the Receipt Picture */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <button
@@ -460,45 +534,67 @@ ${courseSchedule}
             </div>
 
             {/* Receipt Action Bar */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className="bg-red-600 hover:bg-red-500 text-white text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-extrabold cursor-pointer transition-all shadow-md shadow-red-700/30 disabled:opacity-60"
+              >
+                {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                <span>تحميل إيصال PDF (A4)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePrintPdf}
+                disabled={isGeneratingPdf}
+                className="bg-[#12253b] hover:bg-[#193556] border border-blue-500/40 text-blue-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all disabled:opacity-60"
+              >
+                <Printer className="w-4 h-4 text-blue-400" />
+                <span>طباعة PDF مباشرة</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleDownloadReceiptImage}
                 disabled={isGeneratingImage}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-extrabold cursor-pointer transition-all shadow-md shadow-emerald-700/20"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-extrabold cursor-pointer transition-all shadow-md shadow-emerald-700/20 disabled:opacity-60"
               >
                 <Download className="w-4 h-4" />
-                <span>تحميل صورة الإيصال (PNG)</span>
+                <span>تحميل صورة (PNG)</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleCopyReceiptImage}
                 disabled={isGeneratingImage}
-                className="bg-[#12253b] hover:bg-[#19324f] border border-blue-500/40 text-blue-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all"
+                className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all disabled:opacity-60"
               >
-                {copiedImage ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-blue-400" />}
-                <span>نسخ لصق في شات الواتساب</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleOpenWhatsApp}
-                className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold cursor-pointer transition-all"
-              >
-                <MessageCircle className="w-4 h-4 text-emerald-400" />
-                <span>إرسال للواتساب</span>
+                {copiedImage ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-emerald-400" />}
+                <span>نسخ لصق في واتساب</span>
               </button>
             </div>
           </div>
         )}
 
         {/* Footer Navigation Buttons */}
-        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#16253b]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#16253b]">
           <button
-            onClick={() => window.print()}
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf}
             type="button"
-            className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer"
+            className="bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer disabled:opacity-60 transition-all"
+          >
+            <FileText className="w-4 h-4 text-red-400" />
+            <span>تحميل PDF</span>
+          </button>
+
+          <button
+            onClick={handlePrintPdf}
+            disabled={isGeneratingPdf}
+            type="button"
+            className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer disabled:opacity-60 transition-all"
           >
             <Printer className="w-4 h-4 text-blue-400" />
             <span>طباعة الإيصال</span>
@@ -507,19 +603,19 @@ ${courseSchedule}
           <button
             onClick={handleCopyMessageText}
             type="button"
-            className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer"
+            className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all"
           >
             {copiedText ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
-            <span>نسخ نص الرسالة</span>
+            <span>نسخ الرسالة</span>
           </button>
 
           <button
             onClick={onGoToStudentsList}
             type="button"
-            className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer"
+            className="bg-[#122033] hover:bg-[#1a2d48] border border-[#1f3654] text-slate-200 text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all"
           >
             <User className="w-4 h-4 text-emerald-400" />
-            <span>عرض بسجل الطلاب</span>
+            <span>عرض بالسجل</span>
           </button>
         </div>
       </div>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { NavigationScreen, Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig, CenterSettings, SupabaseConfig } from './types';
 import {
   getStoredStudents,
@@ -48,10 +48,15 @@ import { CloudSettingsScreen } from './components/screens/CloudSettingsScreen';
 import { StudentSuccessModal } from './components/modals/StudentSuccessModal';
 import { ReceiptViewModal } from './components/modals/ReceiptViewModal';
 import { DirectWhatsAppModal } from './components/modals/DirectWhatsAppModal';
+import { InstallmentSettleModal } from './components/modals/InstallmentSettleModal';
+import { getDueInstallments } from './utils/installmentUtils';
 
 export default function App() {
   // Navigation State - defaults to 'new-student' as in screenshot
   const [currentScreen, setCurrentScreen] = useState<NavigationScreen>('new-student');
+  const [studentsListInitialFilter, setStudentsListInitialFilter] = useState<
+    'all' | 'full' | 'pending_installment' | 'paid_in_full' | 'due_soon'
+  >('all');
 
   // Persistence States
   const [students, setStudents] = useState<Student[]>(() => getStoredStudents());
@@ -80,7 +85,12 @@ export default function App() {
   const [successStudent, setSuccessStudent] = useState<Student | null>(null);
   const [viewReceiptUrl, setViewReceiptUrl] = useState<string | null>(null);
   const [whatsAppStudent, setWhatsAppStudent] = useState<Student | null>(null);
+  const [whatsAppMessageType, setWhatsAppMessageType] = useState<'registration' | 'installment_reminder'>('registration');
+  const [settlingStudentFromSidebar, setSettlingStudentFromSidebar] = useState<Student | null>(null);
   const [storageNotification, setStorageNotification] = useState<string | null>(null);
+
+  // Compute approaching / overdue installments based on registration date
+  const dueInstallments = useMemo(() => getDueInstallments(students), [students]);
 
   // Sync dark/light theme to document and body
   useEffect(() => {
@@ -541,6 +551,11 @@ export default function App() {
         onToggleTheme={() => setIsDarkMode(!isDarkMode)}
         isWhatsConnected={whatsAppConfig.isConnected}
         centerSettings={centerSettings}
+        dueInstallmentsCount={dueInstallments.length}
+        onNavigateToDueInstallments={() => {
+          setStudentsListInitialFilter('due_soon');
+          setCurrentScreen('students-list');
+        }}
         onOpenWhatsAppScreen={() => setCurrentScreen('whatsapp')}
         onOpenStorageInfo={() => {
           setStorageNotification(
@@ -566,7 +581,12 @@ export default function App() {
         {/* Sidebar (On the Right in RTL) */}
         <Sidebar
           currentScreen={currentScreen}
-          onSelectScreen={setCurrentScreen}
+          onSelectScreen={(screen) => {
+            if (screen === 'students-list') {
+              setStudentsListInitialFilter('all');
+            }
+            setCurrentScreen(screen);
+          }}
           studentsCount={students.length}
           totalRevenue={totalRevenue}
           isDarkMode={isDarkMode}
@@ -574,6 +594,16 @@ export default function App() {
           onExportJson={exportDatabaseToJson}
           onExportExcel={exportStudentsToExcel}
           isWhatsConnected={whatsAppConfig.isConnected}
+          dueInstallments={dueInstallments}
+          onOpenInstallmentSettle={(student) => setSettlingStudentFromSidebar(student)}
+          onOpenWhatsAppReminder={(student) => {
+            setWhatsAppMessageType('installment_reminder');
+            setWhatsAppStudent(student);
+          }}
+          onNavigateToDueInstallments={() => {
+            setStudentsListInitialFilter('due_soon');
+            setCurrentScreen('students-list');
+          }}
         />
 
         {/* Dynamic Center Screen View */}
@@ -594,11 +624,17 @@ export default function App() {
               students={students}
               courses={courses}
               grades={grades}
+              initialPaymentFilter={studentsListInitialFilter}
               onDeleteStudent={handleDeleteStudent}
               onUpdateStudent={handleUpdateStudent}
               onViewReceipt={(url) => setViewReceiptUrl(url)}
-              onOpenWhatsAppModal={(student) => setWhatsAppStudent(student)}
+              onOpenWhatsAppModal={(student) => {
+                setWhatsAppMessageType('registration');
+                setWhatsAppStudent(student);
+              }}
               onExportExcel={exportStudentsToExcel}
+              onUpdateGradeName={handleUpdateGradeName}
+              onDeleteGrade={handleDeleteGrade}
             />
           )}
 
@@ -710,7 +746,39 @@ export default function App() {
         <DirectWhatsAppModal
           student={whatsAppStudent}
           courses={courses}
-          onClose={() => setWhatsAppStudent(null)}
+          initialMessageType={whatsAppMessageType}
+          onClose={() => {
+            setWhatsAppStudent(null);
+            setWhatsAppMessageType('registration');
+          }}
+        />
+      )}
+
+      {settlingStudentFromSidebar && (
+        <InstallmentSettleModal
+          student={settlingStudentFromSidebar}
+          onClose={() => setSettlingStudentFromSidebar(null)}
+          onSettle={(id, settlementData) => {
+            handleUpdateStudent(id, {
+              amountPaid: settlementData.newAmountPaid,
+              remainingAmount: settlementData.newRemaining,
+              installmentStatus: settlementData.newStatus,
+              paymentMethod: settlementData.settlementMethod,
+            });
+            setSettlingStudentFromSidebar(null);
+            if (settlementData.sendWhatsAppNotice) {
+              const target = students.find((s) => s.id === id);
+              if (target) {
+                setWhatsAppMessageType('registration');
+                setWhatsAppStudent({
+                  ...target,
+                  amountPaid: settlementData.newAmountPaid,
+                  remainingAmount: settlementData.newRemaining,
+                  installmentStatus: settlementData.newStatus,
+                });
+              }
+            }
+          }}
         />
       )}
     </div>

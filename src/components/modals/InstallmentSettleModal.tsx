@@ -9,8 +9,13 @@ import {
   AlertCircle,
   ArrowRightLeft,
   Sparkles,
+  FileText,
+  Printer,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import { Student } from '../../types';
+import { downloadReceiptPdf, printReceiptPdf } from '../../utils/receiptPdf';
 
 interface InstallmentSettleModalProps {
   student: Student | null;
@@ -46,6 +51,8 @@ export const InstallmentSettleModal: React.FC<InstallmentSettleModalProps> = ({
   const [settlementType, setSettlementType] = useState<'full' | 'partial'>('full');
   const [additionalNotes, setAdditionalNotes] = useState<string>('تم سداد باقي القسط بالكامل');
   const [sendWhatsApp, setSendWhatsApp] = useState<boolean>(true);
+  const [downloadPdf, setDownloadPdf] = useState<boolean>(true);
+  const [isPrintingPdf, setIsPrintingPdf] = useState<boolean>(false);
 
   const calculatedNewRemaining =
     settlementType === 'full'
@@ -58,8 +65,36 @@ export const InstallmentSettleModal: React.FC<InstallmentSettleModalProps> = ({
   const newStatus: 'paid_in_full' | 'pending_installment' =
     calculatedNewRemaining === 0 ? 'paid_in_full' : 'pending_installment';
 
+  const getUpdatedStudentObject = (): Student => ({
+    ...student,
+    amountPaid: calculatedNewAmountPaid,
+    remainingAmount: calculatedNewRemaining,
+    installmentStatus: newStatus,
+    paymentMethod: paymentMethod,
+    paymentType: 'installment',
+    confirmedBy: 'أك. محمود عزت',
+  });
+
+  const handlePrintPdfNow = async () => {
+    try {
+      setIsPrintingPdf(true);
+      const updatedStd = getUpdatedStudentObject();
+      await printReceiptPdf(updatedStd, student.courseSchedule);
+    } catch (e) {
+      console.error(e);
+      window.print();
+    } finally {
+      setIsPrintingPdf(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (downloadPdf) {
+      const updatedStd = getUpdatedStudentObject();
+      downloadReceiptPdf(updatedStd, student.courseSchedule).catch(console.error);
+    }
+
     onSettle(student.id, {
       newAmountPaid: calculatedNewAmountPaid,
       newRemaining: calculatedNewRemaining,
@@ -263,23 +298,55 @@ export const InstallmentSettleModal: React.FC<InstallmentSettleModalProps> = ({
             </span>
           </label>
 
+          {/* Download PDF Receipt checkbox */}
+          <label className="flex items-center gap-2.5 p-2.5 bg-[#070d17] rounded-xl border border-red-500/30 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={downloadPdf}
+              onChange={(e) => setDownloadPdf(e.target.checked)}
+              className="w-4 h-4 rounded text-red-500 focus:ring-red-500 bg-[#0b1320] border-[#1e3452]"
+            />
+            <FileText className="w-4 h-4 text-red-400" />
+            <div className="flex-1 flex items-center justify-between">
+              <span className="text-xs text-slate-200 font-bold">
+                توليد وتحميل إيصال سداد رسمي بصيغة PDF فور الحفظ
+              </span>
+              <span className="text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded font-mono font-bold border border-red-500/30">
+                PDF A4
+              </span>
+            </div>
+          </label>
+
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-2">
+          <div className="flex items-center justify-between gap-2.5 pt-2 border-t border-[#162942]">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl transition-colors cursor-pointer"
+              onClick={handlePrintPdfNow}
+              disabled={isPrintingPdf}
+              className="bg-[#102338] hover:bg-[#16304c] border border-blue-500/40 text-blue-200 text-xs font-bold py-2.5 px-3.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-60"
+              title="طباعة إيصال الدفع بصيغة PDF مباشرة"
             >
-              إلغاء
+              {isPrintingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4 text-blue-400" />}
+              <span>طباعة إيصال PDF</span>
             </button>
 
-            <button
-              type="submit"
-              className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>تحويل إلى تم دفع القسط وحفظ</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl transition-colors cursor-pointer"
+              >
+                إلغاء
+              </button>
+
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>تحويل إلى تم دفع القسط وحفظ</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

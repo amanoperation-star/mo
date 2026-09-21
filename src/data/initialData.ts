@@ -1,5 +1,16 @@
 import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog } from '../types';
 
+// Helper to generate dynamic relative dates for realistic live testing
+const getRelativeDateStr = (offsetDays: number): string => {
+  const d = new Date(Date.now() + offsetDays * 86400000);
+  return d.toISOString().slice(0, 10);
+};
+
+const getRelativeDateTimeStr = (offsetDays: number, timeStr = '11:30'): string => {
+  const d = new Date(Date.now() + offsetDays * 86400000);
+  return `${d.toISOString().slice(0, 10)} ${timeStr}`;
+};
+
 export const initialStudents: Student[] = [
   {
     id: 'std-1',
@@ -14,8 +25,9 @@ export const initialStudents: Student[] = [
     paymentMethod: 'فودافون كاش / محفظة ذكية',
     confirmedBy: 'أك. محمود عزت',
     receiptUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-    createdAt: '2025-03-01 11:30',
+    createdAt: getRelativeDateTimeStr(-20, '11:30'),
     status: 'active',
+    paymentType: 'full',
   },
   {
     id: 'std-2',
@@ -30,8 +42,9 @@ export const initialStudents: Student[] = [
     paymentMethod: 'إنستاباي (InstaPay)',
     confirmedBy: 'أك. محمود عزت',
     receiptUrl: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=600&q=80',
-    createdAt: '2025-03-02 14:15',
+    createdAt: getRelativeDateTimeStr(-18, '14:15'),
     status: 'active',
+    paymentType: 'full',
   },
   {
     id: 'std-3',
@@ -46,14 +59,80 @@ export const initialStudents: Student[] = [
     paymentMethod: 'فودافون كاش / محفظة ذكية',
     confirmedBy: 'أك. محمود عزت',
     receiptUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=600&q=80',
-    createdAt: '2025-03-03 09:45',
+    createdAt: getRelativeDateTimeStr(-26, '09:45'),
     status: 'active',
     paymentType: 'installment',
     totalCourseFee: 650,
     installmentStatus: 'pending_installment',
     remainingAmount: 300,
-    installmentDueDate: '2025-03-25',
+    installmentDueDate: getRelativeDateStr(4), // Due in 4 days (اقترب موعد الاستحقاق)
     installmentNotes: 'تم سداد قسط أول 350 ج.م - متبقي 300 ج.م مستحق قبل نهاية الشهر',
+  },
+  {
+    id: 'std-4',
+    code: 'CHEM-2025-0844',
+    name: 'زياد محمود علام',
+    phone: '01122334455',
+    parentWhatsapp: '01011223344',
+    grade: 'الصف الثالث الثانوي (علمي)',
+    course: 'المعسكر الشامل للثانوية العامة 2025 (1200 ج.م)',
+    attendanceMode: 'المنصة أونلاين (بث مباشر ومسجل 24/7)',
+    amountPaid: 600,
+    paymentMethod: 'إنستاباي (InstaPay)',
+    confirmedBy: 'أك. محمود عزت',
+    receiptUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
+    createdAt: getRelativeDateTimeStr(-28, '16:20'),
+    status: 'active',
+    paymentType: 'installment',
+    totalCourseFee: 1200,
+    installmentStatus: 'pending_installment',
+    remainingAmount: 600,
+    installmentDueDate: getRelativeDateStr(2), // Due in 2 days (اقترب جداً)
+    installmentNotes: 'قسط أول 600 ج.م، القسط الثاني مستحق مع بداية الجزء الثاني من المعسكر',
+  },
+  {
+    id: 'std-5',
+    code: 'CHEM-2025-0845',
+    name: 'سلمى إبراهيم حسني',
+    phone: '01055667788',
+    parentWhatsapp: '01233445566',
+    grade: 'الصف الثاني الثانوي',
+    course: 'منهج الصف الثاني الثانوي - كيمياء الترم الثاني (500 ج.م)',
+    attendanceMode: 'المنصة أونلاين (بث مباشر ومسجل 24/7)',
+    amountPaid: 250,
+    paymentMethod: 'فودافون كاش / محفظة ذكية',
+    confirmedBy: 'أك. محمود عزت',
+    receiptUrl: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=600&q=80',
+    createdAt: getRelativeDateTimeStr(-32, '12:00'),
+    status: 'active',
+    paymentType: 'installment',
+    totalCourseFee: 500,
+    installmentStatus: 'pending_installment',
+    remainingAmount: 250,
+    installmentDueDate: getRelativeDateStr(-2), // Overdue by 2 days (متأخر عن الموعد)
+    installmentNotes: 'تم دفع القسط الأول، تذكير ولي الأمر باقتراب ميعاد القسط الثاني',
+  },
+  {
+    id: 'std-6',
+    code: 'CHEM-2025-0846',
+    name: 'عمر خالد النجار',
+    phone: '01099881122',
+    parentWhatsapp: '01122998877',
+    grade: 'الصف الثالث الثانوي (علمي)',
+    course: 'مراجعة الكيمياء العضوية المكثفة 2025 (800 ج.م)',
+    attendanceMode: 'المنصة أونلاين (بث مباشر ومسجل 24/7)',
+    amountPaid: 400,
+    paymentMethod: 'إنستاباي (InstaPay)',
+    confirmedBy: 'أك. محمود عزت',
+    receiptUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=600&q=80',
+    createdAt: getRelativeDateTimeStr(-5, '18:40'),
+    status: 'active',
+    paymentType: 'installment',
+    totalCourseFee: 800,
+    installmentStatus: 'pending_installment',
+    remainingAmount: 400,
+    installmentDueDate: getRelativeDateStr(25), // Due in 25 days (مستحق لاحقاً)
+    installmentNotes: 'طالب مسجل حديثاً، القسط القادم بعد 25 يوماً',
   },
 ];
 

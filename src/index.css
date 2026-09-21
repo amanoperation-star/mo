@@ -26,44 +26,57 @@
 }
 
 /* ============================================================
-   LIGHT THEME ADAPTATION
-   When html or body has .light class
+   EXECUTIVE BANKING LIGHT THEME ADAPTATION
+   Activated when html or body has .light class
+   Provides pristine high-contrast, crisp typography & borders
    ============================================================ */
 html.light,
 body.light {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
   color: #0f172a !important;
-  --scrollbar-track: #e2e8f0;
-  --scrollbar-thumb: #94a3b8;
-  --scrollbar-thumb-hover: #64748b;
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
 }
 
-/* Base background overrides for light mode */
+/* Base background & root container overrides */
 html.light #root-system-container,
-html.light .bg-\[\#070d17\] {
-  background-color: #f1f5f9 !important;
+html.light .bg-\[\#070d17\],
+html.light .bg-\[\#070d18\],
+html.light .bg-\[\#050a12\],
+html.light .bg-\[\#060c16\] {
+  background-color: #f8fafc !important;
 }
 
+/* Header in light mode */
 html.light #main-app-header,
 html.light .bg-\[\#0a111c\] {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
 }
 
+/* Sidebar in light mode */
 html.light #system-navigation-sidebar,
 html.light .bg-\[\#0d1522\] {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
 }
 
-html.light .bg-\[\#0b1320\] {
+/* Screen cards and primary containers */
+html.light .bg-\[\#0b1320\],
+html.light .bg-\[\#0b1422\] {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
 }
 
-html.light .bg-\[\#080f1a\] {
+/* Secondary cards & nested sections */
+html.light .bg-\[\#080f1a\],
+html.light .bg-\[\#0e1726\],
+html.light .bg-\[\#0f172a\],
+html.light .bg-\[\#09111c\] {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
@@ -74,61 +87,598 @@ html.light .bg-\[\#0d1726\] {
   color: #0f172a !important;
 }
 
-html.light .bg-\[\#122033\] {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #1e293b !important;
+/* ============================================================
+   TYPOGRAPHY & READABILITY IN LIGHT MODE
+   High-contrast dark slate for all body text, headings & metrics
+   ============================================================ */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #0f172a !important;
 }
 
-html.light .bg-\[\#132032\] {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #1e293b !important;
+/* Default light mode text-white becomes crisp dark slate */
+html.light .text-white {
+  color: #0f172a !important;
 }
 
-html.light .bg-\[\#132238\] {
+/* Secondary & muted text in light mode */
+html.light .text-slate-100,
+html.light .text-slate-200 {
+  color: #1e293b !important;
+}
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+html.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* ============================================================
+   PRESERVE WHITE TEXT & WHITE ICONS IN SOLID COLORED BUTTONS
+   ============================================================ */
+html.light button.bg-blue-600,
+html.light button.bg-emerald-600,
+html.light button.bg-amber-600,
+html.light button.bg-teal-600,
+html.light button.bg-rose-600,
+html.light button.bg-red-600,
+html.light button.bg-purple-600,
+html.light button.bg-\[\#1da851\],
+html.light button.bg-\[\#2563eb\],
+html.light .bg-blue-600,
+html.light .bg-emerald-600,
+html.light .bg-amber-600,
+html.light .bg-teal-600,
+html.light .bg-rose-600,
+html.light .bg-red-600,
+html.light .bg-purple-600,
+html.light .bg-\[\#1da851\],
+html.light .bg-\[\#2563eb\],
+html.light [class*="bg-gradient-"] {
+  color: #ffffff !important;
+}
+
+html.light button.bg-blue-600 *,
+html.light button.bg-emerald-600 *,
+html.light button.bg-amber-600 *,
+html.light button.bg-teal-600 *,
+html.light button.bg-rose-600 *,
+html.light button.bg-red-600 *,
+html.light button.bg-purple-600 *,
+html.light button.bg-\[\#1da851\] *,
+html.light button.bg-\[\#2563eb\] *,
+html.light .bg-blue-600 *,
+html.light .bg-emerald-600 *,
+html.light .bg-amber-600 *,
+html.light .bg-teal-600 *,
+html.light .bg-rose-600 *,
+html.light .bg-red-600 *,
+html.light .bg-purple-600 *,
+html.light .bg-\[\#1da851\] *,
+html.light .bg-\[\#2563eb\] *,
+html.light [class*="bg-gradient-"] * {
+  color: #ffffff !important;
+}
+
+html.light button.bg-blue-600 svg,
+html.light button.bg-emerald-600 svg,
+html.light button.bg-amber-600 svg,
+html.light button.bg-teal-600 svg,
+html.light button.bg-rose-600 svg,
+html.light button.bg-red-600 svg,
+html.light button.bg-purple-600 svg,
+html.light button.bg-\[\#1da851\] svg,
+html.light button.bg-\[\#2563eb\] svg,
+html.light .bg-blue-600 svg,
+html.light .bg-emerald-600 svg,
+html.light .bg-amber-600 svg,
+html.light .bg-teal-600 svg,
+html.light .bg-rose-600 svg,
+html.light .bg-red-600 svg,
+html.light .bg-purple-600 svg,
+html.light .bg-\[\#1da851\] svg,
+html.light .bg-\[\#2563eb\] svg,
+html.light [class*="bg-gradient-"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* ============================================================
+   INSTALLMENT ALERTS SIDEBAR CARD (EXECUTIVE BANKING STYLE)
+   ============================================================ */
+html.light #installment-alerts-sidebar-card {
+  background-color: #ffffff !important;
+  border-color: #fed7aa !important;
+  box-shadow: 0 4px 15px -3px rgba(245, 158, 11, 0.12) !important;
+}
+
+html.light #installment-alerts-empty-box {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Financial overview strip */
+html.light #installment-alerts-sidebar-card .bg-\[\#080e18\],
+html.light .bg-\[\#080e18\] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+
+/* Overdue card in sidebar */
+html.light #installment-alerts-sidebar-card .bg-\[\#150e13\],
+html.light .bg-\[\#150e13\] {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #9f1239 !important;
+}
+html.light #installment-alerts-sidebar-card .bg-\[\#150e13\]:hover {
+  background-color: #ffe4e6 !important;
+}
+
+/* Due today card in sidebar */
+html.light #installment-alerts-sidebar-card .bg-\[\#18140c\],
+html.light .bg-\[\#18140c\] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+html.light #installment-alerts-sidebar-card .bg-\[\#18140c\]:hover {
+  background-color: #fef3c7 !important;
+}
+
+/* Upcoming card in sidebar */
+html.light #installment-alerts-sidebar-card .bg-\[\#0e1726\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+html.light #installment-alerts-sidebar-card .bg-\[\#0e1726\]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Initials badges in sidebar */
+html.light #installment-alerts-sidebar-card .bg-rose-950\/80 {
+  background-color: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #991b1b !important;
+}
+html.light #installment-alerts-sidebar-card .bg-amber-950\/80 {
+  background-color: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+}
+html.light #installment-alerts-sidebar-card .bg-slate-800 {
   background-color: #e2e8f0 !important;
   border-color: #cbd5e1 !important;
-  color: #1e293b !important;
+  color: #334155 !important;
+}
+html.light #installment-alerts-sidebar-card .border-slate-800\/70 {
+  border-color: #f1f5f9 !important;
 }
 
-html.light .bg-\[\#152336\] {
-  background-color: #e2e8f0 !important;
+/* WhatsApp Reminder button in sidebar card */
+html.light #installment-alerts-sidebar-card .bg-\[\#0a1e18\],
+html.light .bg-\[\#0a1e18\] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+html.light #installment-alerts-sidebar-card .bg-\[\#0a1e18\]:hover,
+html.light .bg-\[\#0a1e18\]:hover {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+}
+
+/* Settle installment button in sidebar card */
+html.light #installment-alerts-sidebar-card .bg-\[\#1e170d\],
+html.light .bg-\[\#1e170d\] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+html.light #installment-alerts-sidebar-card .bg-\[\#1e170d\]:hover,
+html.light .bg-\[\#1e170d\]:hover {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+/* View all due in list button in sidebar card */
+html.light #view-all-due-installments-sidebar-btn,
+html.light .bg-\[\#111f32\] {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+html.light #view-all-due-installments-sidebar-btn:hover,
+html.light .bg-\[\#111f32\]:hover {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+/* ============================================================
+   STUDENTS LIST SCREEN & TABLE ENHANCEMENTS
+   ============================================================ */
+
+/* Filter tabs in StudentsListScreen */
+html.light .bg-\[\#160d16\] {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #e11d48 !important;
+}
+html.light .bg-\[\#160d16\]:hover {
+  background-color: #ffe4e6 !important;
+}
+
+html.light .bg-\[\#181307\] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+html.light .bg-\[\#181307\]:hover {
+  background-color: #fef3c7 !important;
+}
+
+html.light .bg-\[\#091a14\] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+html.light .bg-\[\#091a14\]:hover {
+  background-color: #d1fae5 !important;
+}
+
+html.light .bg-\[\#0e1929\] {
+  background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+html.light .bg-\[\#0e1929\]:hover {
+  background-color: #e2e8f0 !important;
   color: #1e293b !important;
 }
 
-html.light .bg-\[\#0f172a\] {
+/* Table container & headers in light mode */
+html.light .overflow-x-auto.bg-\[\#070d17\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+html.light thead.bg-\[\#0f1b2c\],
+html.light thead,
+html.light .bg-\[\#0f1b2c\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+html.light .divide-\[\#132238\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #f1f5f9 !important;
+}
+html.light .border-\[\#142236\],
+html.light .border-\[\#1c2e47\],
+html.light .border-\[\#17273f\] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Overdue table rows in light mode */
+html.light tr.bg-rose-950\/20,
+html.light .bg-rose-950\/20 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+html.light tr.bg-rose-950\/20:hover,
+html.light .hover\:bg-rose-950\/30:hover {
+  background-color: #ffe4e6 !important;
+}
+
+/* Due soon table rows in light mode */
+html.light tr.bg-amber-950\/20,
+html.light .bg-amber-950\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+html.light tr.bg-amber-950\/20:hover,
+html.light .hover\:bg-amber-950\/30:hover {
+  background-color: #fef3c7 !important;
+}
+
+/* Table row normal hover */
+html.light .hover\:bg-\[\#0d1726\]:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Installment status pill in table row */
+html.light .bg-\[\#131f30\] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+/* Installment quick action (تحصيل القسط) */
+html.light .bg-\[\#1a2b42\] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+html.light .bg-\[\#1a2b42\]:hover {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+/* Installment quick action (تصفية كاملة) */
+html.light .bg-emerald-950\/50 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+html.light .bg-emerald-950\/50:hover {
+  background-color: #d1fae5 !important;
+}
+
+/* Payment progress bar track */
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800 {
+  background-color: #e2e8f0 !important;
+}
+
+/* Stage quick edit box */
+html.light .bg-\[\#09111c\] {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
 
-html.light .bg-\[\#1a2639\] {
+/* Full payment non-installment badge */
+html.light .bg-blue-950\/40 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Receipt action buttons */
+html.light .bg-\[\#132238\] {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+html.light .bg-\[\#132238\]:hover {
+  background-color: #dbeafe !important;
+}
+
+html.light .bg-\[\#0f1d30\] {
   background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
   color: #334155 !important;
+}
+html.light .bg-\[\#0f1d30\]:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* ============================================================
+   HEADER NOTIFICATION & BADGES IN LIGHT MODE
+   ============================================================ */
+
+/* Due installments header pill */
+html.light #header-due-installments-pill,
+html.light .bg-\[\#1c1017\] {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #e11d48 !important;
+}
+html.light #header-due-installments-pill:hover,
+html.light .bg-\[\#1c1017\]:hover {
+  background-color: #ffe4e6 !important;
+}
+html.light #header-due-installments-pill svg {
+  color: #e11d48 !important;
+  stroke: #e11d48 !important;
+}
+
+/* User profile badge */
+html.light #user-profile-badge {
+  background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
 
-html.light .bg-\[\#101b2a\] {
+/* Platform URL Link Pill */
+html.light #header-platform-url-link,
+html.light .bg-\[\#082029\] {
+  background-color: #ecfeff !important;
+  border-color: #a5f3fc !important;
+  color: #0e7490 !important;
+}
+html.light #header-platform-url-link:hover {
+  background-color: #cffafe !important;
+}
+
+/* Phone Contact Pill */
+html.light #header-phone-contact-link,
+html.light .bg-\[\#0b1c2e\] {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+html.light #header-phone-contact-link:hover {
+  background-color: #dbeafe !important;
+}
+
+/* WhatsApp Gateway Header Button */
+html.light #whatsapp-gateway-header-button,
+html.light .bg-\[\#081b16\] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+html.light #whatsapp-gateway-header-button:hover {
+  background-color: #d1fae5 !important;
+}
+
+/* Theme Toggle Header Button */
+html.light #theme-toggle-header-button,
+html.light .bg-\[\#1b1a13\] {
+  background-color: #fef9c3 !important;
+  border-color: #fde047 !important;
+  color: #854d0e !important;
+}
+
+/* Local storage indicator pill */
+html.light #local-storage-indicator-button,
+html.light .bg-\[\#0c1b18\] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+/* ============================================================
+   OTHER ACTION & SECONDARY BUTTONS IN LIGHT MODE
+   ============================================================ */
+html.light .bg-\[\#122033\],
+html.light .bg-\[\#132032\],
+html.light .bg-\[\#152336\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html.light .bg-\[\#122033\]:hover,
+html.light .bg-\[\#132032\]:hover,
+html.light .bg-\[\#152336\]:hover {
+  background-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#1a2639\],
+html.light .bg-\[\#101b2a\],
+html.light .bg-\[\#142338\],
+html.light .bg-\[\#121e30\] {
   background-color: #f1f5f9 !important;
   border-color: #e2e8f0 !important;
 }
 
-/* Card hover and table rows in light mode */
-html.light .hover\:bg-\[\#0c1524\]:hover,
-html.light .hover\:bg-\[\#152336\]:hover,
-html.light .hover\:bg-\[\#1a2d48\]:hover,
-html.light .hover\:bg-\[\#1b2d47\]:hover,
-html.light .hover\:bg-\[\#122033\]:hover {
-  background-color: #f1f5f9 !important;
+/* Blue Tinted Action Buttons */
+html.light .bg-\[\#12233b\],
+html.light .bg-\[\#102033\] {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+html.light .bg-\[\#12233b\]:hover,
+html.light .bg-\[\#102033\]:hover {
+  background-color: #dbeafe !important;
 }
 
-/* Border overrides in light mode */
+/* Course schedule notice box & installment detail box */
+html.light .bg-\[\#1b1509\],
+html.light .bg-\[\#141b2b\],
+html.light .bg-\[\#181307\] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+/* Receipt Upload Box in NewStudent */
+html.light #receipt-upload-box,
+html.light .bg-\[\#080f1a\]\/80 {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+html.light .bg-\[\#111f33\],
+html.light .bg-\[\#122238\] {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Delete / Remove Action Buttons (Red / Rose) */
+html.light .bg-red-950\/40,
+html.light .bg-red-950\/60,
+html.light .bg-rose-950\/40,
+html.light .bg-rose-950\/60 {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+}
+html.light .bg-red-950\/40:hover,
+html.light .bg-red-950\/60:hover,
+html.light .bg-rose-950\/40:hover,
+html.light .bg-rose-950\/60:hover {
+  background-color: #fee2e2 !important;
+}
+html.light .bg-red-950\/40 svg,
+html.light .bg-red-950\/60 svg,
+html.light .bg-rose-950\/40 svg,
+html.light .bg-rose-950\/60 svg {
+  color: #dc2626 !important;
+  stroke: #dc2626 !important;
+}
+
+/* Edit / Details Action Buttons (Blue) */
+html.light .bg-blue-950\/60,
+html.light .bg-blue-950\/70,
+html.light .bg-blue-950 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+html.light .bg-blue-950\/60:hover,
+html.light .bg-blue-950\/70:hover {
+  background-color: #dbeafe !important;
+}
+html.light .bg-blue-950\/60 svg,
+html.light .bg-blue-950\/70 svg,
+html.light .bg-blue-950 svg {
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
+}
+
+/* WhatsApp / Success Action Buttons (Emerald) */
+html.light .bg-emerald-950\/60,
+html.light .bg-emerald-950\/40,
+html.light .bg-emerald-950 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+html.light .bg-emerald-950\/60:hover,
+html.light .bg-emerald-950\/40:hover {
+  background-color: #d1fae5 !important;
+}
+html.light .bg-emerald-950\/60 svg,
+html.light .bg-emerald-950\/40 svg,
+html.light .bg-emerald-950 svg {
+  color: #047857 !important;
+  stroke: #047857 !important;
+}
+
+/* Amber Action Buttons & Badges (Installments) */
+html.light .bg-amber-950\/40,
+html.light .bg-amber-950\/60,
+html.light .bg-amber-500\/15,
+html.light .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+html.light .bg-amber-950\/40 svg,
+html.light .bg-amber-950\/60 svg,
+html.light .bg-amber-500\/15 svg,
+html.light .bg-amber-500\/20 svg {
+  color: #b45309 !important;
+  stroke: #b45309 !important;
+}
+
+/* ============================================================
+   BORDER OVERRIDES IN LIGHT MODE
+   ============================================================ */
 html.light .border-\[\#16253b\],
 html.light .border-\[\#17273f\],
 html.light .border-\[\#192b42\],
 html.light .border-\[\#1a2b42\],
 html.light .border-\[\#1b2f48\],
+html.light .border-\[\#1b2b40\],
 html.light .border-\[\#1c2e47\],
 html.light .border-\[\#1e293b\],
 html.light .border-\[\#1e3452\],
@@ -136,11 +686,14 @@ html.light .border-\[\#1e3a5f\],
 html.light .border-\[\#1f3350\],
 html.light .border-\[\#1f3654\],
 html.light .border-\[\#132238\],
-html.light .border-\[\#223a5d\] {
+html.light .border-\[\#223a5d\],
+html.light .border-\[\#23354d\] {
   border-color: #e2e8f0 !important;
 }
 
-/* Inputs, Textareas, Selects in light mode */
+/* ============================================================
+   INPUTS, SELECTS & TEXTAREAS IN LIGHT MODE
+   ============================================================ */
 html.light input:not([type="checkbox"]):not([type="radio"]),
 html.light select,
 html.light textarea {
@@ -154,69 +707,14 @@ html.light textarea:focus {
   border-color: #2563eb !important;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12) !important;
 }
-
-/* Headings and primary text in light mode */
-html.light h1,
-html.light h2,
-html.light h3,
-html.light h4,
-html.light .text-white:not(button.bg-blue-600 *):not(button.bg-emerald-600 *):not(button.bg-\[\#1da851\] *):not(button.bg-\[\#2563eb\] *):not(.bg-blue-600):not(.bg-emerald-600):not(.bg-\[\#1da851\]):not(.bg-\[\#2563eb\]):not(.bg-gradient-to-tr *) {
-  color: #0f172a !important;
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
 }
 
-/* Secondary & muted text in light mode */
-html.light .text-slate-200 {
-  color: #1e293b !important;
-}
-html.light .text-slate-300 {
-  color: #334155 !important;
-}
-html.light .text-slate-400 {
-  color: #64748b !important;
-}
-
-/* Badges and subtle blue elements in light mode */
-html.light .bg-blue-950\/60 {
-  background-color: #eff6ff !important;
-  border-color: #bfdbfe !important;
-  color: #1d4ed8 !important;
-}
-html.light .text-blue-300,
-html.light .text-blue-400 {
-  color: #1d4ed8 !important;
-}
-
-/* Badges and subtle emerald elements in light mode */
-html.light .bg-emerald-950\/60 {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-  color: #047857 !important;
-}
-
-/* Preserve bright button text on colored buttons */
-html.light button.bg-blue-600,
-html.light button.bg-emerald-600,
-html.light button.bg-\[\#1da851\],
-html.light button.bg-\[\#2563eb\],
-html.light .bg-blue-600,
-html.light .bg-emerald-600,
-html.light .bg-\[\#1da851\],
-html.light .bg-\[\#2563eb\] {
-  color: #ffffff !important;
-}
-
-html.light button.bg-blue-600 *,
-html.light button.bg-emerald-600 *,
-html.light button.bg-\[\#1da851\] *,
-html.light button.bg-\[\#2563eb\] *,
-html.light .bg-blue-600 *,
-html.light .bg-emerald-600 *,
-html.light .bg-\[\#1da851\] *,
-html.light .bg-\[\#2563eb\] * {
-  color: #ffffff !important;
-}
-
-/* Theme appearance banner & toggle in light mode */
+/* ============================================================
+   THEME APPEARANCE CARD & TOGGLE IN SIDEBAR
+   ============================================================ */
 html.light #theme-appearance-card,
 html.light .bg-\[\#14191d\] {
   background-color: #fefce8 !important;
@@ -232,30 +730,177 @@ html.light .bg-\[\#20272c\] {
   border-color: #eab308 !important;
 }
 
-/* Local storage pill in light mode */
-html.light #local-storage-indicator-button,
-html.light .bg-\[\#0c1b18\] {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
+/* ============================================================
+   GLOBAL LUCIDE ICON VISIBILITY & CONTRAST IN LIGHT MODE
+   ============================================================ */
+html.light svg {
+  stroke-width: 2px;
+}
+
+/* Cyan Icons */
+html.light svg.text-cyan-400,
+html.light svg.text-cyan-300,
+html.light svg.text-cyan-500,
+html.light .text-cyan-400 svg,
+html.light .text-cyan-300 svg,
+html.light .text-cyan-500 svg,
+html.light .text-cyan-400,
+html.light .text-cyan-300,
+html.light .text-cyan-500 {
+  color: #0891b2 !important;
+  stroke: #0891b2 !important;
+}
+
+/* Amber / Yellow Icons */
+html.light svg.text-amber-400,
+html.light svg.text-amber-300,
+html.light svg.text-amber-500,
+html.light svg.text-yellow-400,
+html.light svg.text-yellow-300,
+html.light svg.text-yellow-500,
+html.light .text-amber-400 svg,
+html.light .text-amber-300 svg,
+html.light .text-yellow-400 svg,
+html.light .text-amber-400,
+html.light .text-amber-300,
+html.light .text-amber-200,
+html.light .text-amber-100 {
+  color: #b45309 !important;
+  stroke: #b45309 !important;
+}
+
+/* Emerald / Green Icons */
+html.light svg.text-emerald-400,
+html.light svg.text-emerald-300,
+html.light svg.text-emerald-500,
+html.light svg.text-green-400,
+html.light svg.text-green-500,
+html.light .text-emerald-400 svg,
+html.light .text-emerald-300 svg,
+html.light .text-emerald-500 svg,
+html.light .text-green-400 svg,
+html.light .text-green-500 svg,
+html.light .text-emerald-400,
+html.light .text-emerald-300,
+html.light .text-emerald-500 {
   color: #047857 !important;
+  stroke: #047857 !important;
 }
 
-/* Theme toggle header button in light mode */
-html.light #theme-toggle-header-button,
-html.light .bg-\[\#1b1a13\] {
-  background-color: #fef9c3 !important;
-  border-color: #fde047 !important;
-  color: #854d0e !important;
+/* Blue Icons */
+html.light svg.text-blue-400,
+html.light svg.text-blue-300,
+html.light svg.text-blue-500,
+html.light .text-blue-400 svg,
+html.light .text-blue-300 svg,
+html.light .text-blue-500 svg,
+html.light .text-blue-400,
+html.light .text-blue-300,
+html.light .text-blue-500 {
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
 }
 
-/* Modals in light mode */
+/* Red / Rose Icons */
+html.light svg.text-red-400,
+html.light svg.text-red-300,
+html.light svg.text-red-500,
+html.light svg.text-rose-400,
+html.light svg.text-rose-300,
+html.light svg.text-rose-500,
+html.light .text-red-400 svg,
+html.light .text-red-300 svg,
+html.light .text-rose-400 svg,
+html.light .text-rose-300 svg,
+html.light .text-rose-500 svg,
+html.light .text-red-400,
+html.light .text-rose-400,
+html.light .text-rose-300,
+html.light .text-rose-500 {
+  color: #dc2626 !important;
+  stroke: #dc2626 !important;
+}
+
+/* Purple Icons */
+html.light svg.text-purple-400,
+html.light svg.text-purple-300,
+html.light svg.text-purple-500,
+html.light .text-purple-400 svg,
+html.light .text-purple-300 svg,
+html.light .text-purple-500 svg,
+html.light .text-purple-400,
+html.light .text-purple-300,
+html.light .text-purple-500 {
+  color: #7c3aed !important;
+  stroke: #7c3aed !important;
+}
+
+/* Slate / Gray Icons */
+html.light svg.text-slate-400,
+html.light .text-slate-400 svg {
+  color: #475569 !important;
+  stroke: #475569 !important;
+}
+html.light svg.text-slate-300,
+html.light .text-slate-300 svg {
+  color: #334155 !important;
+  stroke: #334155 !important;
+}
+html.light svg.text-slate-500,
+html.light .text-slate-500 svg,
+html.light svg.text-slate-600,
+html.light .text-slate-600 svg {
+  color: #475569 !important;
+  stroke: #475569 !important;
+}
+
+/* Prevent generic hover:text-white from washing out buttons in light mode */
+html.light button.hover\:text-white:not([class*="bg-blue-6"]):not([class*="bg-emerald-6"]):not([class*="bg-rose-6"]):not([class*="bg-red-6"]):hover {
+  color: #0f172a !important;
+}
+
+/* Modal close button (X icon) fix */
+html.light button:hover svg.lucide-x,
+html.light button:hover .lucide-x {
+  color: #dc2626 !important;
+  stroke: #dc2626 !important;
+}
+
+/* ============================================================
+   MODALS IN LIGHT MODE
+   ============================================================ */
 html.light .bg-black\/80,
 html.light .bg-black\/85 {
   background-color: rgba(15, 23, 42, 0.65) !important;
 }
-html.light .bg-\[\#0c1421\] {
+html.light .bg-\[\#0c1421\],
+html.light .bg-\[\#0b1320\].fixed,
+html.light .bg-\[\#0f172a\].fixed,
+html.light #installment-settle-modal-card,
+html.light #direct-whatsapp-modal-card,
+html.light #whatsapp-receipt-modal-card,
+html.light #receipt-view-modal-card,
+html.light #student-success-modal-card {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
+html.light #installment-settle-modal-card .bg-\[\#0f1b2c\],
+html.light #direct-whatsapp-modal-card .bg-\[\#0f1b2c\],
+html.light #whatsapp-receipt-modal-card .bg-\[\#0f1b2c\],
+html.light #receipt-view-modal-card .bg-\[\#0f1b2c\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light #installment-settle-modal-card input,
+html.light #installment-settle-modal-card textarea,
+html.light #direct-whatsapp-modal-card input,
+html.light #direct-whatsapp-modal-card textarea,
+html.light #whatsapp-receipt-modal-card input,
+html.light #whatsapp-receipt-modal-card textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}

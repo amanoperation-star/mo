@@ -69,7 +69,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'students-list',
       label: 'سجل ومدفوعات الطلاب',
       icon: Users,
-      badge: hasDueInstallments ? `⚠️ ${dueInstallments.length} مستحق` : studentsCount,
+      badge: hasDueInstallments
+        ? `⚠️ ${dueInstallments.length.toLocaleString('en-US')} مستحق`
+        : studentsCount.toLocaleString('en-US'),
       badgeType: hasDueInstallments ? 'urgent' : 'default',
     },
     {
@@ -147,7 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   ? 'bg-[#2563eb] text-white font-bold shadow-lg shadow-blue-600/30 border border-blue-400/40 active-nav-button'
                   : isDarkMode
                   ? 'text-slate-300 hover:text-white hover:bg-[#152336] border border-transparent'
-                  : 'text-slate-700 hover:text-blue-600 hover:bg-blue-50/90 active:bg-blue-100 border border-transparent'
+                  : 'text-slate-700 hover:text-blue-700 hover:bg-blue-50/90 active:bg-blue-100 border border-transparent bg-transparent'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -163,12 +165,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       : 'text-slate-500 group-hover:text-blue-600'
                   }`}
                 />
-                <span>{item.label}</span>
+                <span
+                  className={
+                    isActive
+                      ? 'text-white font-bold'
+                      : isDarkMode
+                      ? 'text-slate-300 group-hover:text-white'
+                      : 'text-slate-700 group-hover:text-blue-700 font-medium'
+                  }
+                >
+                  {item.label}
+                </span>
               </div>
 
               {item.badge !== undefined && (
                 <span
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full border font-mono ${
                     item.badgeType === 'success'
                       ? isDarkMode
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
@@ -183,8 +195,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       ? 'bg-[#1a2639] text-slate-300 border-slate-700'
                       : 'bg-slate-100 text-slate-700 border-slate-200'
                   }`}
+                  dir="ltr"
                 >
-                  {item.badge}
+                  {typeof item.badge === 'number'
+                    ? item.badge.toLocaleString('en-US')
+                    : item.badge}
                 </span>
               )}
             </button>

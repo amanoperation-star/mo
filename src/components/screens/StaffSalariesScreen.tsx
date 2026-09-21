@@ -56,7 +56,7 @@ export const StaffSalariesScreen: React.FC<StaffSalariesScreenProps> = ({ staff,
                   <div className="font-bold text-white text-sm">{member.name}</div>
                   <div className="text-[11px] text-blue-400 font-medium mt-0.5">{member.role}</div>
                 </td>
-                <td className="p-3.5 font-mono text-slate-300">{member.phone}</td>
+                <td className="p-3.5 font-mono text-slate-300" dir="ltr">{member.phone}</td>
                 <td className="p-3.5 font-mono text-slate-200" dir="ltr">
                   {member.baseSalary.toLocaleString('en-US')} <span className="font-sans text-xs font-normal">ج.م</span>
                 </td>

@@ -12,6 +12,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      /* Force English Western numerals across all Arabic text, browsers, and Windows locales */
+      html, body, * {
+        font-feature-settings: "locl" 0, "tnum" 1 !important;
+        -webkit-font-feature-settings: "locl" 0, "tnum" 1 !important;
+        font-variant-numeric: tabular-nums !important;
+      }
+    </style>
   </head>
   <body class="bg-[#070d17] text-[#dde2f1] antialiased selection:bg-blue-600 selection:text-white">
     <div id="root"></div>

@@ -3,9 +3,15 @@
 @layer base {
   * {
     font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "locl" 0, "tnum" 1 !important;
+    -webkit-font-feature-settings: "locl" 0, "tnum" 1 !important;
+    font-variant-numeric: tabular-nums !important;
   }
-  .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+  .font-mono,
+  input[type="number"],
+  input[type="tel"] {
+    font-family: 'JetBrains Mono', 'Segoe UI', system-ui, -apple-system, monospace;
+    font-feature-settings: "locl" 0, "tnum" 1 !important;
   }
 }
 
@@ -922,21 +928,28 @@ html.light button:hover .lucide-x {
    SIDEBAR NAVIGATION IN LIGHT MODE
    Ensure selected and hovered states look clean, executive and crisp
    ============================================================ */
-html.light #system-navigation-sidebar nav button:not(.active-nav-button) {
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600) {
   color: #334155 !important;
   background-color: transparent !important;
   border-color: transparent !important;
 }
 
-html.light #system-navigation-sidebar nav button:not(.active-nav-button):hover,
-html.light #system-navigation-sidebar nav button:not(.active-nav-button):focus {
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600):hover,
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600):focus,
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600):active {
   background-color: #eff6ff !important;
   color: #1d4ed8 !important;
-  border-color: #dbeafe !important;
+  border-color: #bfdbfe !important;
 }
 
-html.light #system-navigation-sidebar nav button:not(.active-nav-button):hover svg,
-html.light #system-navigation-sidebar nav button:not(.active-nav-button):focus svg {
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600) svg {
+  color: #64748b !important;
+  stroke: #64748b !important;
+}
+
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600):hover svg,
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600):focus svg,
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):not(.bg-\[\#2563eb\]):not(.bg-blue-600):active svg {
   color: #1d4ed8 !important;
   stroke: #1d4ed8 !important;
 }
@@ -956,44 +969,152 @@ html.light #system-navigation-sidebar nav button.bg-blue-600 * {
   color: #ffffff !important;
 }
 
+html.light #system-navigation-sidebar nav button.active-nav-button svg,
+html.light #system-navigation-sidebar nav button.bg-\[\#2563eb\] svg,
+html.light #system-navigation-sidebar nav button.bg-blue-600 svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
 /* ============================================================
-   UNIVERSAL DARK HOVER OVERRIDES IN LIGHT MODE
-   Prevents any element from turning into a black/dark navy blob on hover
+   UNIVERSAL DARK HOVER, FOCUS & ACTIVE OVERRIDES IN LIGHT MODE
+   Prevents any element from turning into a black/dark navy blob on hover/focus/active
    ============================================================ */
 html.light .hover\:bg-\[\#152336\]:hover,
+html.light .hover\:bg-\[\#152336\]:focus,
+html.light .hover\:bg-\[\#152336\]:active,
 html.light .hover\:bg-\[\#122033\]:hover,
+html.light .hover\:bg-\[\#122033\]:focus,
+html.light .hover\:bg-\[\#122033\]:active,
 html.light .hover\:bg-\[\#132032\]:hover,
+html.light .hover\:bg-\[\#132032\]:focus,
+html.light .hover\:bg-\[\#132032\]:active,
 html.light .hover\:bg-\[\#1a2d48\]:hover,
+html.light .hover\:bg-\[\#1a2d48\]:focus,
+html.light .hover\:bg-\[\#1a2d48\]:active,
 html.light .hover\:bg-\[\#18314e\]:hover,
+html.light .hover\:bg-\[\#18314e\]:focus,
+html.light .hover\:bg-\[\#18314e\]:active,
 html.light .hover\:bg-\[\#193556\]:hover,
+html.light .hover\:bg-\[\#193556\]:focus,
+html.light .hover\:bg-\[\#193556\]:active,
 html.light .hover\:bg-\[\#1a3556\]:hover,
+html.light .hover\:bg-\[\#1a3556\]:focus,
+html.light .hover\:bg-\[\#1a3556\]:active,
 html.light .hover\:bg-\[\#1b2d47\]:hover,
+html.light .hover\:bg-\[\#1b2d47\]:focus,
+html.light .hover\:bg-\[\#1b2d47\]:active,
 html.light .hover\:bg-\[\#16304c\]:hover,
+html.light .hover\:bg-\[\#16304c\]:focus,
+html.light .hover\:bg-\[\#16304c\]:active,
 html.light .hover\:bg-\[\#15273d\]:hover,
+html.light .hover\:bg-\[\#15273d\]:focus,
+html.light .hover\:bg-\[\#15273d\]:active,
 html.light .hover\:bg-\[\#173332\]:hover,
+html.light .hover\:bg-\[\#173332\]:focus,
+html.light .hover\:bg-\[\#173332\]:active,
 html.light .hover\:bg-\[\#152e2a\]:hover,
+html.light .hover\:bg-\[\#152e2a\]:focus,
+html.light .hover\:bg-\[\#152e2a\]:active,
 html.light .hover\:bg-\[\#2c363d\]:hover,
+html.light .hover\:bg-\[\#2c363d\]:focus,
+html.light .hover\:bg-\[\#2c363d\]:active,
+html.light .hover\:bg-\[\#111e30\]:hover,
+html.light .hover\:bg-\[\#111e30\]:focus,
+html.light .hover\:bg-\[\#111e30\]:active,
+html.light .hover\:bg-\[\#1a2e4c\]:hover,
+html.light .hover\:bg-\[\#1a2e4c\]:focus,
+html.light .hover\:bg-\[\#1a2e4c\]:active,
+html.light .hover\:bg-\[\#183152\]:hover,
+html.light .hover\:bg-\[\#183152\]:focus,
+html.light .hover\:bg-\[\#183152\]:active,
+html.light .hover\:bg-\[\#193252\]:hover,
+html.light .hover\:bg-\[\#193252\]:focus,
+html.light .hover\:bg-\[\#193252\]:active,
+html.light .hover\:bg-\[\#1d3049\]:hover,
+html.light .hover\:bg-\[\#1d3049\]:focus,
+html.light .hover\:bg-\[\#1d3049\]:active,
+html.light .hover\:bg-\[\#0d1726\]:hover,
+html.light .hover\:bg-\[\#0d1726\]:focus,
+html.light .hover\:bg-\[\#0d1726\]:active,
+html.light .hover\:bg-\[\#183252\]:hover,
+html.light .hover\:bg-\[\#183252\]:focus,
+html.light .hover\:bg-\[\#193355\]:hover,
+html.light .hover\:bg-\[\#193355\]:focus,
+html.light .hover\:bg-\[\#1b3152\]:hover,
+html.light .hover\:bg-\[\#1b3152\]:focus,
+html.light .hover\:bg-\[\#2c2819\]:hover,
+html.light .hover\:bg-\[\#2c2819\]:focus,
+html.light .hover\:bg-\[\#1a2e48\]:hover,
+html.light .hover\:bg-\[\#1a2e48\]:focus,
+html.light .hover\:bg-\[\#0f1b2c\]:hover,
+html.light .hover\:bg-\[\#0f1b2c\]:focus,
+html.light .hover\:bg-\[\#0f2a20\]:hover,
+html.light .hover\:bg-\[\#0f2a20\]:focus,
+html.light .hover\:bg-\[\#12233b\]:hover,
+html.light .hover\:bg-\[\#12233b\]:focus,
+html.light .hover\:bg-\[\#142a48\]:hover,
+html.light .hover\:bg-\[\#142a48\]:focus,
+html.light .hover\:bg-\[\#1b2f4d\]:hover,
+html.light .hover\:bg-\[\#1b2f4d\]:focus,
+html.light .hover\:bg-\[\#223755\]:hover,
+html.light .hover\:bg-\[\#223755\]:focus,
+html.light .hover\:bg-\[\#182c47\]:hover,
+html.light .hover\:bg-\[\#182c47\]:focus,
+html.light .hover\:bg-\[\#192c47\]:hover,
+html.light .hover\:bg-\[\#192c47\]:focus,
+html.light .hover\:bg-\[\#102d24\]:hover,
+html.light .hover\:bg-\[\#172b46\]:hover,
+html.light .hover\:bg-\[\#2b2112\]:hover,
+html.light .hover\:bg-\[\#334155\]:hover,
+html.light .hover\:bg-\[\#334155\]:focus,
 html.light .hover\:bg-slate-800:hover,
+html.light .hover\:bg-slate-800:focus,
 html.light .hover\:bg-slate-800\/50:hover,
 html.light .hover\:bg-slate-800\/80:hover {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
 }
 
 html.light .hover\:bg-\[\#152336\]:hover svg,
+html.light .hover\:bg-\[\#152336\]:focus svg,
 html.light .hover\:bg-\[\#122033\]:hover svg,
+html.light .hover\:bg-\[\#122033\]:focus svg,
 html.light .hover\:bg-\[\#132032\]:hover svg,
+html.light .hover\:bg-\[\#132032\]:focus svg,
 html.light .hover\:bg-\[\#1a2d48\]:hover svg,
+html.light .hover\:bg-\[\#1a2d48\]:focus svg,
 html.light .hover\:bg-\[\#18314e\]:hover svg,
+html.light .hover\:bg-\[\#18314e\]:focus svg,
 html.light .hover\:bg-\[\#193556\]:hover svg,
+html.light .hover\:bg-\[\#193556\]:focus svg,
 html.light .hover\:bg-\[\#1a3556\]:hover svg,
+html.light .hover\:bg-\[\#1a3556\]:focus svg,
 html.light .hover\:bg-\[\#1b2d47\]:hover svg,
+html.light .hover\:bg-\[\#1b2d47\]:focus svg,
 html.light .hover\:bg-\[\#16304c\]:hover svg,
+html.light .hover\:bg-\[\#16304c\]:focus svg,
 html.light .hover\:bg-\[\#15273d\]:hover svg,
+html.light .hover\:bg-\[\#15273d\]:focus svg,
 html.light .hover\:bg-\[\#2c363d\]:hover svg,
-html.light .hover\:bg-slate-800:hover svg {
-  color: #1e293b !important;
+html.light .hover\:bg-\[\#2c363d\]:focus svg,
+html.light .hover\:bg-\[\#111e30\]:hover svg,
+html.light .hover\:bg-\[\#111e30\]:focus svg,
+html.light .hover\:bg-\[\#183152\]:hover svg,
+html.light .hover\:bg-\[\#183152\]:focus svg,
+html.light .hover\:bg-\[\#193252\]:hover svg,
+html.light .hover\:bg-\[\#193252\]:focus svg,
+html.light .hover\:bg-slate-800:hover svg,
+html.light .hover\:bg-slate-800:focus svg {
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
+}
+
+/* Select options light styling */
+html.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 /* ============================================================

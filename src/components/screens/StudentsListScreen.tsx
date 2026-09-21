@@ -31,6 +31,7 @@ import { Student, Course } from '../../types';
 import { InstallmentSettleModal } from '../modals/InstallmentSettleModal';
 import { getStudentInstallmentInfo, getDueInstallments } from '../../utils/installmentUtils';
 import { downloadReceiptPdf, printReceiptPdf } from '../../utils/receiptPdf';
+import { formatNumber, formatCurrency } from '../../utils/formatters';
 
 interface StudentsListScreenProps {
   students: Student[];
@@ -278,7 +279,7 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
           </div>
           <div className="min-w-0">
             <div className="text-[11px] text-slate-400 font-medium truncate">إجمالي الطلاب</div>
-            <div className="text-base font-black text-white font-mono">{totalStudents}</div>
+            <div className="text-base font-black text-white font-mono" dir="ltr">{formatNumber(totalStudents)}</div>
           </div>
         </div>
 
@@ -290,7 +291,7 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
           <div className="min-w-0">
             <div className="text-[11px] text-slate-400 font-medium truncate">المبالغ المحصلة</div>
             <div className="text-base font-black text-emerald-400 font-mono" dir="ltr">
-              {totalCollected.toLocaleString('en-US')} ج.م
+              {formatCurrency(totalCollected)}
             </div>
           </div>
         </div>
@@ -303,7 +304,7 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
           <div className="min-w-0">
             <div className="text-[11px] text-slate-400 font-medium truncate">متبقي قيد التحصيل</div>
             <div className="text-base font-black text-amber-400 font-mono" dir="ltr">
-              {totalPendingAmount.toLocaleString('en-US')} ج.م
+              {formatCurrency(totalPendingAmount)}
             </div>
           </div>
         </div>
@@ -325,8 +326,9 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
               className={`text-base font-black font-mono ${
                 dueSoonCount > 0 ? 'text-rose-400' : 'text-slate-300'
               }`}
+              dir="ltr"
             >
-              {dueSoonCount > 0 ? `${dueSoonCount} مستحق` : 'الكل منتظم'}
+              {dueSoonCount > 0 ? `${formatNumber(dueSoonCount)} مستحق` : 'الكل منتظم'}
             </div>
           </div>
         </div>
@@ -348,8 +350,9 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
             className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
               paymentFilter === 'all' ? 'bg-blue-700 text-white' : 'bg-slate-800 text-slate-300'
             }`}
+            dir="ltr"
           >
-            {students.length}
+            {formatNumber(students.length)}
           </span>
         </button>
 
@@ -366,9 +369,9 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
           <Bell className="w-3.5 h-3.5" />
           <span>تنبيهات استحقاق الأقساط</span>
           {dueSoonCount > 0 && (
-            <span className="bg-rose-500 text-white text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold flex items-center gap-1">
+            <span className="bg-rose-500 text-white text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold flex items-center gap-1" dir="ltr">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-              <span>{dueSoonCount}</span>
+              <span>{formatNumber(dueSoonCount)}</span>
             </span>
           )}
         </button>
@@ -391,8 +394,9 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
                   ? 'bg-amber-700 text-white'
                   : 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
               }`}
+              dir="ltr"
             >
-              {pendingInstallmentsCount}
+              {formatNumber(pendingInstallmentsCount)}
             </span>
           )}
         </button>
@@ -414,8 +418,9 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
                 ? 'bg-emerald-700 text-white'
                 : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60'
             }`}
+            dir="ltr"
           >
-            {paidInstallmentsCount}
+            {formatNumber(paidInstallmentsCount)}
           </span>
         </button>
 
@@ -465,12 +470,12 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
               onChange={(e) => setSelectedGrade(e.target.value)}
               className="w-full bg-[#070d17] border border-[#1c2e47] focus:border-blue-500 rounded-xl pr-9 pl-4 py-2.5 text-xs text-white outline-none transition-all cursor-pointer appearance-none shadow-inner"
             >
-              <option value="all">جميع الصفوف والمراحل الدراسية ({students.length})</option>
+              <option value="all">جميع الصفوف والمراحل الدراسية ({formatNumber(students.length)})</option>
               {allFilterGrades.map((g) => {
                 const count = students.filter((s) => s.grade === g).length;
                 return (
                   <option key={g} value={g}>
-                    {g} ({count} طالب)
+                    {g} ({formatNumber(count)} طالب)
                   </option>
                 );
               })}
@@ -643,11 +648,11 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
                       <div className="flex flex-col gap-1 min-w-[160px]">
                         <div className="flex items-center gap-1.5 font-mono whitespace-nowrap">
                           <span className="font-extrabold text-white text-sm" dir="ltr">
-                            {s.amountPaid.toLocaleString('en-US')} ج.م
+                            {formatCurrency(s.amountPaid)}
                           </span>
                           {isInstallment && s.totalCourseFee && (
                             <span className="text-[11px] text-slate-400" dir="ltr">
-                              / {s.totalCourseFee.toLocaleString('en-US')} ج.م
+                              / {formatCurrency(s.totalCourseFee)}
                             </span>
                           )}
                         </div>
@@ -695,7 +700,7 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
                               />
                               <span>{instInfo.badgeText}</span>
                               <span className="font-mono text-amber-400 font-extrabold" dir="ltr">
-                                (باقي: {instInfo.remainingAmount.toLocaleString('en-US')} ج.م)
+                                (باقي: {formatCurrency(instInfo.remainingAmount)})
                               </span>
                             </div>
 

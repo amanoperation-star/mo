@@ -92,8 +92,8 @@ export const InstallmentAlertSidebarCard: React.FC<InstallmentAlertSidebarCardPr
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono">
-            {count} {count === 1 ? 'طالب' : 'طلاب'}
+          <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono" dir="ltr">
+            {count.toLocaleString('en-US')} {count === 1 ? 'طالب' : 'طلاب'}
           </span>
           <button
             type="button"
@@ -115,21 +115,21 @@ export const InstallmentAlertSidebarCard: React.FC<InstallmentAlertSidebarCardPr
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+        <div className="flex items-center gap-1.5 flex-wrap justify-end font-mono" dir="ltr">
           {overdueCount > 0 && (
             <span className="text-[10px] font-bold text-rose-300 bg-rose-950/70 border border-rose-800/60 px-2 py-0.5 rounded-lg flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-              <span>{overdueCount} متأخر</span>
+              <span>{overdueCount.toLocaleString('en-US')} متأخر</span>
             </span>
           )}
           {dueTodayCount > 0 && (
             <span className="text-[10px] font-bold text-amber-300 bg-amber-950/70 border border-amber-800/60 px-2 py-0.5 rounded-lg">
-              {dueTodayCount} اليوم
+              {dueTodayCount.toLocaleString('en-US')} اليوم
             </span>
           )}
           {upcomingCount > 0 && (
             <span className="text-[10px] font-bold text-slate-300 bg-[#121e30] border border-[#1e3250] px-2 py-0.5 rounded-lg">
-              {upcomingCount} وشيك
+              {upcomingCount.toLocaleString('en-US')} وشيك
             </span>
           )}
         </div>

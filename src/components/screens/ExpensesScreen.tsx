@@ -94,7 +94,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({
           <div className="text-xl font-extrabold text-white font-mono" dir="ltr">
             {totalExpenses.toLocaleString('en-US')} <span className="text-xs font-normal text-slate-400 font-sans">ج.م</span>
           </div>
-          <div className="text-[10px] text-amber-400 font-semibold">{expenses.length} بنود مصروفة</div>
+          <div className="text-[10px] text-amber-400 font-semibold font-mono" dir="ltr">{expenses.length.toLocaleString('en-US')} بنود مصروفة</div>
         </div>
 
         {/* Net Profit */}

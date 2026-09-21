@@ -19,6 +19,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { Course, Student } from '../../types';
+import { formatNumber, formatCurrency } from '../../utils/formatters';
 
 interface CoursesManagementScreenProps {
   courses: Course[];
@@ -275,7 +276,7 @@ export const CoursesManagementScreen: React.FC<CoursesManagementScreenProps> = (
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>الكورسات والمقررات الدراسية ({courses.length})</span>
+          <span>الكورسات والمقررات الدراسية ({formatNumber(courses.length)})</span>
         </button>
 
         <button
@@ -288,7 +289,7 @@ export const CoursesManagementScreen: React.FC<CoursesManagementScreenProps> = (
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>المراحل والصفوف الدراسية ({grades.length})</span>
+          <span>المراحل والصفوف الدراسية ({formatNumber(grades.length)})</span>
         </button>
       </div>
 
@@ -515,7 +516,7 @@ export const CoursesManagementScreen: React.FC<CoursesManagementScreenProps> = (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-400 flex items-center gap-1 font-semibold ml-1">
                         <Users className="w-3.5 h-3.5 text-blue-400" />
-                        <span>{enrolledInCourse} مشترك</span>
+                        <span>{formatNumber(enrolledInCourse)} مشترك</span>
                       </span>
 
                       {/* EDIT BUTTON (Allows editing Grade, Schedule, Name, Price) */}
@@ -634,14 +635,14 @@ export const CoursesManagementScreen: React.FC<CoursesManagementScreenProps> = (
                     <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                       <div className="bg-[#0d1726] border border-[#172b45] p-2 rounded-xl text-center">
                         <span className="text-slate-400 block text-[10px]">الكورسات المرتبطة</span>
-                        <span className="font-extrabold text-blue-400 font-mono text-sm">
-                          {matchedCourses.length} كورس
+                        <span className="font-extrabold text-blue-400 font-mono text-sm" dir="ltr">
+                          {formatNumber(matchedCourses.length)} كورس
                         </span>
                       </div>
                       <div className="bg-[#0d1726] border border-[#172b45] p-2 rounded-xl text-center">
                         <span className="text-slate-400 block text-[10px]">الطلاب المسجلين</span>
-                        <span className="font-extrabold text-emerald-400 font-mono text-sm">
-                          {matchedStudents.length} طالب
+                        <span className="font-extrabold text-emerald-400 font-mono text-sm" dir="ltr">
+                          {formatNumber(matchedStudents.length)} طالب
                         </span>
                       </div>
                     </div>

@@ -50,7 +50,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
             <span>إجمالي المشتركين</span>
             <Users className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-black text-white font-mono">{students.length}</div>
+          <div className="text-2xl font-black text-white font-mono" dir="ltr">{students.length.toLocaleString('en-US')}</div>
           <div className="text-[10px] text-emerald-400 font-semibold">اشتراكات مؤكدة بالمنصة</div>
         </div>
 
@@ -70,7 +70,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
             <span>الكورسات المتاحة</span>
             <BookOpen className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-white font-mono">{courses.length}</div>
+          <div className="text-2xl font-black text-white font-mono" dir="ltr">{courses.length.toLocaleString('en-US')}</div>
           <div className="text-[10px] text-amber-400 font-semibold">جاهزة للبث والتسجيل</div>
         </div>
 
@@ -79,7 +79,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
             <span>نسبة الرضا والمتابعة</span>
             <Award className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-2xl font-black text-cyan-400 font-mono">99.4%</div>
+          <div className="text-2xl font-black text-cyan-400 font-mono" dir="ltr">99.4%</div>
           <div className="text-[10px] text-cyan-400 font-semibold">تسليم إيصالات الواتساب فورياً</div>
         </div>
       </div>

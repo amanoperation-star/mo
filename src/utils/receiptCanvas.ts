@@ -236,7 +236,7 @@ export async function generateProfessionalReceipt(
 
   ctx.font = 'bold 44px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = isPendingInstallment ? '#fbbf24' : '#34d399';
-  ctx.fillText(`${student.amountPaid} ج.م`, amountBoxX + amountBoxW / 2, amountBoxY + 90);
+  ctx.fillText(`${student.amountPaid.toLocaleString('en-US')} ج.م`, amountBoxX + amountBoxW / 2, amountBoxY + 90);
 
   // Paid Status Pill
   drawRoundedRect(ctx, amountBoxX + 25, amountBoxY + 120, amountBoxW - 50, 36, 18);
@@ -245,7 +245,7 @@ export async function generateProfessionalReceipt(
   ctx.font = 'bold 14px "Segoe UI", Tahoma, Arial, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(
-    isPendingInstallment ? `متبقي قسط: ${remAmount} ج.م` : '✓  تم التحصيل وتأكيد الاشتراك',
+    isPendingInstallment ? `متبقي قسط: ${remAmount.toLocaleString('en-US')} ج.م` : '✓  تم التحصيل وتأكيد الاشتراك',
     amountBoxX + amountBoxW / 2,
     amountBoxY + 144
   );
@@ -258,7 +258,7 @@ export async function generateProfessionalReceipt(
     drawInfoRow(
       ctx,
       'نظام الاشتراك:',
-      isPendingInstallment ? `تقسيط (إجمالي ${fee} ج.م)` : `تقسيط (مسدد بالكامل)`,
+      isPendingInstallment ? `تقسيط (إجمالي ${fee.toLocaleString('en-US')} ج.م)` : `تقسيط (مسدد بالكامل)`,
       900,
       finBoxY + 105,
       '#fde68a',

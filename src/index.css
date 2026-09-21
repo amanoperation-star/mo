@@ -66,25 +66,42 @@ html.light .bg-\[\#0d1522\] {
 
 /* Screen cards and primary containers */
 html.light .bg-\[\#0b1320\],
-html.light .bg-\[\#0b1422\] {
+html.light .bg-\[\#0b1422\],
+html.light .bg-\[\#0b1322\],
+html.light .bg-\[\#0b1424\],
+html.light .bg-\[\#0e1726\],
+html.light .bg-\[\#080f1a\],
+html.light .bg-\[\#09111c\],
+html.light .bg-\[\#0f172a\],
+html.light .bg-\[\#08101c\],
+html.light .bg-\[\#09101c\],
+html.light .bg-\[\#0a121e\],
+html.light .bg-\[\#101b2a\] {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05) !important;
 }
 
 /* Secondary cards & nested sections */
-html.light .bg-\[\#080f1a\],
-html.light .bg-\[\#0e1726\],
-html.light .bg-\[\#0f172a\],
-html.light .bg-\[\#09111c\] {
+html.light .bg-\[\#0d1726\],
+html.light .bg-\[\#111e30\],
+html.light .bg-\[\#121e30\],
+html.light .bg-\[\#141e30\],
+html.light .bg-\[\#121927\],
+html.light .bg-\[\#0d1624\],
+html.light .bg-\[\#0c1626\] {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
-html.light .bg-\[\#0d1726\] {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+/* Progress bar tracks in light mode */
+html.light .bg-\[\#182638\],
+html.light .bg-\[\#18263a\],
+html.light .bg-\[\#152336\],
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800 {
+  background-color: #e2e8f0 !important;
 }
 
 /* ============================================================
@@ -114,7 +131,7 @@ html.light .text-slate-300 {
   color: #334155 !important;
 }
 html.light .text-slate-400 {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 html.light .text-slate-500 {
   color: #64748b !important;
@@ -673,19 +690,54 @@ html.light .bg-amber-500\/20 svg {
 /* ============================================================
    BORDER OVERRIDES IN LIGHT MODE
    ============================================================ */
+html.light .border-\[\#132238\],
+html.light .border-\[\#13253d\],
+html.light .border-\[\#142236\],
+html.light .border-\[\#142337\],
+html.light .border-\[\#142339\],
+html.light .border-\[\#14233a\],
+html.light .border-\[\#15253b\],
+html.light .border-\[\#162338\],
 html.light .border-\[\#16253b\],
+html.light .border-\[\#16273e\],
+html.light .border-\[\#162740\],
+html.light .border-\[\#162942\],
 html.light .border-\[\#17273f\],
+html.light .border-\[\#172840\],
+html.light .border-\[\#172b45\],
+html.light .border-\[\#172b47\],
+html.light .border-\[\#18263a\],
+html.light .border-\[\#182a40\],
+html.light .border-\[\#182a44\],
+html.light .border-\[\#182c47\],
 html.light .border-\[\#192b42\],
 html.light .border-\[\#1a2b42\],
-html.light .border-\[\#1b2f48\],
+html.light .border-\[\#1a2d46\],
+html.light .border-\[\#1a2d48\],
+html.light .border-\[\#1a2f4a\],
+html.light .border-\[\#1a3050\],
 html.light .border-\[\#1b2b40\],
+html.light .border-\[\#1b2c45\],
+html.light .border-\[\#1b2f48\],
+html.light .border-\[\#1b2f4d\],
+html.light .border-\[\#1b3150\],
+html.light .border-\[\#1c2d44\],
 html.light .border-\[\#1c2e47\],
+html.light .border-\[\#1d314f\],
+html.light .border-\[\#1d3350\],
+html.light .border-\[\#1d3354\],
+html.light .border-\[\#1d3556\],
+html.light .border-\[\#1d385c\],
 html.light .border-\[\#1e293b\],
+html.light .border-\[\#1e2f47\],
+html.light .border-\[\#1e3250\],
 html.light .border-\[\#1e3452\],
 html.light .border-\[\#1e3a5f\],
 html.light .border-\[\#1f3350\],
 html.light .border-\[\#1f3654\],
-html.light .border-\[\#132238\],
+html.light .border-\[\#1f385c\],
+html.light .border-\[\#203656\],
+html.light .border-\[\#223755\],
 html.light .border-\[\#223a5d\],
 html.light .border-\[\#23354d\] {
   border-color: #e2e8f0 !important;
@@ -864,6 +916,84 @@ html.light button:hover svg.lucide-x,
 html.light button:hover .lucide-x {
   color: #dc2626 !important;
   stroke: #dc2626 !important;
+}
+
+/* ============================================================
+   SIDEBAR NAVIGATION IN LIGHT MODE
+   Ensure selected and hovered states look clean, executive and crisp
+   ============================================================ */
+html.light #system-navigation-sidebar nav button:not(.active-nav-button) {
+  color: #334155 !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):hover,
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):focus {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #dbeafe !important;
+}
+
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):hover svg,
+html.light #system-navigation-sidebar nav button:not(.active-nav-button):focus svg {
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
+}
+
+html.light #system-navigation-sidebar nav button.active-nav-button,
+html.light #system-navigation-sidebar nav button.bg-\[\#2563eb\],
+html.light #system-navigation-sidebar nav button.bg-blue-600 {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3) !important;
+}
+
+html.light #system-navigation-sidebar nav button.active-nav-button *,
+html.light #system-navigation-sidebar nav button.bg-\[\#2563eb\] *,
+html.light #system-navigation-sidebar nav button.bg-blue-600 * {
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   UNIVERSAL DARK HOVER OVERRIDES IN LIGHT MODE
+   Prevents any element from turning into a black/dark navy blob on hover
+   ============================================================ */
+html.light .hover\:bg-\[\#152336\]:hover,
+html.light .hover\:bg-\[\#122033\]:hover,
+html.light .hover\:bg-\[\#132032\]:hover,
+html.light .hover\:bg-\[\#1a2d48\]:hover,
+html.light .hover\:bg-\[\#18314e\]:hover,
+html.light .hover\:bg-\[\#193556\]:hover,
+html.light .hover\:bg-\[\#1a3556\]:hover,
+html.light .hover\:bg-\[\#1b2d47\]:hover,
+html.light .hover\:bg-\[\#16304c\]:hover,
+html.light .hover\:bg-\[\#15273d\]:hover,
+html.light .hover\:bg-\[\#173332\]:hover,
+html.light .hover\:bg-\[\#152e2a\]:hover,
+html.light .hover\:bg-\[\#2c363d\]:hover,
+html.light .hover\:bg-slate-800:hover,
+html.light .hover\:bg-slate-800\/50:hover,
+html.light .hover\:bg-slate-800\/80:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .hover\:bg-\[\#152336\]:hover svg,
+html.light .hover\:bg-\[\#122033\]:hover svg,
+html.light .hover\:bg-\[\#132032\]:hover svg,
+html.light .hover\:bg-\[\#1a2d48\]:hover svg,
+html.light .hover\:bg-\[\#18314e\]:hover svg,
+html.light .hover\:bg-\[\#193556\]:hover svg,
+html.light .hover\:bg-\[\#1a3556\]:hover svg,
+html.light .hover\:bg-\[\#1b2d47\]:hover svg,
+html.light .hover\:bg-\[\#16304c\]:hover svg,
+html.light .hover\:bg-\[\#15273d\]:hover svg,
+html.light .hover\:bg-\[\#2c363d\]:hover svg,
+html.light .hover\:bg-slate-800:hover svg {
+  color: #1e293b !important;
 }
 
 /* ============================================================

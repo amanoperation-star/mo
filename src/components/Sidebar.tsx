@@ -142,17 +142,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
               id={`nav-item-${item.id}`}
               onClick={() => onSelectScreen(item.id)}
               type="button"
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer text-right ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer text-right group ${
                 isActive
-                  ? 'bg-[#2563eb] text-white font-bold shadow-lg shadow-blue-600/30 border border-blue-400/40'
-                  : 'text-slate-300 hover:text-white hover:bg-[#152336] border border-transparent'
+                  ? 'bg-[#2563eb] text-white font-bold shadow-lg shadow-blue-600/30 border border-blue-400/40 active-nav-button'
+                  : isDarkMode
+                  ? 'text-slate-300 hover:text-white hover:bg-[#152336] border border-transparent'
+                  : 'text-slate-700 hover:text-blue-600 hover:bg-blue-50/90 active:bg-blue-100 border border-transparent'
               }`}
             >
               <div className="flex items-center gap-2.5">
                 {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm shrink-0" />
                 )}
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <Icon
+                  className={`w-4 h-4 shrink-0 transition-colors ${
+                    isActive
+                      ? 'text-white'
+                      : isDarkMode
+                      ? 'text-slate-400 group-hover:text-white'
+                      : 'text-slate-500 group-hover:text-blue-600'
+                  }`}
+                />
                 <span>{item.label}</span>
               </div>
 
@@ -160,10 +170,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span
                   className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
                     item.badgeType === 'success'
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      ? isDarkMode
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-emerald-100 text-emerald-700 border-emerald-300'
                       : item.badgeType === 'urgent'
-                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                      : 'bg-[#1a2639] text-slate-300 border-slate-700'
+                      ? isDarkMode
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                        : 'bg-rose-100 text-rose-700 border-rose-300'
+                      : isActive
+                      ? 'bg-blue-700 text-white border-blue-400/40'
+                      : isDarkMode
+                      ? 'bg-[#1a2639] text-slate-300 border-slate-700'
+                      : 'bg-slate-100 text-slate-700 border-slate-200'
                   }`}
                 >
                   {item.badge}
@@ -187,15 +205,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Appearance Card */}
         <div
           id="theme-appearance-card"
-          className="bg-[#14191d] border border-amber-500/25 rounded-xl p-3 flex items-center justify-between shadow-sm transition-all"
+          className={`rounded-xl p-3 flex items-center justify-between shadow-sm transition-all border ${
+            isDarkMode
+              ? 'bg-[#14191d] border-amber-500/25'
+              : 'bg-amber-50/80 border-amber-200/80'
+          }`}
         >
           <div className="flex items-center gap-2">
             {isDarkMode ? (
               <Moon className="w-4 h-4 text-amber-400 shrink-0 fill-amber-400/20" />
             ) : (
-              <Sun className="w-4 h-4 text-amber-500 shrink-0 fill-amber-500/20" />
+              <Sun className="w-4 h-4 text-amber-600 shrink-0 fill-amber-500/20" />
             )}
-            <span className="text-xs font-bold text-amber-300">
+            <span className={`text-xs font-bold ${isDarkMode ? 'text-amber-300' : 'text-amber-900'}`}>
               {isDarkMode ? 'المظهر: ليلي (Dark)' : 'المظهر: نهاري (Light)'}
             </span>
           </div>
@@ -203,7 +225,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             id="theme-appearance-toggle-btn"
             onClick={onToggleTheme}
             type="button"
-            className="bg-[#20272c] hover:bg-[#2c363d] text-slate-200 text-xs px-2.5 py-1 rounded-md border border-slate-700 font-semibold cursor-pointer transition-colors"
+            className={`text-xs px-2.5 py-1 rounded-md border font-semibold cursor-pointer transition-colors ${
+              isDarkMode
+                ? 'bg-[#20272c] hover:bg-[#2c363d] text-slate-200 border-slate-700'
+                : 'bg-white hover:bg-amber-100 text-amber-900 border-amber-300 shadow-sm'
+            }`}
           >
             {isDarkMode ? 'تبديل للنهاري ☀️' : 'تبديل لليلي 🌙'}
           </button>
@@ -224,9 +250,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </span>
           </div>
 
-          <div className="text-2xl font-black text-white font-mono tracking-tight flex items-baseline gap-1.5">
-            <span>{totalRevenue.toLocaleString('ar-EG')}</span>
-            <span className="text-xs font-bold text-slate-400">ج.م</span>
+          <div className="text-2xl font-black text-white font-mono tracking-tight flex items-baseline gap-1.5" dir="ltr">
+            <span>{totalRevenue.toLocaleString('en-US')}</span>
+            <span className="text-xs font-bold text-slate-400 font-sans">ج.م</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#16253b]">
@@ -234,7 +260,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               id="export-json-sidebar-button"
               onClick={onExportJson}
               type="button"
-              className="bg-[#132032] hover:bg-[#1b2d47] border border-[#1f3654] text-xs text-slate-200 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all cursor-pointer"
+              className={`border text-xs py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all cursor-pointer ${
+                isDarkMode
+                  ? 'bg-[#132032] hover:bg-[#1b2d47] border-[#1f3654] text-slate-200'
+                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+              }`}
               title="تصدير قاعدة البيانات كاملة كملف JSON"
             >
               <Download className="w-3.5 h-3.5 text-blue-400" />
@@ -244,7 +274,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               id="export-excel-sidebar-button"
               onClick={onExportExcel}
               type="button"
-              className="bg-[#132032] hover:bg-[#1b2d47] border border-[#1f3654] text-xs text-slate-200 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all cursor-pointer"
+              className={`border text-xs py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all cursor-pointer ${
+                isDarkMode
+                  ? 'bg-[#132032] hover:bg-[#1b2d47] border-[#1f3654] text-slate-200'
+                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+              }`}
               title="تصدير سجل الطلاب إلى ملف Excel / CSV"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />

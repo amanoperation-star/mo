@@ -59,10 +59,10 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
             <span>معدل التحصيل</span>
             <TrendingUp className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-400 font-mono">
-            {totalRevenue.toLocaleString('ar-EG')} <span className="text-xs font-normal">ج.م</span>
+          <div className="text-2xl font-black text-emerald-400 font-mono" dir="ltr">
+            {totalRevenue.toLocaleString('en-US')} <span className="text-xs font-normal font-sans">ج.م</span>
           </div>
-          <div className="text-[10px] text-slate-400 font-semibold">متوسط {students.length > 0 ? Math.round(totalRevenue / students.length) : 0} ج.م للطالب</div>
+          <div className="text-[10px] text-slate-400 font-semibold" dir="ltr">متوسط {(students.length > 0 ? Math.round(totalRevenue / students.length) : 0).toLocaleString('en-US')} ج.م للطالب</div>
         </div>
 
         <div className="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-4 flex flex-col gap-1.5">

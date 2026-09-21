@@ -79,32 +79,32 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({
             <span>إجمالي الإيرادات</span>
             <TrendingUp className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-xl font-extrabold text-white font-mono">
-            {totalRevenue.toLocaleString('ar-EG')} <span className="text-xs font-normal text-slate-400">ج.م</span>
+          <div className="text-xl font-extrabold text-white font-mono" dir="ltr">
+            {totalRevenue.toLocaleString('en-US')} <span className="text-xs font-normal text-slate-400 font-sans">ج.م</span>
           </div>
           <div className="text-[10px] text-emerald-400 font-semibold">اشتراكات الطلاب النشطة</div>
         </div>
 
         {/* Total Expenses */}
-        <div className="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-4 flex flex-col gap-1.5">
+        <div className="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-4 flex flex-col gap-1.5 shadow-sm">
           <div className="text-xs text-slate-400 font-bold flex items-center justify-between">
             <span>إجمالي المصروفات</span>
             <TrendingDown className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-xl font-extrabold text-white font-mono">
-            {totalExpenses.toLocaleString('ar-EG')} <span className="text-xs font-normal text-slate-400">ج.م</span>
+          <div className="text-xl font-extrabold text-white font-mono" dir="ltr">
+            {totalExpenses.toLocaleString('en-US')} <span className="text-xs font-normal text-slate-400 font-sans">ج.م</span>
           </div>
           <div className="text-[10px] text-amber-400 font-semibold">{expenses.length} بنود مصروفة</div>
         </div>
 
         {/* Net Profit */}
-        <div className="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-4 flex flex-col gap-1.5">
+        <div className="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-4 flex flex-col gap-1.5 shadow-sm">
           <div className="text-xs text-slate-400 font-bold flex items-center justify-between">
             <span>صافي الربح</span>
             <DollarSign className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-xl font-extrabold text-blue-400 font-mono">
-            {netProfit.toLocaleString('ar-EG')} <span className="text-xs font-normal text-slate-400">ج.م</span>
+          <div className="text-xl font-extrabold text-blue-400 font-mono" dir="ltr">
+            {netProfit.toLocaleString('en-US')} <span className="text-xs font-normal text-slate-400 font-sans">ج.م</span>
           </div>
           <div className="text-[10px] text-slate-400 font-semibold">بعد خصم التكاليف</div>
         </div>
@@ -204,8 +204,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({
                     {exp.category}
                   </span>
                 </td>
-                <td className="p-3.5 font-mono font-bold text-amber-400 text-sm">
-                  {exp.amount.toLocaleString('ar-EG')} ج.م
+                <td className="p-3.5 font-mono font-bold text-amber-400 text-sm" dir="ltr">
+                  {exp.amount.toLocaleString('en-US')} <span className="font-sans text-xs font-normal">ج.م</span>
                 </td>
                 <td className="p-3.5 text-slate-400 font-mono">{exp.date}</td>
                 <td className="p-3.5 text-slate-300">{exp.paidBy}</td>

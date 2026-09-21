@@ -545,7 +545,7 @@ export const NewStudentScreen: React.FC<NewStudentScreenProps> = ({
                     نظام الأقساط مفعل
                   </span>
                   <span className="text-[11px] font-bold text-slate-300">
-                    المتبقي: <span className="text-amber-400 font-mono">{remainingInstallment.toLocaleString('ar-EG')} ج.م</span>
+                    المتبقي: <span className="text-amber-400 font-mono" dir="ltr">{remainingInstallment.toLocaleString('en-US')} ج.م</span>
                   </span>
                 </div>
               </div>
@@ -590,7 +590,7 @@ export const NewStudentScreen: React.FC<NewStudentScreenProps> = ({
                     المبلغ المتبقي من القسط
                   </label>
                   <div className="bg-[#0b1320] border border-amber-500/30 rounded-xl px-3.5 py-2.5 text-sm text-amber-400 font-mono font-bold flex items-center justify-between">
-                    <span>{remainingInstallment.toLocaleString('ar-EG')} ج.م</span>
+                    <span dir="ltr">{remainingInstallment.toLocaleString('en-US')} <span className="font-sans text-xs">ج.م</span></span>
                     <span className="text-[10px] text-slate-400 font-sans">
                       {remainingInstallment === 0 ? 'مسدد بالكامل ✓' : 'متبقي'}
                     </span>

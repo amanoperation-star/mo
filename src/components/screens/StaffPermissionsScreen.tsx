@@ -272,8 +272,8 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
                     <DollarSign className="w-3 h-3 text-emerald-400" />
                     <span>الراتب الأساسي:</span>
                   </span>
-                  <span className="font-mono text-emerald-400 font-bold">
-                    {(member.baseSalary || 0).toLocaleString('ar-EG')} ج.م
+                  <span className="font-mono text-emerald-400 font-bold" dir="ltr">
+                    {(member.baseSalary || 0).toLocaleString('en-US')} <span className="font-sans text-xs font-normal">ج.م</span>
                   </span>
                 </div>
               </div>

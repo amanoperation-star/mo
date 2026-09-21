@@ -153,20 +153,20 @@ export const InstallmentSettleModal: React.FC<InstallmentSettleModalProps> = ({
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#132238] text-center">
               <div className="bg-[#0d1726] p-2 rounded-lg">
                 <span className="block text-[10px] text-slate-400">إجمالي الكورس</span>
-                <span className="text-xs font-bold font-mono text-slate-200">
-                  {totalFee.toLocaleString('ar-EG')} ج.م
+                <span className="text-xs font-bold font-mono text-slate-200" dir="ltr">
+                  {totalFee.toLocaleString('en-US')} <span className="font-sans text-[10px] font-normal">ج.م</span>
                 </span>
               </div>
               <div className="bg-[#0d1726] p-2 rounded-lg">
                 <span className="block text-[10px] text-slate-400">المسدد سابقاً</span>
-                <span className="text-xs font-bold font-mono text-emerald-400">
-                  {student.amountPaid.toLocaleString('ar-EG')} ج.م
+                <span className="text-xs font-bold font-mono text-emerald-400" dir="ltr">
+                  {student.amountPaid.toLocaleString('en-US')} <span className="font-sans text-[10px] font-normal">ج.م</span>
                 </span>
               </div>
               <div className="bg-amber-950/40 border border-amber-800/40 p-2 rounded-lg">
                 <span className="block text-[10px] text-amber-300 font-bold">المتبقي حالياً</span>
-                <span className="text-xs font-bold font-mono text-amber-400">
-                  {currentRemaining.toLocaleString('ar-EG')} ج.م
+                <span className="text-xs font-bold font-mono text-amber-400" dir="ltr">
+                  {currentRemaining.toLocaleString('en-US')} <span className="font-sans text-[10px] font-normal">ج.م</span>
                 </span>
               </div>
             </div>

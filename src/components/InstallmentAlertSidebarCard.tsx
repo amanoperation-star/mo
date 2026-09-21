@@ -110,8 +110,8 @@ export const InstallmentAlertSidebarCard: React.FC<InstallmentAlertSidebarCardPr
       <div className="bg-[#080e18] border border-[#162338] rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-inner">
         <div className="flex flex-col">
           <span className="text-[10px] text-slate-400 font-medium">إجمالي المستحق</span>
-          <span className="text-xs font-black text-amber-300 font-mono tracking-wide">
-            {totalDueAmount.toLocaleString('ar-EG')} ج.م
+          <span className="text-xs font-black text-amber-300 font-mono tracking-wide" dir="ltr">
+            {totalDueAmount.toLocaleString('en-US')} <span className="font-sans text-[10px] font-normal">ج.م</span>
           </span>
         </div>
 
@@ -183,8 +183,8 @@ export const InstallmentAlertSidebarCard: React.FC<InstallmentAlertSidebarCardPr
                   </div>
 
                   <div className="text-left shrink-0">
-                    <span className="text-xs font-extrabold text-amber-400 font-mono">
-                      {info.remainingAmount.toLocaleString('ar-EG')} ج.م
+                    <span className="text-xs font-extrabold text-amber-400 font-mono" dir="ltr">
+                      {info.remainingAmount.toLocaleString('en-US')} <span className="font-sans text-[10px] font-normal">ج.م</span>
                     </span>
                     <div className="text-[9px] text-slate-400">متبقي</div>
                   </div>

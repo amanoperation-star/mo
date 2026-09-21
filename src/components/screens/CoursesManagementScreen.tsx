@@ -507,8 +507,8 @@ export const CoursesManagementScreen: React.FC<CoursesManagementScreenProps> = (
 
                   {/* Footer with Price & Actions: Edit & Delete */}
                   <div className="flex items-center justify-between pt-3 border-t border-[#132238]">
-                    <div className="flex items-baseline gap-1 text-emerald-400 font-black font-mono text-lg">
-                      <span>{course.price.toLocaleString('ar-EG')}</span>
+                    <div className="flex items-baseline gap-1 text-emerald-400 font-black font-mono text-lg" dir="ltr">
+                      <span>{course.price.toLocaleString('en-US')}</span>
                       <span className="text-xs text-slate-400 font-sans font-normal">ج.م</span>
                     </div>
 

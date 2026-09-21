@@ -224,7 +224,7 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
           ...supabaseForm,
           isConnected: true,
           syncStatus: 'connected',
-          lastSyncTime: new Date().toLocaleTimeString('ar-EG', {
+          lastSyncTime: new Date().toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
@@ -258,7 +258,7 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
             ...supabaseForm,
             isConnected: true,
             syncStatus: 'connected',
-            lastSyncTime: new Date().toLocaleTimeString('ar-EG', {
+            lastSyncTime: new Date().toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
               second: '2-digit',

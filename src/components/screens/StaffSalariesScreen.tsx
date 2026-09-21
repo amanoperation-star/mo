@@ -29,8 +29,8 @@ export const StaffSalariesScreen: React.FC<StaffSalariesScreenProps> = ({ staff,
 
         <div className="bg-[#121e30] border border-amber-500/30 px-3.5 py-1.5 rounded-xl flex items-center gap-2">
           <span className="text-xs text-slate-400">إجمالي الرواتب:</span>
-          <span className="text-sm font-bold text-amber-300 font-mono">
-            {totalSalaries.toLocaleString('ar-EG')} ج.م
+          <span className="text-sm font-bold text-amber-300 font-mono" dir="ltr">
+            {totalSalaries.toLocaleString('en-US')} <span className="font-sans text-xs font-normal">ج.م</span>
           </span>
         </div>
       </div>
@@ -57,14 +57,14 @@ export const StaffSalariesScreen: React.FC<StaffSalariesScreenProps> = ({ staff,
                   <div className="text-[11px] text-blue-400 font-medium mt-0.5">{member.role}</div>
                 </td>
                 <td className="p-3.5 font-mono text-slate-300">{member.phone}</td>
-                <td className="p-3.5 font-mono text-slate-200">
-                  {member.baseSalary.toLocaleString('ar-EG')} ج.م
+                <td className="p-3.5 font-mono text-slate-200" dir="ltr">
+                  {member.baseSalary.toLocaleString('en-US')} <span className="font-sans text-xs font-normal">ج.م</span>
                 </td>
-                <td className="p-3.5 font-mono text-emerald-400 font-bold">
-                  +{member.bonus.toLocaleString('ar-EG')} ج.م
+                <td className="p-3.5 font-mono text-emerald-400 font-bold" dir="ltr">
+                  +{member.bonus.toLocaleString('en-US')} <span className="font-sans text-xs font-normal">ج.م</span>
                 </td>
-                <td className="p-3.5 font-mono font-bold text-amber-400 text-sm">
-                  {(member.baseSalary + member.bonus).toLocaleString('ar-EG')} ج.م
+                <td className="p-3.5 font-mono font-bold text-amber-400 text-sm" dir="ltr">
+                  {(member.baseSalary + member.bonus).toLocaleString('en-US')} <span className="font-sans text-xs font-normal">ج.م</span>
                 </td>
                 <td className="p-3.5">
                   <span

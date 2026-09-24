@@ -127,6 +127,7 @@ export function saveStoredCenterSettings(settings: CenterSettings): void {
 export const defaultSupabaseConfig: SupabaseConfig = {
   projectUrl: '',
   anonKey: '',
+  publishableKey: '',
   isConnected: false,
   autoSync: true,
   lastSyncTime: '',

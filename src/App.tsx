@@ -88,6 +88,7 @@ export default function App() {
   const [whatsAppMessageType, setWhatsAppMessageType] = useState<'registration' | 'installment_reminder'>('registration');
   const [settlingStudentFromSidebar, setSettlingStudentFromSidebar] = useState<Student | null>(null);
   const [storageNotification, setStorageNotification] = useState<string | null>(null);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'header' | 'supabase'>('header');
 
   // Compute approaching / overdue installments based on registration date
   const dueInstallments = useMemo(() => getDueInstallments(students), [students]);
@@ -549,6 +550,12 @@ export default function App() {
       <Header
         isDarkMode={isDarkMode}
         onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        isCloudConnected={supabaseConfig.isConnected}
+        cloudStatusText={supabaseConfig.isConnected ? 'السحابة متصلة (Supabase)' : 'السحابة غير متصلة'}
+        onOpenCloudSettings={() => {
+          setSettingsInitialTab('supabase');
+          setCurrentScreen('settings');
+        }}
         isWhatsConnected={whatsAppConfig.isConnected}
         centerSettings={centerSettings}
         dueInstallmentsCount={dueInstallments.length}
@@ -584,6 +591,9 @@ export default function App() {
           onSelectScreen={(screen) => {
             if (screen === 'students-list') {
               setStudentsListInitialFilter('all');
+            }
+            if (screen === 'settings') {
+              setSettingsInitialTab('header');
             }
             setCurrentScreen(screen);
           }}
@@ -711,6 +721,7 @@ export default function App() {
               onUpdateCenterSettings={handleUpdateCenterSettings}
               supabaseConfig={supabaseConfig}
               onUpdateSupabaseConfig={handleUpdateSupabaseConfig}
+              initialTab={settingsInitialTab}
               databaseStats={{
                 studentsCount: students.length,
                 coursesCount: courses.length,

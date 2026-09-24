@@ -110,7 +110,8 @@ export interface CenterSettings {
 
 export interface SupabaseConfig {
   projectUrl: string;
-  anonKey: string;
+  anonKey: string; // Also serves as Publishable API Key
+  publishableKey?: string;
   isConnected: boolean;
   autoSync: boolean;
   lastSyncTime?: string;

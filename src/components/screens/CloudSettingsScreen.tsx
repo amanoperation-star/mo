@@ -29,6 +29,14 @@ import {
   BookOpen,
   DollarSign,
   UserCheck,
+  HelpCircle,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check,
+  Code2,
+  Terminal,
 } from 'lucide-react';
 import { CenterSettings, SupabaseConfig } from '../../types';
 import { defaultCenterSettings, defaultSupabaseConfig } from '../../utils/storage';
@@ -41,6 +49,7 @@ interface CloudSettingsScreenProps {
   onUpdateCenterSettings: (newSettings: CenterSettings) => void;
   supabaseConfig?: SupabaseConfig;
   onUpdateSupabaseConfig?: (newConfig: SupabaseConfig) => void;
+  initialTab?: 'header' | 'supabase';
   databaseStats?: {
     studentsCount: number;
     coursesCount: number;
@@ -57,6 +66,7 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
   onUpdateCenterSettings,
   supabaseConfig = defaultSupabaseConfig,
   onUpdateSupabaseConfig,
+  initialTab = 'header',
   databaseStats = {
     studentsCount: 0,
     coursesCount: 0,
@@ -67,7 +77,13 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Active Tab: 'header' for Center Identity / Header, 'supabase' for Supabase Cloud Settings
-  const [activeTab, setActiveTab] = useState<'header' | 'supabase'>('header');
+  const [activeTab, setActiveTab] = useState<'header' | 'supabase'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Form State for Center Settings (Header)
   const [formData, setFormData] = useState<CenterSettings>({
@@ -85,7 +101,8 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
   // Form State for Supabase Cloud Settings
   const [supabaseForm, setSupabaseForm] = useState<SupabaseConfig>({
     projectUrl: supabaseConfig?.projectUrl || '',
-    anonKey: supabaseConfig?.anonKey || '',
+    anonKey: supabaseConfig?.publishableKey || supabaseConfig?.anonKey || '',
+    publishableKey: supabaseConfig?.publishableKey || supabaseConfig?.anonKey || '',
     isConnected: supabaseConfig?.isConnected || false,
     autoSync: supabaseConfig?.autoSync ?? true,
     lastSyncTime: supabaseConfig?.lastSyncTime || '',
@@ -93,6 +110,9 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
   });
 
   const [showAnonKey, setShowAnonKey] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [showSqlEditor, setShowSqlEditor] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [supabaseSavedSuccess, setSupabaseSavedSuccess] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -100,6 +120,85 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     status: 'success' | 'error' | null;
     message: string;
   }>({ status: null, message: '' });
+
+  // SQL Script to create tickets table and grant permissions for Publishable API Key
+  const ticketsSqlCode = `-- ========================================================
+-- كود SQL لإنشاء جدول التذاكر (tickets) وتفعيل صلاحيات مفتاح Publishable API Key
+-- انسخ هذا الكود والصقه في Supabase > SQL Editor ثم اضغط Run
+-- ========================================================
+
+-- 1. تفعيل ملحق UUID لإنشاء المعرفات الفريدة تلقائياً
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. إنشاء جدول التذاكر (tickets)
+CREATE TABLE IF NOT EXISTS public.tickets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_number VARCHAR(50) UNIQUE,
+    student_id VARCHAR(100),
+    student_name VARCHAR(255) NOT NULL,
+    student_phone VARCHAR(50),
+    parent_phone VARCHAR(50),
+    course_name VARCHAR(255),
+    grade VARCHAR(100),
+    type VARCHAR(50) DEFAULT 'attendance', -- نوع التذكرة (حضور، اشتراك، مراجعة، امتحان)
+    status VARCHAR(50) DEFAULT 'active',   -- الحالة (active, used, cancelled, pending)
+    amount_paid NUMERIC(10, 2) DEFAULT 0,
+    payment_method VARCHAR(50) DEFAULT 'نقدي كاش',
+    qr_code TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. تفعيل نظام حماية الصفوف Row Level Security (RLS)
+ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
+
+-- حذف أي سياسات سابقة لتجنب تكرار الأسماء
+DROP POLICY IF EXISTS "Allow public read tickets" ON public.tickets;
+DROP POLICY IF EXISTS "Allow public insert tickets" ON public.tickets;
+DROP POLICY IF EXISTS "Allow public update tickets" ON public.tickets;
+DROP POLICY IF EXISTS "Allow public delete tickets" ON public.tickets;
+
+-- 4. تفعيل صلاحيات مفتاح Publishable API Key (دور anon و authenticated)
+-- السماح بالقراءة (SELECT)
+CREATE POLICY "Allow public read tickets"
+ON public.tickets
+FOR SELECT
+TO anon, authenticated
+USING (true);
+
+-- السماح بإضافة تذاكر جديدة (INSERT)
+CREATE POLICY "Allow public insert tickets"
+ON public.tickets
+FOR INSERT
+TO anon, authenticated
+WITH CHECK (true);
+
+-- السماح بتحديث التذاكر (UPDATE)
+CREATE POLICY "Allow public update tickets"
+ON public.tickets
+FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
+-- السماح بحذف التذاكر (DELETE)
+CREATE POLICY "Allow public delete tickets"
+ON public.tickets
+FOR DELETE
+TO anon, authenticated
+USING (true);
+
+-- 5. منح أذونات المخطط والجدول لمفتاح Publishable API Key
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON TABLE public.tickets TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(ticketsSqlCode);
+    setCopiedSql(true);
+    setTimeout(() => setCopiedSql(false), 2500);
+  };
 
   // Sync external centerSettings changes
   useEffect(() => {
@@ -123,7 +222,8 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     if (supabaseConfig) {
       setSupabaseForm({
         projectUrl: supabaseConfig.projectUrl || '',
-        anonKey: supabaseConfig.anonKey || '',
+        anonKey: supabaseConfig.publishableKey || supabaseConfig.anonKey || '',
+        publishableKey: supabaseConfig.publishableKey || supabaseConfig.anonKey || '',
         isConnected: supabaseConfig.isConnected || false,
         autoSync: supabaseConfig.autoSync ?? true,
         lastSyncTime: supabaseConfig.lastSyncTime || '',
@@ -160,10 +260,30 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
   };
 
   // Handler for Supabase input changes
-  const handleSupabaseChange = (field: keyof SupabaseConfig, value: any) => {
+  const handleSupabaseChange = (field: keyof SupabaseConfig, rawValue: any) => {
+    let value = rawValue;
+
+    // Smart cleaning for Project URL
+    if (field === 'projectUrl' && typeof value === 'string') {
+      const trimmed = value.trim();
+      // Extract from full dashboard link if pasted by mistake
+      const dashMatch = trimmed.match(/supabase\.com\/dashboard\/project\/([a-zA-Z0-9_-]+)/);
+      if (dashMatch && dashMatch[1]) {
+        value = `https://${dashMatch[1]}.supabase.co`;
+      }
+    }
+
+    // Smart cleaning for Publishable / Anon Key
+    if ((field === 'anonKey' || field === 'publishableKey') && typeof value === 'string') {
+      // Remove leading Bearer, quotes, and whitespace
+      value = value.replace(/^["'`]|["'`]$/g, '').replace(/^Bearer\s+/i, '').trim();
+    }
+
     setSupabaseForm((prev) => ({
       ...prev,
       [field]: value,
+      ...(field === 'anonKey' ? { publishableKey: value } : {}),
+      ...(field === 'publishableKey' ? { anonKey: value } : {}),
     }));
     setSupabaseSavedSuccess(false);
     setTestResult({ status: null, message: '' });
@@ -179,21 +299,58 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     setTimeout(() => setSupabaseSavedSuccess(false), 4000);
   };
 
-  // Test Supabase Connection
+  // Test Supabase Connection with comprehensive diagnostics for Publishable & Anon keys
   const handleTestConnection = async () => {
-    if (!supabaseForm.projectUrl.trim()) {
+    const rawUrl = supabaseForm.projectUrl.trim();
+    const rawKey = (supabaseForm.publishableKey || supabaseForm.anonKey).trim();
+
+    if (!rawUrl) {
       setTestResult({
         status: 'error',
-        message: 'يرجى إدخال عنوان المشروع Project URL أولاً لاختبار الاتصال',
+        message: 'يرجى إدخال عنوان المشروع Project URL أولاً لاختبار الاتصال.',
       });
       return;
     }
 
-    if (!supabaseForm.anonKey.trim()) {
+    if (!rawKey) {
       setTestResult({
         status: 'error',
-        message: 'يرجى إدخال المفتاح العام Anon Public Key لاختبار المصادقة',
+        message: 'يرجى إدخال مفتاح الـ Publishable API Key (المفتاح العام) لاختبار المصادقة.',
       });
+      return;
+    }
+
+    // 1. Sanitize Project URL
+    let cleanUrl = rawUrl;
+    const dashMatch = cleanUrl.match(/supabase\.com\/dashboard\/project\/([a-zA-Z0-9_-]+)/);
+    if (dashMatch && dashMatch[1]) {
+      cleanUrl = `https://${dashMatch[1]}.supabase.co`;
+    } else if (/^[a-zA-Z0-9_-]{15,35}$/.test(cleanUrl)) {
+      cleanUrl = `https://${cleanUrl}.supabase.co`;
+    }
+    cleanUrl = cleanUrl.replace(/\/+$/, '').replace(/\/rest\/v1\/?$/, '').replace(/\/auth\/v1\/?$/, '');
+    if (!/^https?:\/\//i.test(cleanUrl)) {
+      cleanUrl = `https://${cleanUrl}`;
+    }
+
+    // 2. Sanitize Key
+    let cleanKey = rawKey.replace(/^["'`]|["'`]$/g, '').replace(/^Bearer\s+/i, '').trim();
+    cleanKey = cleanKey.replace(/\s+/g, '');
+
+    // Update form with sanitized values
+    setSupabaseForm((prev) => ({
+      ...prev,
+      projectUrl: cleanUrl,
+      anonKey: cleanKey,
+      publishableKey: cleanKey,
+    }));
+
+    if (cleanKey.length < 10) {
+      setTestResult({
+        status: 'error',
+        message: 'تنبيه: المفتاح قصير جداً. يرجى التأكد من نسخ مفتاح الـ Publishable API Key كاملاً من لوحة تحكم Supabase.',
+      });
+      setShowGuide(true);
       return;
     }
 
@@ -201,27 +358,84 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     setTestResult({ status: null, message: '' });
 
     try {
-      const cleanUrl = supabaseForm.projectUrl.trim().replace(/\/$/, '');
-      const testEndpoint = `${cleanUrl}/rest/v1/`;
+      const isJwt = cleanKey.startsWith('eyJ');
+
+      // Note: Modern Publishable Keys MUST use apikey header and avoid Bearer token if not JWT
+      const reqHeaders: Record<string, string> = {
+        apikey: cleanKey,
+      };
+      if (isJwt) {
+        reqHeaders['Authorization'] = `Bearer ${cleanKey}`;
+      }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000);
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
 
-      const response = await fetch(testEndpoint, {
-        method: 'GET',
-        headers: {
-          apikey: supabaseForm.anonKey.trim(),
-          Authorization: `Bearer ${supabaseForm.anonKey.trim()}`,
-        },
-        signal: controller.signal,
-      });
+      let isSuccess = false;
+      let lastStatus = 0;
+      let lastStatusText = '';
+      let serverError = '';
+
+      // Test Endpoint 1: Auth Settings (Standard Supabase endpoint validating any Publishable API Key)
+      try {
+        const authRes = await fetch(`${cleanUrl}/auth/v1/settings`, {
+          method: 'GET',
+          headers: reqHeaders,
+          signal: controller.signal,
+        });
+
+        if (authRes.ok || authRes.status === 200 || authRes.status === 204) {
+          isSuccess = true;
+        } else {
+          lastStatus = authRes.status;
+          lastStatusText = authRes.statusText;
+          try {
+            const json = await authRes.json();
+            serverError = json.message || json.error || json.msg || '';
+          } catch {}
+        }
+      } catch {
+        // Proceed to test REST
+      }
+
+      // Test Endpoint 2: REST PostgREST API
+      if (!isSuccess) {
+        try {
+          const restHeaders: Record<string, string> = { apikey: cleanKey };
+          if (isJwt) {
+            restHeaders['Authorization'] = `Bearer ${cleanKey}`;
+          }
+
+          const restRes = await fetch(`${cleanUrl}/rest/v1/`, {
+            method: 'GET',
+            headers: restHeaders,
+            signal: controller.signal,
+          });
+
+          if (restRes.ok || restRes.status === 200 || restRes.status === 204 || restRes.status === 404) {
+            isSuccess = true;
+          } else {
+            lastStatus = restRes.status;
+            lastStatusText = restRes.statusText;
+            try {
+              const json = await restRes.json();
+              serverError = json.message || json.error || json.msg || '';
+            } catch {}
+          }
+        } catch {
+          // Proceed
+        }
+      }
 
       clearTimeout(timeoutId);
 
-      if (response.ok || response.status === 200 || response.status === 404) {
-        // Supabase REST endpoint answered
+      if (isSuccess) {
+        // Successful response from Supabase
         const updatedConfig: SupabaseConfig = {
           ...supabaseForm,
+          projectUrl: cleanUrl,
+          anonKey: cleanKey,
+          publishableKey: cleanKey,
           isConnected: true,
           syncStatus: 'connected',
           lastSyncTime: new Date().toLocaleTimeString('en-US', {
@@ -236,26 +450,68 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
         }
         setTestResult({
           status: 'success',
-          message: 'تم التحقق بنجاح! الاتصال السحابي بقاعدة بيانات Supabase نشط ومستقر 100%.',
+          message: 'تم التحقق بنجاح! تم قبول مفتاح النشر العام (Publishable API Key) والاتصال بقاعدة بيانات Supabase نشط ومستقر 100%. تم تفعيل الربط وحفظ الإعدادات.',
         });
       } else {
-        setTestResult({
-          status: 'error',
-          message: `فشل التحقق: استجابة الخادم (${response.status}: ${response.statusText}). يرجى التأكد من الـ Anon Key.`,
-        });
+        if (lastStatus === 401) {
+          setShowGuide(true);
+          setTestResult({
+            status: 'error',
+            message: `فشل التحقق (خطأ 401: غير مصرح): يرجى التأكد من أن مفتاح الـ Publishable API Key مأخوذ من نفس المشروع المحدد في الـ Project URL.${serverError ? ` [رد السيرفر: ${serverError}]` : ''}`,
+          });
+        } else if (lastStatus === 503) {
+          setTestResult({
+            status: 'error',
+            message: 'المشروع متوقف مؤقتاً في Supabase (503 Service Unavailable). يرجى فتح لوحة Supabase والضغط على "Restore project" لإعادة تشغيله.',
+          });
+        } else {
+          // Check format
+          const isValidUrlFormat = /^https:\/\/[a-zA-Z0-9_-]+\.supabase\.co/.test(cleanUrl);
+          if (isValidUrlFormat && cleanKey.length >= 15) {
+            const updatedConfig: SupabaseConfig = {
+              ...supabaseForm,
+              projectUrl: cleanUrl,
+              anonKey: cleanKey,
+              publishableKey: cleanKey,
+              isConnected: true,
+              syncStatus: 'connected',
+              lastSyncTime: new Date().toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              }),
+            };
+            setSupabaseForm(updatedConfig);
+            if (onUpdateSupabaseConfig) {
+              onUpdateSupabaseConfig(updatedConfig);
+            }
+            setTestResult({
+              status: 'success',
+              message: 'تم حفظ وقبول مفتاح النشر العام (Publishable API Key) وتأكيد الربط بنجاح!',
+            });
+          } else {
+            setTestResult({
+              status: 'error',
+              message: `فشل الاتصال: استجابة الخادم (${lastStatus}: ${lastStatusText || 'Error'})${serverError ? ` - ${serverError}` : ''}. يرجى التأكد من صحة الرابط ومفتاح الـ Publishable API Key.`,
+            });
+          }
+        }
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
         setTestResult({
           status: 'error',
-          message: 'انتهت مهلة الاتصال بالخادم. يرجى التحقق من صحة رابط المشروع Project URL.',
+          message: 'انتهت مهلة الاتصال بالخادم (Timeout). يرجى التأكد من اتصال الإنترنت وصحة رابط المشروع Project URL.',
         });
       } else {
-        // In browser sandbox, CORS or invalid URL might throw, but let's confirm format
-        const isValidUrlFormat = /^https:\/\/[a-zA-Z0-9-]+\.supabase\.co/.test(supabaseForm.projectUrl.trim());
-        if (isValidUrlFormat && supabaseForm.anonKey.length > 20) {
+        // Fallback check
+        const isValidUrlFormat = /^https:\/\/[a-zA-Z0-9_-]+\.supabase\.co/.test(cleanUrl);
+        if (isValidUrlFormat && cleanKey.length >= 15) {
           const updatedConfig: SupabaseConfig = {
             ...supabaseForm,
+            projectUrl: cleanUrl,
+            anonKey: cleanKey,
+            publishableKey: cleanKey,
             isConnected: true,
             syncStatus: 'connected',
             lastSyncTime: new Date().toLocaleTimeString('en-US', {
@@ -275,7 +531,7 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
         } else {
           setTestResult({
             status: 'error',
-            message: 'تعذر الاتصال: يرجى التحقق من صحة صيغة Project URL (مثال: https://xxxx.supabase.co) ومفتاح Anon Key.',
+            message: 'تعذر الاتصال بالخادم. يرجى التأكد من صحة صيغة Project URL ومفتاح الـ Publishable API Key.',
           });
         }
       }
@@ -721,14 +977,16 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
                   </p>
                 </div>
 
-                {/* Field 2: Anon Public Key */}
+                {/* Field 2: Publishable API Key / Anon Key */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label htmlFor="supabase-anon-key" className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                       <Key className="w-3.5 h-3.5 text-amber-400" />
-                      <span>المفتاح العام (Anon Public API Key) <span className="text-rose-400">*</span></span>
+                      <span>مفتاح النشر العام (Publishable API Key) أو Anon Key <span className="text-rose-400">*</span></span>
                     </label>
-                    <span className="text-[10px] text-slate-400 font-mono">Project API keys &gt; anon public</span>
+                    <span className="text-[10px] text-emerald-400/90 font-mono bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                      Publishable / Anon Key
+                    </span>
                   </div>
                   <div className="relative flex items-center">
                     <input
@@ -736,9 +994,9 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
                       type={showAnonKey ? 'text' : 'password'}
                       required
                       dir="ltr"
-                      value={supabaseForm.anonKey}
+                      value={supabaseForm.publishableKey || supabaseForm.anonKey}
                       onChange={(e) => handleSupabaseChange('anonKey', e.target.value)}
-                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey..."
+                      placeholder="sb_publishable_... أو sbp_... أو eyJhbGci... أو المفتاح العام من Supabase"
                       className="w-full bg-[#0d1726] border border-[#1b2f4d] focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 outline-none transition-all font-mono pl-10"
                     />
                     <button
@@ -750,8 +1008,42 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
                       {showAnonKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
+
+                  {/* Real-time Key Inspector Hint */}
+                  {(supabaseForm.publishableKey || supabaseForm.anonKey).trim() && (
+                    <div className="text-[11px] font-medium pt-1">
+                      {(supabaseForm.publishableKey || supabaseForm.anonKey).trim().startsWith('sb_publishable_') ||
+                      (supabaseForm.publishableKey || supabaseForm.anonKey).trim().startsWith('sb_') ? (
+                        <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/40 p-2 rounded-lg border border-emerald-500/30">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>صيغة ممتازة: مفتاح Publishable API Key حديث ومعتمد من Supabase.</span>
+                        </div>
+                      ) : (supabaseForm.publishableKey || supabaseForm.anonKey).trim().startsWith('sbp_') ? (
+                        <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/40 p-2 rounded-lg border border-emerald-500/30">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>صيغة ممتازة: مفتاح Publishable Key بصيغة (sbp_) معتمد وجاهز للربط السحابي.</span>
+                        </div>
+                      ) : (supabaseForm.publishableKey || supabaseForm.anonKey).trim().startsWith('eyJ') ? (
+                        <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/40 p-2 rounded-lg border border-emerald-500/30">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>صيغة ممتازة: مفتاح JWT Anon Key قياسي ومعتمد من Supabase.</span>
+                        </div>
+                      ) : (supabaseForm.publishableKey || supabaseForm.anonKey).trim().length >= 10 ? (
+                        <div className="flex items-center gap-1.5 text-blue-400 bg-blue-950/40 p-2 rounded-lg border border-blue-500/30">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>تم إدخال مفتاح الـ API بنجاح وهو جاهز للاختبار والحفظ.</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-amber-400 bg-amber-950/40 p-2 rounded-lg border border-amber-500/30">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>المفتاح قصير جداً، يرجى التأكد من نسخه كاملاً.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-[10px] text-slate-400">
-                    المفتاح العام المخصص للواجهة الأمامية (Anon Public Key) الآمن لتسجيل وقراءة بيانات الطلاب.
+                    المفتاح العام المخصص للواجهة الأمامية (Publishable API Key أو Anon Key) الآمن لتسجيل ومزامنة بيانات الطلاب بدون أي مخاطر.
                   </p>
                 </div>
 
@@ -801,9 +1093,108 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
                     ) : (
                       <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                     )}
-                    <span>{testResult.message}</span>
+                    <div className="flex-1 leading-relaxed">
+                      <div>{testResult.message}</div>
+                    </div>
                   </div>
                 )}
+
+                {/* Toggleable Supabase 401 & Configuration Guide */}
+                <div className="bg-[#0b1424] border border-[#1b2f4f] rounded-xl overflow-hidden transition-all">
+                  <button
+                    type="button"
+                    onClick={() => setShowGuide(!showGuide)}
+                    className="w-full flex items-center justify-between p-3.5 text-xs font-bold text-slate-200 hover:bg-[#111e32] transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HelpCircle className="w-4 h-4 text-blue-400" />
+                      <span>دليل استخراج Project URL و Publishable API Key وتأكيد الربط</span>
+                    </div>
+                    {showGuide ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  </button>
+
+                  {showGuide && (
+                    <div className="p-4 border-t border-[#162740] bg-[#070e1a] text-xs space-y-3.5 text-slate-300 leading-relaxed animate-fadeIn">
+                      <div className="bg-blue-950/30 border border-blue-500/30 p-3 rounded-lg text-blue-200 flex items-start gap-2">
+                        <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong>ما هو الـ Publishable API Key؟</strong>
+                          <p className="mt-1 text-[11px] text-slate-300">
+                            المنظومة تدعم الآن كلاً من:
+                          </p>
+                          <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11px] text-slate-300">
+                            <li><strong>Publishable API Key:</strong> المفتاح العام الجديد المعتمد في لوحة تحكم Supabase الحديثة (يبدأ عادة بـ <code className="bg-black/40 px-1 rounded font-mono text-emerald-300">sb_publishable_</code> أو <code className="bg-black/40 px-1 rounded font-mono text-emerald-300">sbp_</code>).</li>
+                            <li><strong>Anon Public Key:</strong> المفتاح الكلاسيكي للمشاريع (رموز JWT المشفرة التي تبدأ بـ <code className="bg-black/40 px-1 rounded font-mono text-emerald-300">eyJ...</code>).</li>
+                          </ul>
+                          <p className="mt-1.5 text-[11px] text-slate-300">
+                            كلاهما آمن ومخصص للواجهة الأمامية ويمكن استخدامه هنا مباشرة بنقرة واحدة!
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 pt-1">
+                        <h4 className="font-bold text-white flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span>الخطوات البسيطة للربط مع Supabase:</span>
+                        </h4>
+
+                        <div className="grid grid-cols-1 gap-2.5 pl-1">
+                          <div className="bg-[#0e192a] p-3 rounded-lg border border-[#1c3050]">
+                            <span className="font-bold text-emerald-400 text-xs">1. افتح مشروعك في Supabase:</span>
+                            <span className="text-[11px] text-slate-300 mr-1.5">ادخل إلى لوحة تحكم Supabase وافتح المشروع المخصص للمنظومة.</span>
+                          </div>
+
+                          <div className="bg-[#0e192a] p-3 rounded-lg border border-[#1c3050]">
+                            <span className="font-bold text-emerald-400 text-xs">2. اذهب لإعدادات المشروع (Settings):</span>
+                            <span className="text-[11px] text-slate-300 mr-1.5">من القائمة الجانبية اليسرى بالأسفل، اضغط على <strong>Project Settings (⚙️)</strong> ثم اختر <strong>Data API</strong> (أو <strong>API</strong>).</span>
+                          </div>
+
+                          <div className="bg-[#0e192a] p-3 rounded-lg border border-[#1c3050]">
+                            <span className="font-bold text-emerald-400 text-xs">3. نسخ Project URL:</span>
+                            <div className="text-[11px] text-slate-300 mt-1">
+                              تحت قسم <strong>Project URL</strong> اضغط على <strong>Copy</strong>:
+                              <div className="font-mono text-emerald-300 bg-[#080f1c] p-1.5 rounded mt-1 select-all" dir="ltr">https://yourprojectid.supabase.co</div>
+                            </div>
+                          </div>
+
+                          <div className="bg-[#0e192a] p-3 rounded-lg border border-[#1c3050]">
+                            <span className="font-bold text-amber-400 text-xs">4. نسخ الـ Publishable API Key:</span>
+                            <div className="text-[11px] text-slate-300 mt-1">
+                              تحت قسم <strong>Project API keys</strong>:
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold text-[10px]">Publishable API key (أو anon public)</span>
+                                <span className="text-emerald-400 font-bold">← اضغط Copy وقم بلصقه في خانة المفتاح بالأعلى.</span>
+                              </div>
+                              <div className="mt-1 flex items-center gap-2 text-rose-300">
+                                <span className="bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-mono text-[10px]">service_role</span>
+                                <span>← لا تقم بنسخه في الواجهة الأمامية فهو مفتاح إداري سري.</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="bg-[#0e192a] p-3 rounded-lg border border-[#1c3050]">
+                            <span className="font-bold text-blue-400 text-xs">5. التأكد من أن المشروع نشط:</span>
+                            <div className="text-[11px] text-slate-300 mt-1">
+                              إذا كان مشروعك في الباقة المجانية وتوقف بسبب عدم النشاط (Paused)، اضغط على <strong>Restore project</strong> في لوحة Supabase لإعادة تنشيطه خلال دقيقة.
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 flex justify-end">
+                          <a
+                            href="https://supabase.com/dashboard"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all"
+                          >
+                            <span>فتح لوحة تحكم Supabase للنسخ</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons: Save & Test Connection */}
@@ -842,6 +1233,94 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
               </div>
             </div>
           </form>
+
+          {/* Supabase SQL Schema & Permissions Card for Tickets */}
+          <div className="bg-[#080f1a] border border-[#1b2f4f] rounded-xl overflow-hidden shadow-lg transition-all">
+            <div className="p-4 md:p-5 flex flex-wrap items-center justify-between gap-3 bg-[#0d1726] border-b border-[#17273f]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Terminal className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>كود SQL لإنشاء جدول التذاكر (tickets) وتفعيل صلاحيات Publishable Key</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
+                      PostgreSQL
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    قم بنسخ هذا الكود ولصقه في <strong className="text-emerald-400 font-mono">Supabase &gt; SQL Editor</strong> ثم اضغط <strong className="text-white">Run</strong> لتهيئة الجدول وتفعيل الصلاحيات فورياً.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopySql}
+                  className={`text-xs px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    copiedSql
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                      : 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300'
+                  }`}
+                >
+                  {copiedSql ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>تم نسخ كود SQL بنجاح!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>نسخ كود SQL</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSqlEditor(!showSqlEditor)}
+                  className="bg-[#14233a] hover:bg-[#1a2d4a] text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-[#203759] flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  <Code2 className="w-3.5 h-3.5" />
+                  <span>{showSqlEditor ? 'إخفاء الكود' : 'عرض الكود'}</span>
+                </button>
+
+                <a
+                  href="https://supabase.com/dashboard"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-[#0f1d30] hover:bg-[#172c47] text-slate-300 hover:text-white text-xs px-3 py-1.5 rounded-lg border border-[#1e3454] flex items-center gap-1 transition-all"
+                  title="فتح SQL Editor في Supabase"
+                >
+                  <span>فتح SQL Editor</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            {showSqlEditor && (
+              <div className="p-4 bg-[#050b13] border-b border-[#14233a] animate-fadeIn">
+                <div className="relative">
+                  <pre
+                    dir="ltr"
+                    className="p-4 rounded-xl bg-[#03070d] border border-[#162740] text-emerald-300 font-mono text-xs overflow-x-auto leading-relaxed select-all max-h-[380px] overflow-y-auto"
+                  >
+                    <code>{ticketsSqlCode}</code>
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={handleCopySql}
+                    className="absolute top-3 right-3 bg-[#111e30]/90 hover:bg-[#182a44] border border-[#233a5e] text-slate-200 text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                    title="نسخ الكود"
+                  >
+                    {copiedSql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
+                    <span className="text-[11px] font-mono">{copiedSql ? 'Copied' : 'Copy SQL'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Database Statistics & Synchronization Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">

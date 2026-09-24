@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare, Phone, Globe, ExternalLink, Bell } from 'lucide-react';
+import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare, Phone, Globe, ExternalLink, Bell, Cloud, CloudOff } from 'lucide-react';
 import { CenterSettings } from '../types';
 
 interface HeaderProps {
@@ -7,6 +7,9 @@ interface HeaderProps {
   onToggleTheme: () => void;
   storageStatusText?: string;
   onOpenStorageInfo?: () => void;
+  isCloudConnected?: boolean;
+  cloudStatusText?: string;
+  onOpenCloudSettings?: () => void;
   isWhatsConnected?: boolean;
   onOpenWhatsAppScreen?: () => void;
   centerSettings?: CenterSettings;
@@ -19,6 +22,9 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTheme,
   storageStatusText = 'التخزين المحلي متصل (LocalStorage)',
   onOpenStorageInfo,
+  isCloudConnected = false,
+  cloudStatusText,
+  onOpenCloudSettings,
   isWhatsConnected = true,
   onOpenWhatsAppScreen,
   centerSettings,
@@ -151,6 +157,42 @@ export const Header: React.FC<HeaderProps> = ({
           <span>{isWhatsConnected ? 'الواتساب مربوط ومفعل' : 'الواتساب غير متصل'}</span>
         </button>
 
+        {/* Cloud Storage (Supabase) Indicator Pill */}
+        <button
+          id="cloud-storage-indicator-button"
+          onClick={onOpenCloudSettings}
+          type="button"
+          title={
+            isCloudConnected
+              ? 'حالة السحابة: متصل ومستقر (Supabase) - انقر لفتح إعدادات الربط والمزامنة'
+              : 'حالة السحابة: غير متصل (Supabase) - انقر هنا لربط المنظومة بالسحابة وحفظ البيانات أونلاين'
+          }
+          className={`flex items-center gap-2 text-xs px-3.5 py-1.5 rounded-full font-bold transition-all shadow-sm cursor-pointer border ${
+            isCloudConnected
+              ? 'bg-[#081b16] border-emerald-500/40 hover:border-emerald-400 text-emerald-300 hover:shadow-emerald-500/10'
+              : 'bg-[#1e0e13] border-rose-500/40 hover:border-rose-400 text-rose-300 hover:shadow-rose-500/10'
+          }`}
+        >
+          <span className="relative flex h-2 w-2">
+            {isCloudConnected && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            )}
+            <span
+              className={`relative inline-flex rounded-full h-2 w-2 ${
+                isCloudConnected ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-rose-500 shadow-[0_0_6px_#f43f5e]'
+              }`}
+            ></span>
+          </span>
+          {isCloudConnected ? (
+            <Cloud className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          ) : (
+            <CloudOff className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+          )}
+          <span>
+            {cloudStatusText || (isCloudConnected ? 'السحابة متصلة (Supabase)' : 'السحابة غير متصلة')}
+          </span>
+        </button>
+
         {/* Local Storage Pill */}
         <button
           id="local-storage-indicator-button"
@@ -163,6 +205,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
           </span>
+          <Database className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span>{storageStatusText}</span>
         </button>
 

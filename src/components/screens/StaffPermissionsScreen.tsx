@@ -47,6 +47,8 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [phone, setPhone] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [baseSalary, setBaseSalary] = useState<number>(3000);
   const [bonus, setBonus] = useState<number>(0);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
@@ -59,6 +61,8 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
     setName('');
     setRole('مساعد تدريس وإشراف');
     setPhone('');
+    setUsername('');
+    setPassword('123');
     setBaseSalary(3000);
     setBonus(0);
     setSelectedPermissions(['متابعة الطلاب', 'تأكيد الإيصالات']);
@@ -70,6 +74,8 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
     setName(member.name);
     setRole(member.role);
     setPhone(member.phone);
+    setUsername(member.username || '');
+    setPassword(member.password || '123');
     setBaseSalary(member.baseSalary || 0);
     setBonus(member.bonus || 0);
     setSelectedPermissions(member.permissions || []);
@@ -96,11 +102,17 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
     e.preventDefault();
     if (!name.trim() || !role.trim()) return;
 
+    // Generate fallback username if empty
+    const generatedUsername = username.trim() || name.trim().toLowerCase().split(' ')[0] + Math.floor(10 + Math.random() * 90);
+    const finalPassword = password.trim() || '123';
+
     if (editingStaffId) {
       onUpdateStaff(editingStaffId, {
         name: name.trim(),
         role: role.trim(),
         phone: phone.trim(),
+        username: generatedUsername,
+        password: finalPassword,
         baseSalary: Number(baseSalary),
         bonus: Number(bonus),
         permissions: selectedPermissions,
@@ -110,6 +122,8 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
         name: name.trim(),
         role: role.trim(),
         phone: phone.trim() || '01000000000',
+        username: generatedUsername,
+        password: finalPassword,
         baseSalary: Number(baseSalary) || 0,
         bonus: Number(bonus) || 0,
         status: 'معلق',
@@ -258,7 +272,7 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
                 </div>
               </div>
 
-              {/* Footer info: Phone & Salary */}
+              {/* Footer info: Phone, Username, Password & Salary */}
               <div className="pt-3 border-t border-[#132238] flex flex-col gap-1.5 text-[11px] text-slate-400">
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1">
@@ -266,6 +280,17 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
                     <span>رقم الهاتف:</span>
                   </span>
                   <span className="font-mono text-slate-200 font-semibold">{member.phone || 'غير مسجل'}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#050912] p-2 rounded-lg border border-[#16273e]">
+                  <span className="flex items-center gap-1 text-amber-400 font-bold">
+                    <User className="w-3 h-3 text-amber-400" />
+                    <span>بيانات الدخول:</span>
+                  </span>
+                  <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <span className="text-amber-300 font-bold">{member.username || 'admin'}</span>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-emerald-400 font-bold">رمز: {member.password || '123'}</span>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1">
@@ -315,6 +340,31 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
                   onChange={(e) => setName(e.target.value)}
                   className="bg-[#070d17] border border-[#1c2e47] focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition-all"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-300">اسم المستخدم لدخول المنظومة *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="مثال: ahmed_staff"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="bg-[#070d17] border border-[#1c2e47] focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs text-amber-300 outline-none transition-all font-mono font-bold"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-300">كلمة المرور للحساب *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="مثال: 123456"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-[#070d17] border border-[#1c2e47] focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 outline-none transition-all font-mono font-bold"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

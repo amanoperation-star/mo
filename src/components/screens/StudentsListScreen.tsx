@@ -39,6 +39,8 @@ interface StudentsListScreenProps {
   grades?: string[];
   initialPaymentFilter?: 'all' | 'full' | 'pending_installment' | 'paid_in_full' | 'due_soon';
   onDeleteStudent: (id: string) => void;
+  onDeleteAllStudents?: () => void;
+  onDeleteMultipleStudents?: (ids: string[]) => void;
   onUpdateStudent: (id: string, updatedData: Partial<Student>) => void;
   onViewReceipt: (url: string) => void;
   onOpenWhatsAppModal: (student: Student) => void;
@@ -53,6 +55,8 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
   grades = [],
   initialPaymentFilter = 'all',
   onDeleteStudent,
+  onDeleteAllStudents,
+  onDeleteMultipleStudents,
   onUpdateStudent,
   onViewReceipt,
   onOpenWhatsAppModal,
@@ -66,6 +70,9 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
     initialPaymentFilter
   );
   const [settleStudent, setSettleStudent] = useState<Student | null>(null);
+
+  // Checkbox multi-selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Grade Edit & Delete states inside StudentsListScreen
   const [editingGradeModal, setEditingGradeModal] = useState<string | null>(null);
@@ -241,6 +248,47 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
     });
   };
 
+  // Handle selection toggles
+  const handleToggleSelectAll = () => {
+    if (selectedIds.length === filteredStudents.length && filteredStudents.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredStudents.map((s) => s.id));
+    }
+  };
+
+  const handleToggleSelectOne = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((item) => item !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const handleExecuteDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`هل أنت متأكد من حذف (${selectedIds.length}) طلاب محددين من السجل نهائياً؟`)) {
+      if (onDeleteMultipleStudents) {
+        onDeleteMultipleStudents(selectedIds);
+      } else {
+        selectedIds.forEach((id) => onDeleteStudent(id));
+      }
+      setSelectedIds([]);
+    }
+  };
+
+  const handleExecuteDeleteAll = () => {
+    if (students.length === 0) return;
+    if (window.confirm(`⚠️ تحذير نهائي:\nهل أنت متأكد من مسح جميع الطلاب (${students.length} طالب) دفعة واحدة من المنظومة؟`)) {
+      if (onDeleteAllStudents) {
+        onDeleteAllStudents();
+      } else {
+        students.forEach((s) => onDeleteStudent(s.id));
+      }
+      setSelectedIds([]);
+    }
+  };
+
   return (
     <div
       id="students-list-screen"
@@ -258,7 +306,33 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Delete Selected Button */}
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleExecuteDeleteSelected}
+              type="button"
+              className="flex items-center gap-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 text-xs px-3 py-2 rounded-xl font-bold transition-all cursor-pointer shadow-md animate-in fade-in"
+              title={`حذف (${selectedIds.length}) طلاب محددين`}
+            >
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              <span>حذف المحددين ({selectedIds.length})</span>
+            </button>
+          )}
+
+          {/* Delete All Students Button */}
+          {students.length > 0 && (
+            <button
+              onClick={handleExecuteDeleteAll}
+              type="button"
+              className="flex items-center gap-1.5 bg-[#1f0d14] hover:bg-rose-950 border border-rose-600/40 text-rose-300 hover:text-rose-100 text-xs px-3 py-2 rounded-xl font-bold transition-all cursor-pointer shadow-sm"
+              title="مسح جميع بيانات الطلاب المسجلين بالكامل"
+            >
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              <span>مسح جميع الطلاب ({students.length})</span>
+            </button>
+          )}
+
           <button
             onClick={onExportExcel}
             type="button"
@@ -519,6 +593,15 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
         <table className="w-full text-right text-xs">
           <thead className="bg-[#0b1424] text-slate-300 font-bold border-b border-[#1c2e47]">
             <tr>
+              <th className="p-3.5 text-center w-10">
+                <input
+                  type="checkbox"
+                  aria-label="تحديد الكل"
+                  checked={selectedIds.length === filteredStudents.length && filteredStudents.length > 0}
+                  onChange={handleToggleSelectAll}
+                  className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                />
+              </th>
               <th className="p-3.5 whitespace-nowrap min-w-[200px]">الطالب والكود</th>
               <th className="p-3.5 whitespace-nowrap min-w-[170px]">الكورس والمرحلة</th>
               <th className="p-3.5 whitespace-nowrap min-w-[150px]">بيانات التواصل</th>
@@ -531,7 +614,7 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
           <tbody className="divide-y divide-[#132238] text-slate-200">
             {filteredStudents.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">
+                <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">
                   لا توجد نتائج مطابقة لبحثك في هذا الفلتر
                 </td>
               </tr>
@@ -541,6 +624,7 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
                 const hasPending = isInstallment && s.installmentStatus === 'pending_installment';
                 const isPaidInstallment = isInstallment && s.installmentStatus === 'paid_in_full';
                 const instInfo = hasPending ? getStudentInstallmentInfo(s) : null;
+                const isChecked = selectedIds.includes(s.id);
 
                 const initials = s.name
                   ? s.name.trim().split(' ').slice(0, 2).map((w) => w[0]).join('.')
@@ -550,13 +634,25 @@ export const StudentsListScreen: React.FC<StudentsListScreenProps> = ({
                   <tr
                     key={s.id}
                     className={`transition-colors border-b border-[#142236] ${
-                      instInfo?.isApproachingOrOverdue
+                      isChecked
+                        ? 'bg-blue-950/40 hover:bg-blue-950/60'
+                        : instInfo?.isApproachingOrOverdue
                         ? instInfo.status === 'overdue'
                           ? 'bg-rose-950/20 hover:bg-rose-950/30'
                           : 'bg-amber-950/20 hover:bg-amber-950/30'
                         : 'hover:bg-[#0d1726]'
                     }`}
                   >
+                    {/* Checkbox Column */}
+                    <td className="p-3.5 text-center">
+                      <input
+                        type="checkbox"
+                        aria-label={`تحديد الطالب ${s.name}`}
+                        checked={isChecked}
+                        onChange={() => handleToggleSelectOne(s.id)}
+                        className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                      />
+                    </td>
                     {/* Unified Student & Code Column */}
                     <td className="p-3.5">
                       <div className="flex items-center gap-2.5">

@@ -1,4 +1,4 @@
-import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog } from '../types';
+import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, AppNotification } from '../types';
 
 // Helper to generate dynamic relative dates for realistic live testing
 const getRelativeDateStr = (offsetDays: number): string => {
@@ -215,6 +215,8 @@ export const initialStaff: StaffMember[] = [
     bonus: 500,
     status: 'مدفوع',
     permissions: ['التحكم الكامل', 'البيانات المالية', 'تأكيد الإيصالات', 'إدارة الكورسات'],
+    username: 'admin',
+    password: '123',
   },
   {
     id: 'st-2',
@@ -225,6 +227,8 @@ export const initialStaff: StaffMember[] = [
     bonus: 250,
     status: 'معلق',
     permissions: ['تأكيد الإيصالات', 'متابعة الطلاب', 'إرسال الواتساب'],
+    username: 'sara',
+    password: '123',
   },
   {
     id: 'st-3',
@@ -235,6 +239,8 @@ export const initialStaff: StaffMember[] = [
     bonus: 200,
     status: 'معلق',
     permissions: ['متابعة الطلاب', 'رصد الدرجات'],
+    username: 'omar',
+    password: '123',
   },
 ];
 
@@ -298,5 +304,38 @@ export const initialAuditLogs: AuditLog[] = [
     timestamp: '2025-03-01 18:20:00',
     details: 'تم تصدير ملف JSON الشامل للمنظومة',
     type: 'info',
+  },
+];
+
+export const initialNotifications: AppNotification[] = [
+  {
+    id: 'notif-1',
+    title: 'تسجيل اشتراك طالب جديد وتأكيد الدفع',
+    details: 'تم تسجيل الطالب أحمد طارق مصطفى وتفعيل كود CHEM-2025-0841',
+    user: 'أك. محمود عزت',
+    timestamp: 'الآن',
+    type: 'success',
+    read: false,
+    linkScreen: 'students-list',
+  },
+  {
+    id: 'notif-2',
+    title: 'تنبيه استحقاق قسط قادم',
+    details: 'قسط مستحق للطالب يوسف حازم العشري (متبقي 300 ج.م)',
+    user: 'م. سارة أحمد',
+    timestamp: 'منذ 5 دقائق',
+    type: 'installment',
+    read: false,
+    linkScreen: 'students-list',
+  },
+  {
+    id: 'notif-3',
+    title: 'تأكيد اتصال السحابة والواتساب',
+    details: 'بوابة الواتساب وقاعدة بيانات Supabase متصلة ومستقرة',
+    user: 'النظام الآلي',
+    timestamp: 'منذ 15 دقيقة',
+    type: 'info',
+    read: true,
+    linkScreen: 'settings',
   },
 ];

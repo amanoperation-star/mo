@@ -15,8 +15,10 @@ import {
   TrendingUp,
   Download,
   FileSpreadsheet,
+  LogOut,
+  User,
 } from 'lucide-react';
-import { NavigationScreen, Student } from '../types';
+import { NavigationScreen, Student, StaffMember } from '../types';
 import { InstallmentInfo } from '../utils/installmentUtils';
 import { InstallmentAlertSidebarCard } from './InstallmentAlertSidebarCard';
 
@@ -34,6 +36,8 @@ interface SidebarProps {
   onOpenInstallmentSettle?: (student: Student) => void;
   onOpenWhatsAppReminder?: (student: Student) => void;
   onNavigateToDueInstallments?: () => void;
+  currentUser?: StaffMember | null;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -50,6 +54,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenInstallmentSettle,
   onOpenWhatsAppReminder,
   onNavigateToDueInstallments,
+  currentUser,
+  onLogout,
 }) => {
   const hasDueInstallments = dueInstallments.length > 0;
 
@@ -60,6 +66,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     badge?: string | number;
     badgeType?: 'default' | 'urgent' | 'success';
   }[] = [
+    {
+      id: 'analytics',
+      label: 'الرئيسية ولوحة المؤشرات',
+      icon: BarChart3,
+    },
     {
       id: 'new-student',
       label: 'تسجيل طالب جديد',
@@ -87,11 +98,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Coins,
     },
     {
-      id: 'analytics',
-      label: 'لوحة المؤشرات والتحليلات',
-      icon: BarChart3,
-    },
-    {
       id: 'whatsapp',
       label: 'ربط وتفعيل الواتساب',
       icon: MessageSquare,
@@ -115,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'settings',
-      label: 'إعدادات السحابة Supabase',
+      label: 'الإعدادات العامة والتهيئة',
       icon: Settings,
     },
   ];
@@ -249,6 +255,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isDarkMode ? 'تبديل للنهاري ☀️' : 'تبديل لليلي 🌙'}
           </button>
         </div>
+
+        {/* Current Logged In User Card & Logout */}
+        {currentUser && onLogout && (
+          <div
+            id="sidebar-user-logout-card"
+            className="bg-[#09111c] border border-[#182942] rounded-xl p-3 flex items-center justify-between shadow-sm"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-sm">
+                {currentUser.name.trim().split(' ')[0]?.[0] || 'م'}
+              </div>
+              <div className="min-w-0 flex flex-col">
+                <span className="text-xs font-bold text-white truncate">{currentUser.name}</span>
+                <span className="text-[10px] text-amber-400 font-semibold truncate">{currentUser.role}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={onLogout}
+              type="button"
+              className="p-1.5 rounded-lg bg-[#142236] hover:bg-rose-600 hover:text-white text-rose-300 border border-[#1e3452] transition-colors cursor-pointer shrink-0"
+              title="تسجيل الخروج من المنظومة"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Revenue & Quick Export Card */}
         <div

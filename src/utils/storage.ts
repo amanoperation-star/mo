@@ -1,5 +1,5 @@
-import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig, CenterSettings, SupabaseConfig } from '../types';
-import { initialStudents, initialCourses, initialExpenses, initialStaff, initialWhatsAppTemplates, initialAuditLogs } from '../data/initialData';
+import { Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig, CenterSettings, SupabaseConfig, AppNotification } from '../types';
+import { initialStudents, initialCourses, initialExpenses, initialStaff, initialWhatsAppTemplates, initialAuditLogs, initialNotifications } from '../data/initialData';
 
 const STORAGE_KEYS = {
   STUDENTS: 'el_saqqa_students_v6',
@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   STAFF: 'el_saqqa_staff_v5',
   TEMPLATES: 'el_saqqa_templates_v5',
   LOGS: 'el_saqqa_logs_v5',
+  NOTIFICATIONS: 'el_saqqa_notifications_v5',
   THEME: 'el_saqqa_theme_v5',
   WHATSAPP_CONFIG: 'el_saqqa_whatsapp_config_v5',
   CENTER_SETTINGS: 'el_saqqa_center_settings_v5',
@@ -106,6 +107,14 @@ export function getStoredLogs(): AuditLog[] {
 
 export function saveStoredLogs(logs: AuditLog[]): void {
   saveToStorage(STORAGE_KEYS.LOGS, logs);
+}
+
+export function getStoredNotifications(): AppNotification[] {
+  return loadFromStorage<AppNotification[]>(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+}
+
+export function saveStoredNotifications(notifications: AppNotification[]): void {
+  saveToStorage(STORAGE_KEYS.NOTIFICATIONS, notifications);
 }
 
 export function getStoredWhatsConfig(): WhatsAppIntegrationConfig {

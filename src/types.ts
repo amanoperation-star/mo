@@ -63,6 +63,8 @@ export interface StaffMember {
   bonus: number;
   status: 'مدفوع' | 'معلق';
   permissions: string[];
+  username?: string;
+  password?: string;
 }
 
 export interface WhatsAppTemplate {
@@ -94,6 +96,17 @@ export interface AuditLog {
   timestamp: string;
   details: string;
   type: 'info' | 'success' | 'warning';
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  details: string;
+  user: string;
+  timestamp: string;
+  type: 'success' | 'info' | 'warning' | 'installment';
+  read: boolean;
+  linkScreen?: NavigationScreen;
 }
 
 export interface CenterSettings {

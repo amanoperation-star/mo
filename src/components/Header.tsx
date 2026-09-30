@@ -1,6 +1,7 @@
 import React from 'react';
-import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare, Phone, Globe, ExternalLink, Bell, Cloud, CloudOff } from 'lucide-react';
-import { CenterSettings } from '../types';
+import { Send, Sun, Moon, Database, CheckCircle2, MessageSquare, Phone, Globe, ExternalLink, Bell, Cloud, CloudOff, LogOut, ShieldAlert } from 'lucide-react';
+import { CenterSettings, StaffMember, AppNotification, NavigationScreen } from '../types';
+import { NotificationBell } from './NotificationBell';
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -15,6 +16,14 @@ interface HeaderProps {
   centerSettings?: CenterSettings;
   dueInstallmentsCount?: number;
   onNavigateToDueInstallments?: () => void;
+  currentUser?: StaffMember | null;
+  onLogout?: () => void;
+  notifications?: AppNotification[];
+  onMarkAllAsRead?: () => void;
+  onClearNotifications?: () => void;
+  onNotificationClick?: (notification: AppNotification) => void;
+  onNavigateToScreen?: (screen: NavigationScreen) => void;
+  onOpenProductionReset?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,13 +39,22 @@ export const Header: React.FC<HeaderProps> = ({
   centerSettings,
   dueInstallmentsCount = 0,
   onNavigateToDueInstallments,
+  currentUser,
+  onLogout,
+  notifications = [],
+  onMarkAllAsRead = () => {},
+  onClearNotifications = () => {},
+  onNotificationClick = () => {},
+  onNavigateToScreen,
+  onOpenProductionReset,
 }) => {
   const currentCenterName = centerSettings?.centerName || 'منظومة مستر أشرف السقا';
   const currentPhone = centerSettings?.phoneNumber || '01029847561';
   const currentUrl = centerSettings?.platformUrl || 'https://el-saqqa-chem.online';
   const currentYear = centerSettings?.academicYear || 'v5.0 أونلاين 2025';
   const currentDesc = centerSettings?.systemDescription || 'نظام الإدارة الأكاديمية والمالية المتكامل والربط السحابي والواتساب';
-  const currentManager = centerSettings?.managerName || 'أك. محمود عزت';
+  const currentManager = currentUser?.name || centerSettings?.managerName || 'أك. محمود عزت';
+  const currentRole = currentUser?.role || 'المدير الإداري والمالي';
 
   // Manager initials
   const managerInitials = currentManager.split(' ').slice(0, 2).map((w) => w[0]).join('.') || 'أ.س';
@@ -99,21 +117,41 @@ export const Header: React.FC<HeaderProps> = ({
           </a>
         )}
 
-        {/* User Pill */}
-        <div
-          id="user-profile-badge"
-          className="flex items-center gap-2.5 bg-[#0f172a] border border-[#1e293b] rounded-full px-3 py-1.5 shadow-sm"
-        >
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 font-black flex items-center justify-center text-[11px] shadow-sm">
-            {managerInitials}
+        {/* User Pill & Logout Button */}
+        <div className="flex items-center gap-1 bg-[#0f172a] border border-[#1e293b] rounded-full p-1 pl-2 shadow-sm">
+          <div
+            id="user-profile-badge"
+            className="flex items-center gap-2 px-2 py-0.5"
+          >
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 font-black flex items-center justify-center text-[11px] shadow-sm">
+              {managerInitials}
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-xs font-bold text-white">{currentManager}</span>
+              <span className="text-[10px] text-amber-400 font-semibold">{currentRole}</span>
+            </div>
           </div>
-          <div className="flex flex-col leading-tight pl-1">
-            <span className="text-xs font-bold text-white">{currentManager}</span>
-            <span className="text-[10px] text-amber-400 font-semibold">المدير الإداري والمالي</span>
-          </div>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              type="button"
+              title="تسجيل الخروج من المنظومة"
+              className="p-1.5 rounded-full bg-[#182338] hover:bg-rose-600 hover:text-white text-rose-300 transition-all cursor-pointer mr-1"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Installment Due Alert Quick Header Button */}
+        {/* Live Notification Bell Component */}
+        <NotificationBell
+          notifications={notifications}
+          onMarkAllAsRead={onMarkAllAsRead}
+          onClearAll={onClearNotifications}
+          onNotificationClick={onNotificationClick}
+          onNavigateToScreen={onNavigateToScreen}
+        />
         {dueInstallmentsCount > 0 && onNavigateToDueInstallments && (
           <button
             id="header-due-installments-pill"

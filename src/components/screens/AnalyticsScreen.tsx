@@ -1,17 +1,21 @@
 import React from 'react';
-import { BarChart3, TrendingUp, Users, BookOpen, CreditCard, Award, CheckCircle2 } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, BookOpen, CreditCard, Award, UserPlus, ArrowLeft, Plus } from 'lucide-react';
 import { Student, Course } from '../../types';
 
 interface AnalyticsScreenProps {
   students: Student[];
   courses: Course[];
   totalRevenue: number;
+  onNavigateToRegister?: () => void;
+  onNavigateToStudentsList?: () => void;
 }
 
 export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
   students,
   courses,
   totalRevenue,
+  onNavigateToRegister,
+  onNavigateToStudentsList,
 }) => {
   // Payment methods distribution
   const paymentCounts = students.reduce<Record<string, number>>((acc, curr) => {
@@ -35,11 +39,34 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
         <div>
           <h2 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2.5">
             <BarChart3 className="w-5 h-5 text-blue-400" />
-            <span>لوحة المؤشرات والتحليلات الأكاديمية</span>
+            <span>الرئيسية - لوحة المؤشرات والتحليلات</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1 font-medium">
-            بيانات الاشتراكات، الإقبال على الكورسات، وتحليلات بوابات الدفع الإلكتروني
+            مرحباً بك في المنظومة الأكاديمية - نظرة شاملة على الاشتراكات والمؤشرات والوصول السريع
           </p>
+        </div>
+
+        {/* Quick Action Buttons */}
+        <div className="flex items-center gap-2.5">
+          {onNavigateToRegister && (
+            <button
+              onClick={onNavigateToRegister}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-900/30 transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>تسجيل طالب جديد</span>
+            </button>
+          )}
+
+          {onNavigateToStudentsList && (
+            <button
+              onClick={onNavigateToStudentsList}
+              className="bg-[#121e30] hover:bg-[#1a2b44] text-slate-200 border border-[#213552] text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <Users className="w-4 h-4 text-emerald-400" />
+              <span>سجل الطلاب</span>
+            </button>
+          )}
         </div>
       </div>
 

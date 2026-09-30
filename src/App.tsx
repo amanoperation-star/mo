@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { NavigationScreen, Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig, CenterSettings, SupabaseConfig } from './types';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { NavigationScreen, Student, Course, Expense, StaffMember, WhatsAppTemplate, AuditLog, WhatsAppIntegrationConfig, CenterSettings, SupabaseConfig, AppNotification } from './types';
 import {
   getStoredStudents,
   saveStoredStudents,
@@ -18,6 +18,8 @@ import {
   saveStoredTemplates,
   getStoredLogs,
   saveStoredLogs,
+  getStoredNotifications,
+  saveStoredNotifications,
   getStoredWhatsConfig,
   saveStoredWhatsConfig,
   getStoredCenterSettings,
@@ -32,6 +34,8 @@ import {
   exportDatabaseToJson,
   exportStudentsToExcel,
 } from './utils/storage';
+import { broadcastRealtimeEvent, subscribeToRealtimeEvents, RealtimeSyncPayload } from './utils/realtimeBroadcast';
+import { RealtimeNotificationToast } from './components/RealtimeNotificationToast';
 import { initialStudents, initialCourses, initialExpenses, initialStaff, initialWhatsAppTemplates, initialAuditLogs } from './data/initialData';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -45,15 +49,17 @@ import { CoursesManagementScreen } from './components/screens/CoursesManagementS
 import { StaffPermissionsScreen } from './components/screens/StaffPermissionsScreen';
 import { AuditLogScreen } from './components/screens/AuditLogScreen';
 import { CloudSettingsScreen } from './components/screens/CloudSettingsScreen';
+import { LoginScreen } from './components/screens/LoginScreen';
 import { StudentSuccessModal } from './components/modals/StudentSuccessModal';
+import { ProductionResetModal, ResetCategories } from './components/modals/ProductionResetModal';
 import { ReceiptViewModal } from './components/modals/ReceiptViewModal';
 import { DirectWhatsAppModal } from './components/modals/DirectWhatsAppModal';
 import { InstallmentSettleModal } from './components/modals/InstallmentSettleModal';
 import { getDueInstallments } from './utils/installmentUtils';
 
 export default function App() {
-  // Navigation State - defaults to 'new-student' as in screenshot
-  const [currentScreen, setCurrentScreen] = useState<NavigationScreen>('new-student');
+  // Navigation State - defaults to 'analytics' (Home Dashboard)
+  const [currentScreen, setCurrentScreen] = useState<NavigationScreen>('analytics');
   const [studentsListInitialFilter, setStudentsListInitialFilter] = useState<
     'all' | 'full' | 'pending_installment' | 'paid_in_full' | 'due_soon'
   >('all');
@@ -65,10 +71,39 @@ export default function App() {
   const [staff, setStaff] = useState<StaffMember[]>(() => getStoredStaff());
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>(() => getStoredTemplates());
   const [logs, setLogs] = useState<AuditLog[]>(() => getStoredLogs());
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
   const [whatsAppConfig, setWhatsAppConfig] = useState<WhatsAppIntegrationConfig>(() => getStoredWhatsConfig());
   const [centerSettings, setCenterSettings] = useState<CenterSettings>(() => getStoredCenterSettings());
   const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>(() => getStoredSupabaseConfig());
   const [grades, setGrades] = useState<string[]>(() => getStoredGrades());
+
+  // Real-time Event Toast State
+  const [latestRealtimeEvent, setLatestRealtimeEvent] = useState<RealtimeSyncPayload | null>(null);
+
+  // Auth State
+  const [currentUser, setCurrentUser] = useState<StaffMember | null>(() => {
+    try {
+      const saved = localStorage.getItem('el_saqqa_current_user');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return null;
+  });
+
+  const handleLogin = (user: StaffMember) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('el_saqqa_current_user', JSON.stringify(user));
+    } catch (e) {}
+    setStorageNotification(`أهلاً بك يا ${user.name}، تم تسجيل الدخول بنجاح!`);
+    setTimeout(() => setStorageNotification(null), 3000);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('el_saqqa_current_user');
+    } catch (e) {}
+  };
 
   // UI States - initialized from localStorage (defaults to true for dark mode)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -88,7 +123,8 @@ export default function App() {
   const [whatsAppMessageType, setWhatsAppMessageType] = useState<'registration' | 'installment_reminder'>('registration');
   const [settlingStudentFromSidebar, setSettlingStudentFromSidebar] = useState<Student | null>(null);
   const [storageNotification, setStorageNotification] = useState<string | null>(null);
-  const [settingsInitialTab, setSettingsInitialTab] = useState<'header' | 'supabase'>('header');
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'header' | 'supabase' | 'reset'>('header');
+  const [showProductionResetModal, setShowProductionResetModal] = useState(false);
 
   // Compute approaching / overdue installments based on registration date
   const dueInstallments = useMemo(() => getDueInstallments(students), [students]);
@@ -137,6 +173,74 @@ export default function App() {
   useEffect(() => {
     saveStoredLogs(logs);
   }, [logs]);
+
+  useEffect(() => {
+    saveStoredNotifications(notifications);
+  }, [notifications]);
+
+  // Real-Time Cross-Browser Listener Subscriptions
+  useEffect(() => {
+    const unsubscribe = subscribeToRealtimeEvents((payload) => {
+      // 1. Reload latest stored state in real-time
+      setStudents(getStoredStudents());
+      setCourses(getStoredCourses());
+      setExpenses(getStoredExpenses());
+      setStaff(getStoredStaff());
+      setLogs(getStoredLogs());
+      setCenterSettings(getStoredCenterSettings());
+      setSupabaseConfig(getStoredSupabaseConfig());
+      setGrades(getStoredGrades());
+
+      // 2. Add notification if present
+      if (payload.notification) {
+        const newNotif = payload.notification;
+        setNotifications((prev) => {
+          if (prev.some((n) => n.id === newNotif.id)) return prev;
+          return [newNotif, ...prev];
+        });
+      }
+
+      // 3. Trigger live Toast popup
+      setLatestRealtimeEvent(payload);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Helper to trigger and broadcast a real-time event & notification
+  const triggerRealtimeAction = useCallback(
+    (
+      actionTitle: string,
+      actionDetails: string,
+      type: 'success' | 'info' | 'warning' | 'installment' = 'info',
+      linkScreen?: NavigationScreen
+    ) => {
+      const sender = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+      const newNotif: AppNotification = {
+        id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        title: actionTitle,
+        details: actionDetails,
+        user: sender,
+        timestamp: 'الآن',
+        type,
+        read: false,
+        linkScreen,
+      };
+
+      setNotifications((prev) => [newNotif, ...prev]);
+
+      // Broadcast in real-time to all other open browsers/tabs
+      broadcastRealtimeEvent({
+        type: 'NOTIFICATION_ADDED',
+        senderUser: sender,
+        actionTitle,
+        actionDetails,
+        timestamp: 'الآن',
+        notification: newNotif,
+      });
+    },
+    [currentUser, centerSettings]
+  );
 
   useEffect(() => {
     saveStoredWhatsConfig(whatsAppConfig);
@@ -242,16 +346,24 @@ export default function App() {
       )
     );
 
-    // Add Audit Log
+    // Add Audit Log & Realtime Broadcast
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       action: 'تسجيل اشتراك طالب جديد وتأكيد الدفع',
-      user: 'أك. محمود عزت',
+      user: currentUserTitle,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
       details: `تم تفعيل كود ${generatedCode} للطالب ${newStudent.name} بمبلغ ${newStudent.amountPaid} ج.م`,
       type: 'success',
     };
     setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `تسجيل طالب جديد: ${newStudent.name}`,
+      `تم تفعيل كود ${generatedCode} (${newStudent.course}) بمبلغ ${newStudent.amountPaid} ج.م`,
+      'success',
+      'students-list'
+    );
 
     // Show Success Modal
     setSuccessStudent(newStudent);
@@ -263,16 +375,70 @@ export default function App() {
     if (!target) return;
     if (window.confirm(`هل أنت متأكد من حذف اشتراك الطالب: ${target.name}؟`)) {
       setStudents((prev) => prev.filter((s) => s.id !== id));
+      const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
       const newLog: AuditLog = {
         id: `log-${Date.now()}`,
         action: 'حذف اشتراك طالب',
-        user: 'أك. محمود عزت',
+        user: currentUserTitle,
         timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
         details: `تم إلغاء تفعيل وحذف بيانات الطالب ${target.name}`,
         type: 'warning',
       };
       setLogs((prev) => [newLog, ...prev]);
+
+      triggerRealtimeAction(
+        `حذف اشتراك طالب: ${target.name}`,
+        `تم إلغاء تفعيل حساب الطالب (${target.name}) وحذفه من السجل`,
+        'warning',
+        'students-list'
+      );
     }
+  };
+
+  // Delete All Students
+  const handleDeleteAllStudents = () => {
+    const count = students.length;
+    setStudents([]);
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'مسح جميع بيانات الطلاب دفعة واحدة',
+      user: currentUserTitle,
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم مسح وتفريغ سجل الطلاب بالكامل بواقع (${count}) طالب`,
+      type: 'warning',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `تفريغ سجل الطلاب بالكامل`,
+      `تم مسح كافة سجلات الاشتراكات بواقع (${count}) طالب`,
+      'warning',
+      'students-list'
+    );
+  };
+
+  // Delete Multiple Selected Students
+  const handleDeleteMultipleStudents = (ids: string[]) => {
+    const count = ids.length;
+    setStudents((prev) => prev.filter((s) => !ids.includes(s.id)));
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'حذف مجموعة طلاب محددين',
+      user: currentUserTitle,
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم حذف (${count}) طلاب محددين من السجل`,
+      type: 'warning',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `حذف (${count}) طلاب محددين`,
+      `تم حذف مجموعة طلاب محددين من السجل`,
+      'warning',
+      'students-list'
+    );
   };
 
   // Update Student (e.g. Settle Installment / Mark as Paid)
@@ -282,21 +448,29 @@ export default function App() {
     );
 
     const target = students.find((s) => s.id === id);
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+    const isSettle = updatedData.installmentStatus === 'paid_in_full';
+
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
-      action:
-        updatedData.installmentStatus === 'paid_in_full'
-          ? 'سداد قسط وتصفية حساب الطالب'
-          : 'تحديث بيانات الطالب',
-      user: 'أك. محمود عزت',
+      action: isSettle ? 'سداد قسط وتصفية حساب الطالب' : 'تحديث بيانات الطالب',
+      user: currentUserTitle,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      details:
-        updatedData.installmentStatus === 'paid_in_full'
-          ? `تم سداد وتسوية قسط الطالب (${target?.name}) وتحديث الحالة إلى (تم دفع القسط) بنجاح`
-          : `تم تحديث بيانات الطالب (${target?.name})`,
+      details: isSettle
+        ? `تم سداد وتسوية قسط الطالب (${target?.name}) وتحديث الحالة إلى (تم دفع القسط) بنجاح`
+        : `تم تحديث بيانات الطالب (${target?.name})`,
       type: 'success',
     };
     setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      isSettle ? `سداد قسط وتصفية حساب: ${target?.name}` : `تحديث بيانات الطالب: ${target?.name}`,
+      isSettle
+        ? `تم تسوية قسط الطالب ${target?.name} بمبلغ ${updatedData.amountPaid || target?.amountPaid} ج.م`
+        : `تعديل بيانات الطالب ${target?.name}`,
+      isSettle ? 'installment' : 'info',
+      'students-list'
+    );
   };
 
   // Add Expense
@@ -307,15 +481,23 @@ export default function App() {
     };
     setExpenses((prev) => [newExpense, ...prev]);
 
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       action: 'تسجيل بند مصروف جديد',
-      user: 'أك. محمود عزت',
+      user: currentUserTitle,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
       details: `تم صرف مبلغ ${newExpense.amount} ج.م لبند (${newExpense.title})`,
       type: 'info',
     };
     setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `تسجيل مصروف جديد: ${newExpense.title}`,
+      `تم صرف مبلغ ${newExpense.amount} ج.م لبند (${newExpense.category})`,
+      'info',
+      'expenses'
+    );
   };
 
   // Delete Expense
@@ -342,15 +524,23 @@ export default function App() {
     };
     setStaff((prev) => [...prev, newStaff]);
 
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       action: 'إضافة عضو جديد وتعيين الصلاحيات',
-      user: 'أك. محمود عزت',
+      user: currentUserTitle,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
       details: `تمت إضافة (${newStaff.name} - ${newStaff.role}) بصلاحيات: ${newStaff.permissions.join(', ')}`,
       type: 'info',
     };
     setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `إضافة موظف جديد: ${newStaff.name}`,
+      `تم إنشاء حساب (${newStaff.role}) مع اسم المستخدم (${newStaff.username})`,
+      'success',
+      'staff'
+    );
   };
 
   // Update Staff Member & Permissions
@@ -360,15 +550,23 @@ export default function App() {
     );
 
     const target = staff.find((st) => st.id === id);
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       action: 'تحديث بيانات وصلاحيات عضو فريق العمل',
-      user: 'أك. محمود عزت',
+      user: currentUserTitle,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      details: `تم تحديث صلاحيات (${target?.name || 'عضو'})`,
+      details: `تم تحديث صلاحيات وحساب (${target?.name || 'عضو'})`,
       type: 'info',
     };
     setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `تحديث صلاحيات موظف: ${target?.name}`,
+      `تم تحديث بيانات وحساب الموظف ${target?.name}`,
+      'info',
+      'staff'
+    );
   };
 
   // Delete Staff Member
@@ -376,15 +574,23 @@ export default function App() {
     const target = staff.find((st) => st.id === id);
     setStaff((prev) => prev.filter((st) => st.id !== id));
 
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       action: 'حذف عضو من فريق العمل',
-      user: 'أك. محمود عزت',
+      user: currentUserTitle,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
       details: `تم حذف (${target?.name || 'عضو'}) من فريق العمل وسحب كافة الصلاحيات`,
       type: 'warning',
     };
     setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `حذف موظف: ${target?.name}`,
+      `تم حذف الموظف (${target?.name}) وإلغاء صلاحيات الوصول`,
+      'warning',
+      'staff'
+    );
   };
 
   // Add Course
@@ -509,19 +715,45 @@ export default function App() {
     );
   };
 
-  // Reset Data to Factory Defaults
-  const handleResetData = () => {
-    setStudents(initialStudents);
-    setCourses(initialCourses);
-    setExpenses(initialExpenses);
-    setStaff(initialStaff);
-    setTemplates(initialWhatsAppTemplates);
-    setLogs(initialAuditLogs);
-    setCenterSettings(defaultCenterSettings);
-    setSupabaseConfig(defaultSupabaseConfig);
-    setGrades(defaultGrades);
-    setStorageNotification('تمت استعادة البيانات الافتراضية بنجاح');
-    setTimeout(() => setStorageNotification(null), 3000);
+  // Execute Selective Production System Reset
+  const handleExecuteProductionReset = (categories: ResetCategories) => {
+    const wipedItems: string[] = [];
+
+    if (categories.students) {
+      setStudents([]);
+      wipedItems.push('سجل الطلاب والاشتراكات');
+    }
+    if (categories.expenses) {
+      setExpenses([]);
+      wipedItems.push('سجل المصروفات والمالية');
+    }
+    if (categories.logs) {
+      setLogs([]);
+      wipedItems.push('سجل الرقابة (Audit Log)');
+    }
+    if (categories.notifications) {
+      setNotifications([]);
+      wipedItems.push('قائمة الإشعارات والتنبيهات');
+    }
+    if (categories.courses) {
+      setCourses([]);
+      wipedItems.push('الكورسات والمراحل');
+    }
+    if (categories.staff) {
+      // Retain active logged in user or admin account
+      setStaff((prev) => prev.filter((st) => st.username === 'admin' || st.id === currentUser?.id));
+      wipedItems.push('حسابات المساعدين التجريبية');
+    }
+
+    const summaryText = `تم تصفية وتهيئة البيانات المحددة (${wipedItems.join('، ')}) وتجهيز المنظومة للعمل الميداني والإنتاج الرسمي 🚀.`;
+    setStorageNotification(summaryText);
+    setTimeout(() => setStorageNotification(null), 5000);
+
+    triggerRealtimeAction(
+      '🚀 تهيئة المنظومة والبدء في وضع الإنتاج',
+      summaryText,
+      'warning'
+    );
   };
 
   // Import JSON Backup
@@ -538,6 +770,31 @@ export default function App() {
     setStorageNotification('تم استيراد النسخة الاحتياطية بنجاح!');
     setTimeout(() => setStorageNotification(null), 3000);
   };
+
+  // Notification Handlers
+  const handleMarkAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleClearNotifications = () => {
+    setNotifications([]);
+  };
+
+  const handleNotificationClick = (notif: AppNotification) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
+    );
+  };
+
+  if (!currentUser) {
+    return (
+      <LoginScreen
+        staffList={staff}
+        centerSettings={centerSettings}
+        onLogin={handleLogin}
+      />
+    );
+  }
 
   return (
     <div
@@ -570,6 +827,14 @@ export default function App() {
           );
           setTimeout(() => setStorageNotification(null), 3500);
         }}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        notifications={notifications}
+        onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+        onClearNotifications={handleClearNotifications}
+        onNotificationClick={handleNotificationClick}
+        onNavigateToScreen={(screen) => setCurrentScreen(screen)}
+        onOpenProductionReset={() => setShowProductionResetModal(true)}
       />
 
       {/* Storage Notification Banner */}
@@ -614,6 +879,8 @@ export default function App() {
             setStudentsListInitialFilter('due_soon');
             setCurrentScreen('students-list');
           }}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
 
         {/* Dynamic Center Screen View */}
@@ -636,6 +903,8 @@ export default function App() {
               grades={grades}
               initialPaymentFilter={studentsListInitialFilter}
               onDeleteStudent={handleDeleteStudent}
+              onDeleteAllStudents={handleDeleteAllStudents}
+              onDeleteMultipleStudents={handleDeleteMultipleStudents}
               onUpdateStudent={handleUpdateStudent}
               onViewReceipt={(url) => setViewReceiptUrl(url)}
               onOpenWhatsAppModal={(student) => {
@@ -669,6 +938,11 @@ export default function App() {
               students={students}
               courses={courses}
               totalRevenue={totalRevenue}
+              onNavigateToRegister={() => setCurrentScreen('new-student')}
+              onNavigateToStudentsList={() => {
+                setStudentsListInitialFilter('all');
+                setCurrentScreen('students-list');
+              }}
             />
           )}
 
@@ -715,13 +989,14 @@ export default function App() {
           {currentScreen === 'settings' && (
             <CloudSettingsScreen
               onExportJson={exportDatabaseToJson}
-              onResetData={handleResetData}
+              onResetData={() => setShowProductionResetModal(true)}
               onImportJson={handleImportJson}
               centerSettings={centerSettings}
               onUpdateCenterSettings={handleUpdateCenterSettings}
               supabaseConfig={supabaseConfig}
               onUpdateSupabaseConfig={handleUpdateSupabaseConfig}
               initialTab={settingsInitialTab}
+              onOpenProductionReset={() => setShowProductionResetModal(true)}
               databaseStats={{
                 studentsCount: students.length,
                 coursesCount: courses.length,
@@ -792,6 +1067,25 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Production System Reset Modal */}
+      {showProductionResetModal && (
+        <ProductionResetModal
+          onClose={() => setShowProductionResetModal(false)}
+          onExecuteReset={handleExecuteProductionReset}
+        />
+      )}
+
+      {/* Realtime Action Toast Popup */}
+      <RealtimeNotificationToast
+        latestEvent={latestRealtimeEvent}
+        onClose={() => setLatestRealtimeEvent(null)}
+        onOpenNotifications={() => {
+          // Open notification bell dropdown
+          const bellBtn = document.getElementById('notification-bell-button');
+          if (bellBtn) bellBtn.click();
+        }}
+      />
     </div>
   );
 }

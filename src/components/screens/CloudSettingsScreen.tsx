@@ -10,6 +10,7 @@ import {
   Sparkles,
   Award,
   ShieldCheck,
+  ShieldAlert,
   FileText,
   Cloud,
   Database,
@@ -49,7 +50,8 @@ interface CloudSettingsScreenProps {
   onUpdateCenterSettings: (newSettings: CenterSettings) => void;
   supabaseConfig?: SupabaseConfig;
   onUpdateSupabaseConfig?: (newConfig: SupabaseConfig) => void;
-  initialTab?: 'header' | 'supabase';
+  initialTab?: 'header' | 'supabase' | 'reset';
+  onOpenProductionReset?: () => void;
   databaseStats?: {
     studentsCount: number;
     coursesCount: number;
@@ -67,6 +69,7 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
   supabaseConfig = defaultSupabaseConfig,
   onUpdateSupabaseConfig,
   initialTab = 'header',
+  onOpenProductionReset,
   databaseStats = {
     studentsCount: 0,
     coursesCount: 0,
@@ -76,8 +79,8 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Active Tab: 'header' for Center Identity / Header, 'supabase' for Supabase Cloud Settings
-  const [activeTab, setActiveTab] = useState<'header' | 'supabase'>(initialTab);
+  // Active Tab: 'header' for Center Identity, 'supabase' for Supabase, 'reset' for Production Reset
+  const [activeTab, setActiveTab] = useState<'header' | 'supabase' | 'reset'>(initialTab);
 
   useEffect(() => {
     if (initialTab) {
@@ -623,10 +626,25 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
           }`}
         >
           <Cloud className="w-4 h-4" />
-          <span>إعدادات السحابة و Supabase (Project URL & Anon Key)</span>
+          <span>إعدادات السحابة و Supabase</span>
           {supabaseForm.isConnected && (
             <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
           )}
+        </button>
+
+        {/* Tab 3: Production System Setup & Reset */}
+        <button
+          id="tab-production-reset-settings"
+          type="button"
+          onClick={() => setActiveTab('reset')}
+          className={`flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'reset'
+              ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-[#111e30]'
+          }`}
+        >
+          <ShieldAlert className="w-4 h-4 text-rose-300" />
+          <span>تهيئة المنظومة والإنتاج 🚀</span>
         </button>
       </div>
 
@@ -876,6 +894,37 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                   <span className="text-slate-500 text-[10px]">{formData.receiptFooterText}</span>
                 </div>
               </div>
+
+              {/* Production System Reset Card */}
+              {onOpenProductionReset && (
+                <div className="p-4 rounded-xl bg-[#1a0c14] border border-rose-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center font-bold shrink-0">
+                      <ShieldAlert className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                        <span>زرار تهيئة المنظومة وبدء الإنتاج الفعلي (Production Setup)</span>
+                        <span className="text-[9px] bg-rose-950 text-rose-300 border border-rose-800/60 px-2 py-0.5 rounded font-mono">
+                          جديد
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                        تتيح لك خيارات مخصصة بمربعات اختيار لمسح وتصفير بيانات التجربة (الطلاب، المصروفات، السجلات) لبدء العمل الميداني الفعلي
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={onOpenProductionReset}
+                    className="bg-rose-600 hover:bg-rose-500 text-white text-xs px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-rose-600/30 transition-all cursor-pointer shrink-0"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>افتح زرار التهيئة والتحول للإنتاج 🚀</span>
+                  </button>
+                </div>
+              )}
 
               {/* Form Action Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#14233a]">
@@ -1447,6 +1496,88 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>إعادة ضبط المصنع واسترجاع البيانات الأولية</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3 CONTENT: Production Setup & System Reset */}
+      {activeTab === 'reset' && (
+        <div id="tab-content-reset" className="space-y-6 animate-fadeIn">
+          <div className="bg-[#080f1a] border border-rose-500/40 rounded-2xl p-5 md:p-7 space-y-6">
+            <div className="flex items-center gap-3 border-b border-[#17273f] pb-4">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center font-bold shrink-0">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <span>قسم تهيئة المنظومة والبدء في وضع الإنتاج (Production Setup)</span>
+                </h3>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  تصفية وتطهير بيانات التجربة والاختبار وتفريغ السجلات مع إمكانية تحديد البيانات المطلوبة بمربعات اختيار.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-[#0e1726] border border-[#1b2c45] rounded-xl p-5 flex flex-col justify-between gap-4">
+                <div className="space-y-2">
+                  <span className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>تصفير بيانات التست والتحول للإنتاج</span>
+                  </span>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    يمكنك استخدام زر التهيئة المخصص لاختيار ما ترغب في تصفيره بشكل مباشر ودقيق (الطلاب والاشتراكات، المصروفات، السجلات، الحسابات التجريبية).
+                  </p>
+                </div>
+
+                {onOpenProductionReset && (
+                  <button
+                    type="button"
+                    onClick={onOpenProductionReset}
+                    className="bg-rose-600 hover:bg-rose-500 text-white text-xs md:text-sm px-5 py-3 rounded-xl font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30 transition-all cursor-pointer w-full mt-2"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>تأكيد التهيئة والتحول للإنتاج 🚀</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="bg-[#0e1726] border border-[#1b2c45] rounded-xl p-5 flex flex-col justify-between gap-4">
+                <div className="space-y-2">
+                  <span className="text-sm font-bold text-white flex items-center gap-2">
+                    <Database className="w-4 h-4 text-blue-400" />
+                    <span>إحصائيات قاعدة البيانات الحالية</span>
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 pt-1">
+                    <div className="bg-[#080f1a] p-2.5 rounded-lg border border-[#182942] flex justify-between">
+                      <span className="text-slate-400">إجمالي الطلاب:</span>
+                      <span className="font-mono font-bold text-blue-400">{databaseStats.studentsCount}</span>
+                    </div>
+                    <div className="bg-[#080f1a] p-2.5 rounded-lg border border-[#182942] flex justify-between">
+                      <span className="text-slate-400">الكورسات:</span>
+                      <span className="font-mono font-bold text-emerald-400">{databaseStats.coursesCount}</span>
+                    </div>
+                    <div className="bg-[#080f1a] p-2.5 rounded-lg border border-[#182942] flex justify-between">
+                      <span className="text-slate-400">المصروفات:</span>
+                      <span className="font-mono font-bold text-amber-400">{databaseStats.expensesCount}</span>
+                    </div>
+                    <div className="bg-[#080f1a] p-2.5 rounded-lg border border-[#182942] flex justify-between">
+                      <span className="text-slate-400">فريق العمل:</span>
+                      <span className="font-mono font-bold text-cyan-400">{databaseStats.staffCount}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onExportJson}
+                  className="bg-[#132238] hover:bg-[#1a2e4c] border border-blue-500/40 text-blue-300 text-xs px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer w-full"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>تصدير نسخة احتياطية (JSON) قبل التهيئة</span>
                 </button>
               </div>
             </div>

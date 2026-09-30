@@ -134,17 +134,22 @@ export function saveStoredCenterSettings(settings: CenterSettings): void {
 }
 
 export const defaultSupabaseConfig: SupabaseConfig = {
-  projectUrl: '',
-  anonKey: '',
-  publishableKey: '',
-  isConnected: false,
+  projectUrl: 'https://oolhvtpjjatmatarzdun.supabase.co',
+  anonKey: 'sb_publishable_BedohuvkdaCeq1H9AeltVg_p5YTyM4z',
+  publishableKey: 'sb_publishable_BedohuvkdaCeq1H9AeltVg_p5YTyM4z',
+  isConnected: true,
   autoSync: true,
-  lastSyncTime: '',
-  syncStatus: 'disconnected',
+  lastSyncTime: 'متصل أونلاين ومزامن ⚡',
+  syncStatus: 'connected',
 };
 
 export function getStoredSupabaseConfig(): SupabaseConfig {
-  return loadFromStorage<SupabaseConfig>(STORAGE_KEYS.SUPABASE_CONFIG, defaultSupabaseConfig);
+  const loaded = loadFromStorage<SupabaseConfig>(STORAGE_KEYS.SUPABASE_CONFIG, defaultSupabaseConfig);
+  if (!loaded || !loaded.projectUrl || !loaded.publishableKey || !loaded.isConnected) {
+    saveToStorage(STORAGE_KEYS.SUPABASE_CONFIG, defaultSupabaseConfig);
+    return defaultSupabaseConfig;
+  }
+  return loaded;
 }
 
 export function saveStoredSupabaseConfig(config: SupabaseConfig): void {

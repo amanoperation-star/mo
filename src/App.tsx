@@ -57,6 +57,23 @@ import { DirectWhatsAppModal } from './components/modals/DirectWhatsAppModal';
 import { InstallmentSettleModal } from './components/modals/InstallmentSettleModal';
 import { getDueInstallments } from './utils/installmentUtils';
 
+import {
+  fetchAllCloudData,
+  syncStudentToCloud,
+  deleteStudentFromCloud,
+  deleteAllStudentsFromCloud,
+  syncCourseToCloud,
+  deleteCourseFromCloud,
+  syncExpenseToCloud,
+  deleteExpenseFromCloud,
+  syncStaffToCloud,
+  deleteStaffFromCloud,
+  syncLogToCloud,
+  syncNotificationToCloud,
+  syncCenterSettingsToCloud,
+  subscribeToSupabaseRealtime,
+} from './utils/supabaseClient';
+
 export default function App() {
   // Navigation State - defaults to 'analytics' (Home Dashboard)
   const [currentScreen, setCurrentScreen] = useState<NavigationScreen>('analytics');
@@ -180,8 +197,39 @@ export default function App() {
 
   // Real-Time Cross-Browser Listener Subscriptions
   useEffect(() => {
-    const unsubscribe = subscribeToRealtimeEvents((payload) => {
-      // 1. Reload latest stored state in real-time
+    let isMounted = true;
+
+    // 1. Initial Cloud Sync from Supabase Instance
+    async function initSupabaseCloud() {
+      const cloudData = await fetchAllCloudData();
+      if (cloudData && isMounted) {
+        if (cloudData.students) setStudents(cloudData.students);
+        if (cloudData.courses) setCourses(cloudData.courses);
+        if (cloudData.expenses) setExpenses(cloudData.expenses);
+        if (cloudData.staff) setStaff(cloudData.staff);
+        if (cloudData.logs) setLogs(cloudData.logs);
+        if (cloudData.notifications) setNotifications(cloudData.notifications);
+        if (cloudData.centerSettings) setCenterSettings(cloudData.centerSettings);
+      }
+    }
+
+    initSupabaseCloud();
+
+    // 2. Subscribe to Supabase Postgres Changes
+    const unsubSupabase = subscribeToSupabaseRealtime(() => {
+      if (isMounted) {
+        setStudents(getStoredStudents());
+        setCourses(getStoredCourses());
+        setExpenses(getStoredExpenses());
+        setStaff(getStoredStaff());
+        setLogs(getStoredLogs());
+        setNotifications(getStoredNotifications());
+        setCenterSettings(getStoredCenterSettings());
+      }
+    });
+
+    // 3. Subscribe to Local Broadcast Events
+    const unsubscribeBroadcast = subscribeToRealtimeEvents((payload) => {
       setStudents(getStoredStudents());
       setCourses(getStoredCourses());
       setExpenses(getStoredExpenses());
@@ -191,7 +239,6 @@ export default function App() {
       setSupabaseConfig(getStoredSupabaseConfig());
       setGrades(getStoredGrades());
 
-      // 2. Add notification if present
       if (payload.notification) {
         const newNotif = payload.notification;
         setNotifications((prev) => {
@@ -200,11 +247,14 @@ export default function App() {
         });
       }
 
-      // 3. Trigger live Toast popup
       setLatestRealtimeEvent(payload);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubSupabase();
+      unsubscribeBroadcast();
+    };
   }, []);
 
   // Helper to trigger and broadcast a real-time event & notification
@@ -280,7 +330,8 @@ export default function App() {
   const handleUpdateCenterSettings = (newSettings: CenterSettings) => {
     setCenterSettings(newSettings);
     saveStoredCenterSettings(newSettings);
-    setStorageNotification('تم حفظ وتحديث بيانات المنظومة والترويسة بنجاح في LocalStorage');
+    syncCenterSettingsToCloud(newSettings);
+    setStorageNotification('تم حفظ وتحديث بيانات المنظومة والترويسة بنجاح في LocalStorage والسحابة');
     setTimeout(() => setStorageNotification(null), 3500);
 
     const newLog: AuditLog = {
@@ -339,11 +390,19 @@ export default function App() {
     const updatedStudents = [newStudent, ...students];
     setStudents(updatedStudents);
 
+    // Sync to Supabase Cloud directly
+    syncStudentToCloud(newStudent);
+
     // Increment course enrolled count
     setCourses((prev) =>
-      prev.map((c) =>
-        c.name === newStudent.course ? { ...c, enrolledCount: c.enrolledCount + 1 } : c
-      )
+      prev.map((c) => {
+        if (c.name === newStudent.course) {
+          const updated = { ...c, enrolledCount: c.enrolledCount + 1 };
+          syncCourseToCloud(updated);
+          return updated;
+        }
+        return c;
+      })
     );
 
     // Add Audit Log & Realtime Broadcast
@@ -375,6 +434,7 @@ export default function App() {
     if (!target) return;
     if (window.confirm(`هل أنت متأكد من حذف اشتراك الطالب: ${target.name}؟`)) {
       setStudents((prev) => prev.filter((s) => s.id !== id));
+      deleteStudentFromCloud(id);
       const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
       const newLog: AuditLog = {
         id: `log-${Date.now()}`,
@@ -399,6 +459,7 @@ export default function App() {
   const handleDeleteAllStudents = () => {
     const count = students.length;
     setStudents([]);
+    deleteAllStudentsFromCloud();
     const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -422,6 +483,7 @@ export default function App() {
   const handleDeleteMultipleStudents = (ids: string[]) => {
     const count = ids.length;
     setStudents((prev) => prev.filter((s) => !ids.includes(s.id)));
+    ids.forEach((id) => deleteStudentFromCloud(id));
     const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -443,8 +505,16 @@ export default function App() {
 
   // Update Student (e.g. Settle Installment / Mark as Paid)
   const handleUpdateStudent = (id: string, updatedData: Partial<Student>) => {
+    let updatedStudentObj: Student | null = null;
     setStudents((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updatedData } : s))
+      prev.map((s) => {
+        if (s.id === id) {
+          updatedStudentObj = { ...s, ...updatedData };
+          syncStudentToCloud(updatedStudentObj);
+          return updatedStudentObj;
+        }
+        return s;
+      })
     );
 
     const target = students.find((s) => s.id === id);
@@ -480,6 +550,7 @@ export default function App() {
       id: `exp-${Date.now()}`,
     };
     setExpenses((prev) => [newExpense, ...prev]);
+    syncExpenseToCloud(newExpense);
 
     const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
@@ -503,16 +574,21 @@ export default function App() {
   // Delete Expense
   const handleDeleteExpense = (id: string) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+    deleteExpenseFromCloud(id);
   };
 
   // Toggle Staff Payment Status
   const handleToggleStaffStatus = (id: string) => {
     setStaff((prev) =>
-      prev.map((st) =>
-        st.id === id
-          ? { ...st, status: st.status === 'مدفوع' ? 'معلق' : 'مدفوع' }
-          : st
-      )
+      prev.map((st) => {
+        if (st.id === id) {
+          const newStatus: 'مدفوع' | 'معلق' = st.status === 'مدفوع' ? 'معلق' : 'مدفوع';
+          const updated: StaffMember = { ...st, status: newStatus };
+          syncStaffToCloud(updated);
+          return updated;
+        }
+        return st;
+      })
     );
   };
 
@@ -523,6 +599,7 @@ export default function App() {
       id: `st-${Date.now()}`,
     };
     setStaff((prev) => [...prev, newStaff]);
+    syncStaffToCloud(newStaff);
 
     const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
@@ -546,7 +623,14 @@ export default function App() {
   // Update Staff Member & Permissions
   const handleUpdateStaff = (id: string, updatedData: Partial<StaffMember>) => {
     setStaff((prev) =>
-      prev.map((st) => (st.id === id ? { ...st, ...updatedData } : st))
+      prev.map((st) => {
+        if (st.id === id) {
+          const updated = { ...st, ...updatedData };
+          syncStaffToCloud(updated);
+          return updated;
+        }
+        return st;
+      })
     );
 
     const target = staff.find((st) => st.id === id);
@@ -573,6 +657,7 @@ export default function App() {
   const handleDeleteStaff = (id: string) => {
     const target = staff.find((st) => st.id === id);
     setStaff((prev) => prev.filter((st) => st.id !== id));
+    deleteStaffFromCloud(id);
 
     const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
     const newLog: AuditLog = {
@@ -601,12 +686,20 @@ export default function App() {
       enrolledCount: 0,
     };
     setCourses((prev) => [...prev, newCourse]);
+    syncCourseToCloud(newCourse);
   };
 
   // Update Course (Name, Grade, Schedule, Price)
   const handleUpdateCourse = (id: string, updatedData: Partial<Course>) => {
     setCourses((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updatedData } : c))
+      prev.map((c) => {
+        if (c.id === id) {
+          const updated = { ...c, ...updatedData };
+          syncCourseToCloud(updated);
+          return updated;
+        }
+        return c;
+      })
     );
 
     const target = courses.find((c) => c.id === id);
@@ -624,7 +717,14 @@ export default function App() {
   // Toggle Course Active
   const handleToggleCourseActive = (id: string) => {
     setCourses((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c))
+      prev.map((c) => {
+        if (c.id === id) {
+          const updated = { ...c, isActive: !c.isActive };
+          syncCourseToCloud(updated);
+          return updated;
+        }
+        return c;
+      })
     );
   };
 
@@ -632,6 +732,7 @@ export default function App() {
   const handleDeleteCourse = (id: string) => {
     const target = courses.find((c) => c.id === id);
     setCourses((prev) => prev.filter((c) => c.id !== id));
+    deleteCourseFromCloud(id);
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,

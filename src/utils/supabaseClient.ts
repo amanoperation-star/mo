@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Student, Course, Expense, StaffMember, AuditLog, AppNotification, CenterSettings, SupabaseConfig } from '../types';
+import { Student, Course, Expense, StaffMember, AuditLog, AppNotification, CenterSettings } from '../types';
 import { getStoredSupabaseConfig, saveStoredStudents, saveStoredCourses, saveStoredExpenses, saveStoredStaff, saveStoredLogs, saveStoredNotifications, saveStoredCenterSettings } from './storage';
+import { RealtimeSyncPayload, broadcastRealtimeEvent } from './realtimeBroadcast';
 
 export const DEFAULT_SUPABASE_URL = 'https://oolhvtpjjatmatarzdun.supabase.co';
 export const DEFAULT_SUPABASE_KEY = 'sb_publishable_BedohuvkdaCeq1H9AeltVg_p5YTyM4z';
@@ -18,7 +19,9 @@ export function getSupabaseClient(): SupabaseClient | null {
     if (!supabaseInstance) {
       supabaseInstance = createClient(url, key, {
         auth: { persistSession: false },
-        realtime: { params: { eventsPerSecond: 10 } },
+        realtime: {
+          params: { eventsPerSecond: 20 },
+        },
       });
     }
     return supabaseInstance;
@@ -29,7 +32,24 @@ export function getSupabaseClient(): SupabaseClient | null {
 }
 
 export function resetSupabaseClient() {
+  if (realtimeChannel && supabaseInstance) {
+    try {
+      supabaseInstance.removeChannel(realtimeChannel);
+    } catch (e) {}
+  }
+  realtimeChannel = null;
   supabaseInstance = null;
+}
+
+function safeIsoDate(val?: string): string {
+  if (!val) return new Date().toISOString();
+  try {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return new Date().toISOString();
+    return d.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
 }
 
 // ==========================================
@@ -41,24 +61,24 @@ export function studentToDb(s: Student) {
     id: s.id,
     code: s.code,
     name: s.name,
-    phone: s.phone,
-    parent_whatsapp: s.parentWhatsapp,
-    grade: s.grade,
-    course: s.course,
+    phone: s.phone || null,
+    parent_whatsapp: s.parentWhatsapp || null,
+    grade: s.grade || null,
+    course: s.course || null,
     course_schedule: s.courseSchedule || null,
-    attendance_mode: s.attendanceMode,
-    amount_paid: s.amountPaid,
-    payment_method: s.paymentMethod,
-    confirmed_by: s.confirmedBy,
+    attendance_mode: s.attendanceMode || 'حضور سنتر',
+    amount_paid: s.amountPaid || 0,
+    payment_method: s.paymentMethod || 'نقدي كاش',
+    confirmed_by: s.confirmedBy || null,
     receipt_url: s.receiptUrl || null,
-    status: s.status,
+    status: s.status || 'active',
     payment_type: s.paymentType || 'full',
     total_course_fee: s.totalCourseFee || 0,
     installment_status: s.installmentStatus || 'paid_in_full',
     remaining_amount: s.remainingAmount || 0,
     installment_due_date: s.installmentDueDate || null,
     installment_notes: s.installmentNotes || null,
-    created_at: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
+    created_at: safeIsoDate(s.createdAt),
   };
 }
 
@@ -230,37 +250,37 @@ export async function fetchAllCloudData() {
       supabase.from('staff').select('*'),
       supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(50),
-      supabase.from('center_settings').select('*').eq('id', 'default').single(),
+      supabase.from('center_settings').select('*').eq('id', 'default').maybeSingle(),
     ]);
 
     const result: any = {};
 
-    if (stdRes.data && stdRes.data.length > 0) {
+    if (!stdRes.error && Array.isArray(stdRes.data)) {
       result.students = stdRes.data.map(studentFromDb);
       saveStoredStudents(result.students);
     }
 
-    if (crsRes.data && crsRes.data.length > 0) {
+    if (!crsRes.error && Array.isArray(crsRes.data) && crsRes.data.length > 0) {
       result.courses = crsRes.data.map(courseFromDb);
       saveStoredCourses(result.courses);
     }
 
-    if (expRes.data && expRes.data.length > 0) {
+    if (!expRes.error && Array.isArray(expRes.data)) {
       result.expenses = expRes.data.map(expenseFromDb);
       saveStoredExpenses(result.expenses);
     }
 
-    if (stfRes.data && stfRes.data.length > 0) {
+    if (!stfRes.error && Array.isArray(stfRes.data) && stfRes.data.length > 0) {
       result.staff = stfRes.data.map(staffFromDb);
       saveStoredStaff(result.staff);
     }
 
-    if (logRes.data && logRes.data.length > 0) {
+    if (!logRes.error && Array.isArray(logRes.data)) {
       result.logs = logRes.data.map(logFromDb);
       saveStoredLogs(result.logs);
     }
 
-    if (ntfRes.data && ntfRes.data.length > 0) {
+    if (!ntfRes.error && Array.isArray(ntfRes.data)) {
       result.notifications = ntfRes.data.map(notificationFromDb);
       saveStoredNotifications(result.notifications);
     }
@@ -268,15 +288,15 @@ export async function fetchAllCloudData() {
     if (setRes.data) {
       const row = setRes.data;
       result.centerSettings = {
-        centerName: row.center_name,
-        phoneNumber: row.phone_number,
-        platformUrl: row.platform_url,
-        academicYear: row.academic_year,
-        teacherName: row.teacher_name,
-        managerName: row.manager_name,
-        systemDescription: row.system_description,
-        receiptSystemTitle: row.receipt_system_title,
-        receiptFooterText: row.receipt_footer_text,
+        centerName: row.center_name || '',
+        phoneNumber: row.phone_number || '',
+        platformUrl: row.platform_url || '',
+        academicYear: row.academic_year || '',
+        teacherName: row.teacher_name || '',
+        managerName: row.manager_name || '',
+        systemDescription: row.system_description || '',
+        receiptSystemTitle: row.receipt_system_title || '',
+        receiptFooterText: row.receipt_footer_text || '',
       };
       saveStoredCenterSettings(result.centerSettings);
     }
@@ -293,7 +313,23 @@ export async function syncStudentToCloud(student: Student) {
   if (!supabase) return;
 
   try {
-    await supabase.from('students').upsert(studentToDb(student), { onConflict: 'id' });
+    const payload = studentToDb(student);
+    const { error } = await supabase.from('students').upsert(payload, { onConflict: 'id' });
+    if (error) {
+      console.warn('Supabase student upsert warning, attempting basic columns:', error.message);
+      await supabase.from('students').upsert({
+        id: student.id,
+        code: student.code,
+        name: student.name,
+        phone: student.phone || '',
+        grade: student.grade || '',
+        course: student.course || '',
+        amount_paid: student.amountPaid || 0,
+        payment_method: student.paymentMethod || 'نقدي كاش',
+        confirmed_by: student.confirmedBy || '',
+        status: student.status || 'active',
+      }, { onConflict: 'id' });
+    }
   } catch (e) {
     console.error('Error syncing student to Supabase:', e);
   }
@@ -315,7 +351,7 @@ export async function deleteAllStudentsFromCloud() {
   if (!supabase) return;
 
   try {
-    await supabase.from('students').delete().neq('id', 'keep_all');
+    await supabase.from('students').delete().neq('id', 'sentinel_none');
   } catch (e) {
     console.error('Error deleting all students from Supabase:', e);
   }
@@ -435,24 +471,108 @@ export async function syncCenterSettingsToCloud(settings: CenterSettings) {
   }
 }
 
-export function subscribeToSupabaseRealtime(onSync: () => void) {
+// ==========================================
+// SUPABASE REALTIME WEBSOCKET ENGINE
+// ==========================================
+
+const cloudEventListeners = new Set<(payload: RealtimeSyncPayload) => void>();
+const dbSyncListeners = new Set<() => void>();
+let realtimeChannel: any = null;
+
+export function getRealtimeChannel() {
   const supabase = getSupabaseClient();
-  if (!supabase) return () => {};
+  if (!supabase) return null;
+
+  if (realtimeChannel) {
+    return realtimeChannel;
+  }
 
   try {
-    const channel = supabase
-      .channel('public-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
-        await fetchAllCloudData();
-        onSync();
-      })
-      .subscribe();
+    const channel = supabase.channel('el_saqqa_global_room', {
+      config: {
+        broadcast: { ack: false, self: false },
+      },
+    });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // 1. Attach broadcast handler BEFORE subscribe()
+    channel.on('broadcast', { event: 'TEAM_REALTIME_ACTION' }, (message: any) => {
+      if (message?.payload) {
+        cloudEventListeners.forEach((cb) => {
+          try {
+            cb(message.payload);
+          } catch (err) {
+            console.error('Error in cloud event listener callback:', err);
+          }
+        });
+      }
+    });
+
+    // 2. Attach postgres_changes handlers BEFORE subscribe()
+    channel.on('postgres_changes', { event: '*', schema: 'public' }, async (payload: any) => {
+      console.log('📡 Realtime PostgreSQL Change received:', payload);
+      try {
+        await fetchAllCloudData();
+      } catch (err) {
+        console.warn('Error refetching cloud data after postgres change:', err);
+      }
+      dbSyncListeners.forEach((cb) => {
+        try {
+          cb();
+        } catch (err) {
+          console.error('Error in dbSyncListener callback:', err);
+        }
+      });
+    });
+
+    // 3. ONLY call subscribe() AFTER all callbacks are registered on the channel
+    channel.subscribe((status: string, err: any) => {
+      if (err) {
+        console.warn('📡 Supabase Realtime Channel Subscription Error:', err);
+      } else {
+        console.log('📡 Supabase Realtime Channel Status:', status);
+      }
+    });
+
+    realtimeChannel = channel;
+    return realtimeChannel;
   } catch (e) {
-    console.error('Error subscribing to Supabase Realtime:', e);
-    return () => {};
+    console.error('Error setting up Supabase Realtime channel:', e);
+    return null;
   }
+}
+
+export function broadcastToCloudTeam(payload: RealtimeSyncPayload) {
+  // 1. Instant WebSocket broadcast across ALL devices worldwide
+  try {
+    const channel = getRealtimeChannel();
+    if (channel) {
+      channel.send({
+        type: 'broadcast',
+        event: 'TEAM_REALTIME_ACTION',
+        payload,
+      });
+    }
+  } catch (e) {
+    console.error('Error sending Supabase broadcast:', e);
+  }
+
+  // 2. Also broadcast to same-machine browser tabs
+  broadcastRealtimeEvent(payload);
+}
+
+export function subscribeToSupabaseRealtime(
+  onCloudEvent: (payload: RealtimeSyncPayload) => void,
+  onDbSync: () => void
+): () => void {
+  // Register listeners into sets
+  cloudEventListeners.add(onCloudEvent);
+  dbSyncListeners.add(onDbSync);
+
+  // Ensure singleton channel is created and subscribed with all handlers attached
+  getRealtimeChannel();
+
+  return () => {
+    cloudEventListeners.delete(onCloudEvent);
+    dbSyncListeners.delete(onDbSync);
+  };
 }

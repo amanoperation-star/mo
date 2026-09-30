@@ -1,13 +1,26 @@
-import { AppNotification } from '../types';
+import { AppNotification, NavigationScreen } from '../types';
 
 export interface RealtimeSyncPayload {
-  type: 'STUDENTS_UPDATED' | 'EXPENSES_UPDATED' | 'STAFF_UPDATED' | 'COURSES_UPDATED' | 'SETTINGS_UPDATED' | 'NOTIFICATION_ADDED';
+  type:
+    | 'STUDENTS_UPDATED'
+    | 'STUDENT_ADDED'
+    | 'STUDENT_DELETED'
+    | 'STUDENTS_CLEARED'
+    | 'STUDENT_UPDATED'
+    | 'EXPENSES_UPDATED'
+    | 'EXPENSE_ADDED'
+    | 'EXPENSE_DELETED'
+    | 'STAFF_UPDATED'
+    | 'COURSES_UPDATED'
+    | 'SETTINGS_UPDATED'
+    | 'NOTIFICATION_ADDED';
   senderUser: string;
   actionTitle: string;
   actionDetails: string;
   timestamp: string;
   data?: any;
   notification?: AppNotification;
+  linkScreen?: NavigationScreen;
 }
 
 const CHANNEL_NAME = 'el_saqqa_realtime_broadcast_v1';

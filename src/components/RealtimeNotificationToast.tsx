@@ -1,11 +1,45 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Sparkles, User, X, CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { X } from 'lucide-react';
 import { RealtimeSyncPayload } from '../utils/realtimeBroadcast';
+import { NavigationScreen } from '../types';
 
 interface RealtimeNotificationToastProps {
   latestEvent: RealtimeSyncPayload | null;
   onClose: () => void;
-  onOpenNotifications: () => void;
+  onOpenNotifications: (screen?: NavigationScreen) => void;
+}
+
+function playNotificationChime() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(659.25, now); // E5
+    gain1.gain.setValueAtTime(0.12, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880, now + 0.12); // A5
+    gain2.gain.setValueAtTime(0.14, now + 0.12);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.12);
+    osc2.stop(now + 0.55);
+  } catch (e) {
+    // Ignore autoplay limits
+  }
 }
 
 export const RealtimeNotificationToast: React.FC<RealtimeNotificationToastProps> = ({
@@ -18,69 +52,101 @@ export const RealtimeNotificationToast: React.FC<RealtimeNotificationToastProps>
   useEffect(() => {
     if (latestEvent) {
       setVisible(true);
+      playNotificationChime();
+
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 7000); // Auto hide after 7 seconds
+        onClose();
+      }, 9000); // Display for 9 seconds
       return () => clearTimeout(timer);
     } else {
       setVisible(false);
     }
-  }, [latestEvent]);
+  }, [latestEvent, onClose]);
 
   if (!visible || !latestEvent) return null;
 
+  const handleActionClick = () => {
+    setVisible(false);
+    onClose();
+    if (latestEvent.linkScreen) {
+      onOpenNotifications(latestEvent.linkScreen);
+    } else {
+      onOpenNotifications('students-list');
+    }
+  };
+
+  const handleDismiss = () => {
+    setVisible(false);
+    onClose();
+  };
+
   return (
-    <div className="fixed bottom-5 left-5 z-50 max-w-sm sm:max-w-md w-full bg-[#0a1424] border-2 border-amber-500/60 rounded-2xl p-4 shadow-2xl text-white animate-in slide-in-from-bottom-5 duration-300 backdrop-blur-lg dir-rtl">
-      {/* Top bar */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#182942]">
+    <div
+      id="cloud-realtime-alert-toast"
+      className="fixed bottom-6 left-6 z-[9999] w-[90vw] sm:w-[420px] bg-[#06111a] border-2 border-[#10b981] rounded-2xl p-4 shadow-2xl shadow-emerald-950/70 text-white animate-in slide-in-from-bottom-5 duration-300 backdrop-blur-xl dir-rtl"
+    >
+      {/* Top Header */}
+      <div className="flex items-center justify-between pb-2 border-b border-[#122838]">
+        {/* Right side: Pulsing Green Dot + Title */}
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center animate-bounce">
-            <Bell className="w-4 h-4" />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-black text-amber-300">إشعار مباشر من الفريق</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          </div>
+          <span className="relative flex h-3.5 w-3.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-400 shadow-[0_0_12px_#34d399]" />
+          </span>
+          <h3 className="text-sm font-black text-white tracking-wide">
+            تنبيه سحابي فوري 🌐
+          </h3>
         </div>
 
+        {/* Left side: Close Button */}
         <button
-          onClick={() => setVisible(false)}
+          onClick={handleDismiss}
           type="button"
-          className="p-1 hover:bg-[#142338] text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+          className="p-1 text-slate-400 hover:text-white hover:bg-[#142332] rounded-lg transition-colors cursor-pointer"
+          title="إغلاق التنبيه"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Content */}
-      <div className="mt-2.5 flex flex-col gap-1.5">
-        <h4 className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span>{latestEvent.actionTitle}</span>
+      {/* Main Content Body */}
+      <div className="py-2.5 flex flex-col gap-1 text-right">
+        {/* Headline with Rocket Icon */}
+        <h4 className="text-sm sm:text-base font-black text-[#10b981] leading-snug">
+          {latestEvent.actionTitle}
         </h4>
 
-        <p className="text-xs text-slate-300 font-medium leading-snug">
+        {/* Detail text */}
+        <p className="text-xs text-slate-200 font-semibold leading-relaxed">
           {latestEvent.actionDetails}
         </p>
 
-        <div className="mt-2 pt-2 border-t border-[#182942] flex items-center justify-between text-[11px]">
-          <span className="text-amber-400 font-bold flex items-center gap-1">
-            <User className="w-3 h-3 text-amber-400" />
-            <span>بواسطة: {latestEvent.senderUser}</span>
-          </span>
+        {/* User attribution */}
+        <p className="text-xs text-slate-400 font-medium">
+          بواسطة: {latestEvent.senderUser || 'أك. محمود عزت'}
+        </p>
+      </div>
 
-          <button
-            onClick={() => {
-              onOpenNotifications();
-              setVisible(false);
-            }}
-            type="button"
-            className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 underline cursor-pointer"
-          >
-            <span>عرض التنبيهات</span>
-            <ArrowLeft className="w-3 h-3" />
-          </button>
-        </div>
+      {/* Bottom Actions Row */}
+      <div className="pt-2 flex items-center justify-between gap-3">
+        {/* Dismiss Button on the Left */}
+        <button
+          onClick={handleDismiss}
+          type="button"
+          className="bg-[#152332] hover:bg-[#1e3247] text-slate-300 hover:text-white font-bold text-xs py-2 px-4 rounded-xl transition-all cursor-pointer shrink-0"
+        >
+          تجاهل
+        </button>
+
+        {/* Primary Green Action Button on the Right */}
+        <button
+          onClick={handleActionClick}
+          type="button"
+          className="flex-1 bg-[#059669] hover:bg-[#10b981] active:bg-[#047857] text-white font-black text-xs sm:text-sm py-2 px-4 rounded-xl shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+        >
+          <span>فتح وعرض السجل الآن 👁️</span>
+        </button>
       </div>
     </div>
   );

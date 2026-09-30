@@ -72,6 +72,7 @@ import {
   syncNotificationToCloud,
   syncCenterSettingsToCloud,
   subscribeToSupabaseRealtime,
+  broadcastToCloudTeam,
 } from './utils/supabaseClient';
 
 export default function App() {
@@ -215,39 +216,111 @@ export default function App() {
 
     initSupabaseCloud();
 
-    // 2. Subscribe to Supabase Postgres Changes
-    const unsubSupabase = subscribeToSupabaseRealtime(() => {
-      if (isMounted) {
-        setStudents(getStoredStudents());
-        setCourses(getStoredCourses());
-        setExpenses(getStoredExpenses());
-        setStaff(getStoredStaff());
-        setLogs(getStoredLogs());
-        setNotifications(getStoredNotifications());
-        setCenterSettings(getStoredCenterSettings());
+    // Handler for incoming real-time events across all browsers
+    const handleIncomingRealtimeAction = (payload: RealtimeSyncPayload) => {
+      if (!isMounted) return;
+
+      // Update React state according to action type without page refresh
+      if (payload.type === 'STUDENT_ADDED' && payload.data?.student) {
+        const newStudent = payload.data.student as Student;
+        setStudents((prev) => {
+          if (prev.some((s) => s.id === newStudent.id)) return prev;
+          const next = [newStudent, ...prev];
+          saveStoredStudents(next);
+          return next;
+        });
+      } else if (payload.type === 'STUDENT_DELETED' && payload.data?.studentId) {
+        const deletedId = payload.data.studentId;
+        setStudents((prev) => {
+          const next = prev.filter((s) => s.id !== deletedId);
+          saveStoredStudents(next);
+          return next;
+        });
+      } else if (payload.type === 'STUDENTS_CLEARED') {
+        setStudents([]);
+        saveStoredStudents([]);
+      } else if (payload.type === 'STUDENT_UPDATED' && payload.data?.student) {
+        const updatedStudent = payload.data.student as Student;
+        setStudents((prev) => {
+          const next = prev.map((s) => (s.id === updatedStudent.id ? updatedStudent : s));
+          saveStoredStudents(next);
+          return next;
+        });
+      } else if (payload.type === 'EXPENSE_ADDED' && payload.data?.expense) {
+        const newExpense = payload.data.expense as Expense;
+        setExpenses((prev) => {
+          if (prev.some((e) => e.id === newExpense.id)) return prev;
+          const next = [newExpense, ...prev];
+          saveStoredExpenses(next);
+          return next;
+        });
+      } else if (payload.type === 'EXPENSE_DELETED' && payload.data?.expenseId) {
+        const deletedId = payload.data.expenseId;
+        setExpenses((prev) => {
+          const next = prev.filter((e) => e.id !== deletedId);
+          saveStoredExpenses(next);
+          return next;
+        });
+      } else if (payload.type === 'STUDENTS_UPDATED') {
+        if (payload.data?.studentIds && Array.isArray(payload.data.studentIds)) {
+          const idsSet = new Set(payload.data.studentIds);
+          setStudents((prev) => {
+            const next = prev.filter((s) => !idsSet.has(s.id));
+            saveStoredStudents(next);
+            return next;
+          });
+        }
+        fetchAllCloudData().then((res) => {
+          if (res?.students && isMounted) setStudents(res.students);
+        });
       }
-    });
 
-    // 3. Subscribe to Local Broadcast Events
-    const unsubscribeBroadcast = subscribeToRealtimeEvents((payload) => {
-      setStudents(getStoredStudents());
-      setCourses(getStoredCourses());
-      setExpenses(getStoredExpenses());
-      setStaff(getStoredStaff());
-      setLogs(getStoredLogs());
-      setCenterSettings(getStoredCenterSettings());
-      setSupabaseConfig(getStoredSupabaseConfig());
-      setGrades(getStoredGrades());
-
+      // Add to notifications
       if (payload.notification) {
         const newNotif = payload.notification;
         setNotifications((prev) => {
           if (prev.some((n) => n.id === newNotif.id)) return prev;
           return [newNotif, ...prev];
         });
+      } else if (payload.actionTitle) {
+        const genNotif: AppNotification = {
+          id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          title: payload.actionTitle,
+          details: payload.actionDetails,
+          user: payload.senderUser,
+          timestamp: 'الآن',
+          type: 'info',
+          read: false,
+          linkScreen: payload.linkScreen,
+        };
+        setNotifications((prev) => [genNotif, ...prev]);
       }
 
+      // Trigger the Instant Cloud Toast Alert
       setLatestRealtimeEvent(payload);
+    };
+
+    // 2. Subscribe to Supabase WebSocket Realtime Channel
+    const unsubSupabase = subscribeToSupabaseRealtime(
+      (payload) => {
+        handleIncomingRealtimeAction(payload);
+      },
+      () => {
+        if (isMounted) {
+          setStudents(getStoredStudents());
+          setCourses(getStoredCourses());
+          setExpenses(getStoredExpenses());
+          setStaff(getStoredStaff());
+          setLogs(getStoredLogs());
+          setNotifications(getStoredNotifications());
+          setCenterSettings(getStoredCenterSettings());
+        }
+      }
+    );
+
+    // 3. Subscribe to Local Broadcast Events (same-browser tabs)
+    const unsubscribeBroadcast = subscribeToRealtimeEvents((payload) => {
+      handleIncomingRealtimeAction(payload);
     });
 
     return () => {
@@ -279,14 +352,15 @@ export default function App() {
 
       setNotifications((prev) => [newNotif, ...prev]);
 
-      // Broadcast in real-time to all other open browsers/tabs
-      broadcastRealtimeEvent({
+      // Broadcast in real-time to all open browsers/devices across the team
+      broadcastToCloudTeam({
         type: 'NOTIFICATION_ADDED',
         senderUser: sender,
         actionTitle,
         actionDetails,
         timestamp: 'الآن',
         notification: newNotif,
+        linkScreen,
       });
     },
     [currentUser, centerSettings]
@@ -416,13 +490,18 @@ export default function App() {
       type: 'success',
     };
     setLogs((prev) => [newLog, ...prev]);
+    syncLogToCloud(newLog);
 
-    triggerRealtimeAction(
-      `تسجيل طالب جديد: ${newStudent.name}`,
-      `تم تفعيل كود ${generatedCode} (${newStudent.course}) بمبلغ ${newStudent.amountPaid} ج.م`,
-      'success',
-      'students-list'
-    );
+    // Broadcast INSTANTLY to all team members across all browsers!
+    broadcastToCloudTeam({
+      type: 'STUDENT_ADDED',
+      senderUser: currentUserTitle,
+      actionTitle: `طالب جديد مسجل الآن [${generatedCode}] 🚀`,
+      actionDetails: `الطالب: ${newStudent.name} • الكورس: ${newStudent.course} • المبلغ: ${newStudent.amountPaid} ج.م`,
+      timestamp: 'الآن',
+      data: { student: newStudent },
+      linkScreen: 'students-list',
+    });
 
     // Show Success Modal
     setSuccessStudent(newStudent);
@@ -445,13 +524,17 @@ export default function App() {
         type: 'warning',
       };
       setLogs((prev) => [newLog, ...prev]);
+      syncLogToCloud(newLog);
 
-      triggerRealtimeAction(
-        `حذف اشتراك طالب: ${target.name}`,
-        `تم إلغاء تفعيل حساب الطالب (${target.name}) وحذفه من السجل`,
-        'warning',
-        'students-list'
-      );
+      broadcastToCloudTeam({
+        type: 'STUDENT_DELETED',
+        senderUser: currentUserTitle,
+        actionTitle: `حذف اشتراك طالب [${target.code || target.name}] ⚠️`,
+        actionDetails: `تم إلغاء تفعيل وحذف حساب الطالب (${target.name}) من السجل`,
+        timestamp: 'الآن',
+        data: { studentId: id },
+        linkScreen: 'students-list',
+      });
     }
   };
 
@@ -470,13 +553,16 @@ export default function App() {
       type: 'warning',
     };
     setLogs((prev) => [newLog, ...prev]);
+    syncLogToCloud(newLog);
 
-    triggerRealtimeAction(
-      `تفريغ سجل الطلاب بالكامل`,
-      `تم مسح كافة سجلات الاشتراكات بواقع (${count}) طالب`,
-      'warning',
-      'students-list'
-    );
+    broadcastToCloudTeam({
+      type: 'STUDENTS_CLEARED',
+      senderUser: currentUserTitle,
+      actionTitle: `تفريغ ومسح سجل الطلاب بالكامل ⚠️`,
+      actionDetails: `تم مسح وتصفية كافة سجلات الطلاب بواقع (${count}) طالب`,
+      timestamp: 'الآن',
+      linkScreen: 'students-list',
+    });
   };
 
   // Delete Multiple Selected Students
@@ -494,13 +580,17 @@ export default function App() {
       type: 'warning',
     };
     setLogs((prev) => [newLog, ...prev]);
+    syncLogToCloud(newLog);
 
-    triggerRealtimeAction(
-      `حذف (${count}) طلاب محددين`,
-      `تم حذف مجموعة طلاب محددين من السجل`,
-      'warning',
-      'students-list'
-    );
+    broadcastToCloudTeam({
+      type: 'STUDENTS_UPDATED',
+      senderUser: currentUserTitle,
+      actionTitle: `حذف مجموعة طلاب محددين [${count} طالب] ⚠️`,
+      actionDetails: `تم حذف (${count}) طلاب محددين من السجل`,
+      timestamp: 'الآن',
+      data: { studentIds: ids },
+      linkScreen: 'students-list',
+    });
   };
 
   // Update Student (e.g. Settle Installment / Mark as Paid)
@@ -532,15 +622,23 @@ export default function App() {
       type: 'success',
     };
     setLogs((prev) => [newLog, ...prev]);
+    syncLogToCloud(newLog);
 
-    triggerRealtimeAction(
-      isSettle ? `سداد قسط وتصفية حساب: ${target?.name}` : `تحديث بيانات الطالب: ${target?.name}`,
-      isSettle
-        ? `تم تسوية قسط الطالب ${target?.name} بمبلغ ${updatedData.amountPaid || target?.amountPaid} ج.م`
-        : `تعديل بيانات الطالب ${target?.name}`,
-      isSettle ? 'installment' : 'info',
-      'students-list'
-    );
+    if (updatedStudentObj) {
+      broadcastToCloudTeam({
+        type: 'STUDENT_UPDATED',
+        senderUser: currentUserTitle,
+        actionTitle: isSettle
+          ? `سداد قسط وتصفية حساب [${target?.name}] ✅`
+          : `تحديث بيانات واشتراك [${target?.name}] 🔄`,
+        actionDetails: isSettle
+          ? `تم تسوية قسط الطالب ${target?.name} بمبلغ ${updatedData.amountPaid || target?.amountPaid} ج.م`
+          : `تم تعديل بيانات واشتراك الطالب ${target?.name}`,
+        timestamp: 'الآن',
+        data: { student: updatedStudentObj },
+        linkScreen: 'students-list',
+      });
+    }
   };
 
   // Add Expense
@@ -562,19 +660,35 @@ export default function App() {
       type: 'info',
     };
     setLogs((prev) => [newLog, ...prev]);
+    syncLogToCloud(newLog);
 
-    triggerRealtimeAction(
-      `تسجيل مصروف جديد: ${newExpense.title}`,
-      `تم صرف مبلغ ${newExpense.amount} ج.م لبند (${newExpense.category})`,
-      'info',
-      'expenses'
-    );
+    broadcastToCloudTeam({
+      type: 'EXPENSE_ADDED',
+      senderUser: currentUserTitle,
+      actionTitle: `تسجيل مصروف جديد [${newExpense.title}] 💰`,
+      actionDetails: `المبلغ: ${newExpense.amount} ج.م • البند: ${newExpense.category}`,
+      timestamp: 'الآن',
+      data: { expense: newExpense },
+      linkScreen: 'expenses',
+    });
   };
 
   // Delete Expense
   const handleDeleteExpense = (id: string) => {
+    const target = expenses.find((e) => e.id === id);
     setExpenses((prev) => prev.filter((e) => e.id !== id));
     deleteExpenseFromCloud(id);
+
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+    broadcastToCloudTeam({
+      type: 'EXPENSE_DELETED',
+      senderUser: currentUserTitle,
+      actionTitle: `حذف بند مصروف [${target?.title || ''}] 🗑️`,
+      actionDetails: `تم حذف بند المصروف من السجل المالي`,
+      timestamp: 'الآن',
+      data: { expenseId: id },
+      linkScreen: 'expenses',
+    });
   };
 
   // Toggle Staff Payment Status
@@ -822,7 +936,16 @@ export default function App() {
 
     if (categories.students) {
       setStudents([]);
+      deleteAllStudentsFromCloud();
       wipedItems.push('سجل الطلاب والاشتراكات');
+      broadcastToCloudTeam({
+        type: 'STUDENTS_CLEARED',
+        senderUser: currentUser?.name || centerSettings.managerName || 'أك. محمود عزت',
+        actionTitle: 'تفريغ ومسح سجل الطلاب بالكامل ⚠️',
+        actionDetails: 'تم مسح وتصفير كافة سجلات الطلاب للإنتاج الرسمي',
+        timestamp: 'الآن',
+        linkScreen: 'students-list',
+      });
     }
     if (categories.expenses) {
       setExpenses([]);
@@ -1181,10 +1304,12 @@ export default function App() {
       <RealtimeNotificationToast
         latestEvent={latestRealtimeEvent}
         onClose={() => setLatestRealtimeEvent(null)}
-        onOpenNotifications={() => {
-          // Open notification bell dropdown
-          const bellBtn = document.getElementById('notification-bell-button');
-          if (bellBtn) bellBtn.click();
+        onOpenNotifications={(screen) => {
+          if (screen) {
+            setCurrentScreen(screen);
+          } else {
+            setCurrentScreen('students-list');
+          }
         }}
       />
     </div>

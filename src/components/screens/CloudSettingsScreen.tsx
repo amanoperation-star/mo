@@ -124,16 +124,118 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     message: string;
   }>({ status: null, message: '' });
 
-  // SQL Script to create tickets table and grant permissions for Publishable API Key
-  const ticketsSqlCode = `-- ========================================================
--- كود SQL لإنشاء جدول التذاكر (tickets) وتفعيل صلاحيات مفتاح Publishable API Key
--- انسخ هذا الكود والصقه في Supabase > SQL Editor ثم اضغط Run
+  // SQL Script to create ALL tables and enable Realtime for Publishable API Key
+  const fullSystemSqlCode = `-- ========================================================
+-- كود SQL الشامل والمتكامل لكافة جداول المنظومة وتفعيل الريال تيم
+-- انسخ هذا الكود بالكامل والصقه في Supabase > SQL Editor ثم اضغط Run
 -- ========================================================
 
--- 1. تفعيل ملحق UUID لإنشاء المعرفات الفريدة تلقائياً
+-- 1. تفعيل الملحقات
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. إنشاء جدول التذاكر (tickets)
+-- 2. جدول الطلاب والاشتراكات (students)
+CREATE TABLE IF NOT EXISTS public.students (
+    id VARCHAR(100) PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    parent_whatsapp VARCHAR(50),
+    grade VARCHAR(100),
+    course VARCHAR(255),
+    course_schedule VARCHAR(255),
+    attendance_mode VARCHAR(50) DEFAULT 'حضور سنتر',
+    amount_paid NUMERIC(10, 2) DEFAULT 0,
+    payment_method VARCHAR(50) DEFAULT 'نقدي كاش',
+    confirmed_by VARCHAR(100),
+    receipt_url TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    payment_type VARCHAR(50) DEFAULT 'full',
+    total_course_fee NUMERIC(10, 2) DEFAULT 0,
+    installment_status VARCHAR(50) DEFAULT 'paid_in_full',
+    remaining_amount NUMERIC(10, 2) DEFAULT 0,
+    installment_due_date DATE,
+    installment_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. جدول الكورسات والمقررات (courses)
+CREATE TABLE IF NOT EXISTS public.courses (
+    id VARCHAR(100) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    grade VARCHAR(100) NOT NULL,
+    price NUMERIC(10, 2) DEFAULT 0,
+    enrolled_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    schedule VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. جدول المصروفات (expenses)
+CREATE TABLE IF NOT EXISTS public.expenses (
+    id VARCHAR(100) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) DEFAULT 'أخرى',
+    amount NUMERIC(10, 2) DEFAULT 0,
+    date DATE DEFAULT CURRENT_DATE,
+    paid_by VARCHAR(100),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. جدول فريق العمل والمساعدين (staff)
+CREATE TABLE IF NOT EXISTS public.staff (
+    id VARCHAR(100) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(100) NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    permissions TEXT[] DEFAULT '{}',
+    status VARCHAR(50) DEFAULT 'مدفوع',
+    salary NUMERIC(10, 2) DEFAULT 0,
+    attendance INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. جدول سجل الرقابة والعمليات (audit_logs)
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id VARCHAR(100) PRIMARY KEY,
+    action VARCHAR(255) NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    details TEXT,
+    type VARCHAR(50) DEFAULT 'info',
+    timestamp VARCHAR(50),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 7. جدول الإشعارات والتنبيهات (notifications)
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id VARCHAR(100) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    details TEXT,
+    user_name VARCHAR(100),
+    timestamp VARCHAR(50),
+    type VARCHAR(50) DEFAULT 'info',
+    is_read BOOLEAN DEFAULT FALSE,
+    link_screen VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 8. جدول إعدادات وهوية المركز (center_settings)
+CREATE TABLE IF NOT EXISTS public.center_settings (
+    id VARCHAR(50) PRIMARY KEY DEFAULT 'default',
+    center_name VARCHAR(255),
+    phone_number VARCHAR(50),
+    platform_url TEXT,
+    academic_year VARCHAR(100),
+    teacher_name VARCHAR(255),
+    manager_name VARCHAR(255),
+    system_description TEXT,
+    receipt_system_title VARCHAR(255),
+    receipt_footer_text TEXT,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. جدول التذاكر (tickets)
 CREATE TABLE IF NOT EXISTS public.tickets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_number VARCHAR(50) UNIQUE,
@@ -143,8 +245,8 @@ CREATE TABLE IF NOT EXISTS public.tickets (
     parent_phone VARCHAR(50),
     course_name VARCHAR(255),
     grade VARCHAR(100),
-    type VARCHAR(50) DEFAULT 'attendance', -- نوع التذكرة (حضور، اشتراك، مراجعة، امتحان)
-    status VARCHAR(50) DEFAULT 'active',   -- الحالة (active, used, cancelled, pending)
+    type VARCHAR(50) DEFAULT 'attendance',
+    status VARCHAR(50) DEFAULT 'active',
     amount_paid NUMERIC(10, 2) DEFAULT 0,
     payment_method VARCHAR(50) DEFAULT 'نقدي كاش',
     qr_code TEXT,
@@ -153,52 +255,85 @@ CREATE TABLE IF NOT EXISTS public.tickets (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. تفعيل نظام حماية الصفوف Row Level Security (RLS)
+-- 10. ضبط REPLICA IDENTITY FULL لدعم الريال تيم اللحظي عند التعديل والحذف
+ALTER TABLE public.students REPLICA IDENTITY FULL;
+ALTER TABLE public.courses REPLICA IDENTITY FULL;
+ALTER TABLE public.expenses REPLICA IDENTITY FULL;
+ALTER TABLE public.staff REPLICA IDENTITY FULL;
+ALTER TABLE public.audit_logs REPLICA IDENTITY FULL;
+ALTER TABLE public.notifications REPLICA IDENTITY FULL;
+ALTER TABLE public.center_settings REPLICA IDENTITY FULL;
+ALTER TABLE public.tickets REPLICA IDENTITY FULL;
+
+-- 11. تفعيل النشر اللحظي Realtime لجميع الجداول
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'students') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.students;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'courses') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.courses;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'expenses') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'staff') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.staff;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'audit_logs') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.audit_logs;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'notifications') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'center_settings') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.center_settings;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'tickets') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.tickets;
+    END IF;
+END $$;
+
+-- 12. تفعيل صلاحيات مفتاح Publishable API Key و RLS
+ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.center_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 
--- حذف أي سياسات سابقة لتجنب تكرار الأسماء
-DROP POLICY IF EXISTS "Allow public read tickets" ON public.tickets;
-DROP POLICY IF EXISTS "Allow public insert tickets" ON public.tickets;
-DROP POLICY IF EXISTS "Allow public update tickets" ON public.tickets;
-DROP POLICY IF EXISTS "Allow public delete tickets" ON public.tickets;
+DROP POLICY IF EXISTS "Public Full Access students" ON public.students;
+CREATE POLICY "Public Full Access students" ON public.students FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
--- 4. تفعيل صلاحيات مفتاح Publishable API Key (دور anon و authenticated)
--- السماح بالقراءة (SELECT)
-CREATE POLICY "Allow public read tickets"
-ON public.tickets
-FOR SELECT
-TO anon, authenticated
-USING (true);
+DROP POLICY IF EXISTS "Public Full Access courses" ON public.courses;
+CREATE POLICY "Public Full Access courses" ON public.courses FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
--- السماح بإضافة تذاكر جديدة (INSERT)
-CREATE POLICY "Allow public insert tickets"
-ON public.tickets
-FOR INSERT
-TO anon, authenticated
-WITH CHECK (true);
+DROP POLICY IF EXISTS "Public Full Access expenses" ON public.expenses;
+CREATE POLICY "Public Full Access expenses" ON public.expenses FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
--- السماح بتحديث التذاكر (UPDATE)
-CREATE POLICY "Allow public update tickets"
-ON public.tickets
-FOR UPDATE
-TO anon, authenticated
-USING (true)
-WITH CHECK (true);
+DROP POLICY IF EXISTS "Public Full Access staff" ON public.staff;
+CREATE POLICY "Public Full Access staff" ON public.staff FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
--- السماح بحذف التذاكر (DELETE)
-CREATE POLICY "Allow public delete tickets"
-ON public.tickets
-FOR DELETE
-TO anon, authenticated
-USING (true);
+DROP POLICY IF EXISTS "Public Full Access audit_logs" ON public.audit_logs;
+CREATE POLICY "Public Full Access audit_logs" ON public.audit_logs FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
--- 5. منح أذونات المخطط والجدول لمفتاح Publishable API Key
+DROP POLICY IF EXISTS "Public Full Access notifications" ON public.notifications;
+CREATE POLICY "Public Full Access notifications" ON public.notifications FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Full Access center_settings" ON public.center_settings;
+CREATE POLICY "Public Full Access center_settings" ON public.center_settings FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Full Access tickets" ON public.tickets;
+CREATE POLICY "Public Full Access tickets" ON public.tickets FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT ALL ON TABLE public.tickets TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
 
   const handleCopySql = () => {
-    navigator.clipboard.writeText(ticketsSqlCode);
+    navigator.clipboard.writeText(fullSystemSqlCode);
     setCopiedSql(true);
     setTimeout(() => setCopiedSql(false), 2500);
   };
@@ -1292,13 +1427,13 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <span>كود SQL لإنشاء جدول التذاكر (tickets) وتفعيل صلاحيات Publishable Key</span>
+                    <span>كود SQL الشامل لكافة جداول المنظومة وتفعيل الريال تيم (Supabase Realtime Engine)</span>
                     <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
-                      PostgreSQL
+                      PostgreSQL Realtime
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    قم بنسخ هذا الكود ولصقه في <strong className="text-emerald-400 font-mono">Supabase &gt; SQL Editor</strong> ثم اضغط <strong className="text-white">Run</strong> لتهيئة الجدول وتفعيل الصلاحيات فورياً.
+                    قم بنسخ هذا الكود ولصقه في <strong className="text-emerald-400 font-mono">Supabase &gt; SQL Editor</strong> ثم اضغط <strong className="text-white">Run</strong> لإنشاء وتهيئة كافة الجداول وتفعيل النشر اللحظي Realtime وصلاحيات المفتاح العام فورياً لجميع أعضاء الفريق.
                   </p>
                 </div>
               </div>
@@ -1355,7 +1490,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                     dir="ltr"
                     className="p-4 rounded-xl bg-[#03070d] border border-[#162740] text-emerald-300 font-mono text-xs overflow-x-auto leading-relaxed select-all max-h-[380px] overflow-y-auto"
                   >
-                    <code>{ticketsSqlCode}</code>
+                    <code>{fullSystemSqlCode}</code>
                   </pre>
                   <button
                     type="button"

@@ -201,7 +201,12 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                   {/* Body Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <h4 className="text-xs font-extrabold text-white truncate">{notif.title}</h4>
+                      <h4 className="text-xs font-extrabold text-white truncate flex items-center gap-1.5">
+                        {(!notif.read || notif.status === 'unread') && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" title="غير مقروء" />
+                        )}
+                        <span>{notif.title}</span>
+                      </h4>
                       <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1 shrink-0">
                         <Clock className="w-2.5 h-2.5 text-slate-500" />
                         <span>{notif.timestamp}</span>

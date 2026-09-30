@@ -113,6 +113,25 @@ export default function App() {
     try {
       localStorage.setItem('el_saqqa_current_user', JSON.stringify(user));
     } catch (e) {}
+
+    // Auto-navigate to their first allowed screen
+    const perms = user.permissions || [];
+    if (user.username === 'admin' || perms.includes('التحكم الكامل')) {
+      setCurrentScreen('analytics');
+    } else if (perms.includes('البيانات المالية')) {
+      setCurrentScreen('analytics');
+    } else if (perms.includes('متابعة الطلاب') || perms.includes('تأكيد الإيصالات')) {
+      setCurrentScreen('students-list');
+    } else if (perms.includes('إرسال الواتساب')) {
+      setCurrentScreen('whatsapp');
+    } else if (perms.includes('إدارة الكورسات')) {
+      setCurrentScreen('courses');
+    } else if (perms.includes('إدارة فريق العمل')) {
+      setCurrentScreen('staff');
+    } else {
+      setCurrentScreen('analytics');
+    }
+
     setStorageNotification(`أهلاً بك يا ${user.name}، تم تسجيل الدخول بنجاح!`);
     setTimeout(() => setStorageNotification(null), 3000);
   };
@@ -243,9 +262,11 @@ export default function App() {
       } else if (payload.type === 'NOTIFICATIONS_CLEARED') {
         setNotifications([]);
         saveStoredNotifications([]);
+        setLatestRealtimeEvent(payload);
+        return;
       } else if (payload.type === 'NOTIFICATIONS_MARKED_READ') {
         setNotifications((prev) => {
-          const next = prev.map((n) => ({ ...n, read: true }));
+          const next = prev.map((n) => ({ ...n, read: true, status: 'read' as const }));
           saveStoredNotifications(next);
           return next;
         });
@@ -301,6 +322,7 @@ export default function App() {
           timestamp: 'الآن',
           type: 'info',
           read: false,
+          status: 'unread',
           linkScreen: payload.linkScreen,
         };
         setNotifications((prev) => [genNotif, ...prev]);
@@ -357,6 +379,7 @@ export default function App() {
         timestamp: 'الآن',
         type,
         read: false,
+        status: 'unread',
         linkScreen,
       };
 
@@ -1120,7 +1143,7 @@ export default function App() {
   // Notification Handlers
   const handleMarkAllNotificationsAsRead = () => {
     setNotifications((prev) => {
-      const next = prev.map((n) => ({ ...n, read: true }));
+      const next = prev.map((n) => ({ ...n, read: true, status: 'read' as const }));
       saveStoredNotifications(next);
       return next;
     });
@@ -1149,9 +1172,13 @@ export default function App() {
   };
 
   const handleNotificationClick = (notif: AppNotification) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => {
+      const next = prev.map((n) => (n.id === notif.id ? { ...n, read: true, status: 'read' as const } : n));
+      saveStoredNotifications(next);
+      return next;
+    });
+    const updatedNotif = { ...notif, read: true, status: 'read' as const };
+    syncNotificationToCloud(updatedNotif);
   };
 
   if (!currentUser) {

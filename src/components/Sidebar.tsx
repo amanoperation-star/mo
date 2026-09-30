@@ -126,6 +126,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
+  // Filter navItems based on current user permissions
+  const filteredNavItems = navItems.filter((item) => {
+    // If no user is logged in, show nothing or fallback (though App handles login first)
+    if (!currentUser) return false;
+
+    // Admin username or full control has access to all screens
+    const perms = currentUser.permissions || [];
+    if (currentUser.username === 'admin' || perms.includes('التحكم الكامل')) {
+      return true;
+    }
+
+    // Explicit permission mapping per screen
+    switch (item.id) {
+      case 'analytics':
+        return perms.includes('البيانات المالية');
+      case 'new-student':
+        return perms.includes('متابعة الطلاب') || perms.includes('تأكيد الإيصالات');
+      case 'students-list':
+        return perms.includes('متابعة الطلاب') || perms.includes('تأكيد الإيصالات');
+      case 'expenses':
+        return perms.includes('البيانات المالية') || perms.includes('تعديل المصروفات');
+      case 'salaries':
+        return perms.includes('البيانات المالية') || perms.includes('إدارة فريق العمل');
+      case 'whatsapp':
+        return perms.includes('إرسال الواتساب');
+      case 'courses':
+        return perms.includes('إدارة الكورسات');
+      case 'staff':
+        return perms.includes('إدارة فريق العمل');
+      case 'audit-log':
+        // Only full control/admin sees logs
+        return false;
+      case 'settings':
+        // Only full control/admin sees settings
+        return false;
+      default:
+        return true;
+    }
+  });
+
   return (
     <aside
       id="system-navigation-sidebar"
@@ -141,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation List */}
       <nav className="flex flex-col gap-1.5" aria-label="شاشات المنظومة">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentScreen === item.id;
           return (

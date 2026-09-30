@@ -106,6 +106,7 @@ export interface AppNotification {
   timestamp: string;
   type: 'success' | 'info' | 'warning' | 'installment';
   read: boolean;
+  status?: 'unread' | 'read';
   linkScreen?: NavigationScreen;
 }
 

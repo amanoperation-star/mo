@@ -36,6 +36,7 @@ import {
 } from './utils/storage';
 import { broadcastRealtimeEvent, subscribeToRealtimeEvents, RealtimeSyncPayload } from './utils/realtimeBroadcast';
 import { RealtimeNotificationToast } from './components/RealtimeNotificationToast';
+import { ShieldAlert } from 'lucide-react';
 import { initialStudents, initialCourses, initialExpenses, initialStaff, initialWhatsAppTemplates, initialAuditLogs } from './data/initialData';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -108,6 +109,59 @@ export default function App() {
     return null;
   });
 
+  const hasPermissionForScreen = (screen: NavigationScreen, user: StaffMember | null): boolean => {
+    if (!user) return false;
+    if (user.username === 'admin' || (user.permissions || []).includes('التحكم الكامل')) {
+      return true;
+    }
+
+    const perms = user.permissions || [];
+
+    const SCREEN_PERMISSIONS: Record<NavigationScreen, string> = {
+      'analytics': 'شاشة: الرئيسية',
+      'new-student': 'شاشة: تسجيل طالب',
+      'students-list': 'شاشة: سجل الطلاب',
+      'expenses': 'شاشة: المصروفات',
+      'salaries': 'شاشة: الرواتب',
+      'whatsapp': 'شاشة: الواتساب',
+      'courses': 'شاشة: الكورسات',
+      'staff': 'شاشة: فريق العمل',
+      'audit-log': 'شاشة: سجل الرقابة',
+      'settings': 'شاشة: الإعدادات العامة'
+    };
+
+    // Check direct screen permission
+    if (perms.includes(SCREEN_PERMISSIONS[screen])) {
+      return true;
+    }
+
+    // Backwards compatibility checks
+    switch (screen) {
+      case 'analytics':
+        return perms.includes('البيانات المالية');
+      case 'new-student':
+        return perms.includes('متابعة الطلاب') || perms.includes('تأكيد الإيصالات');
+      case 'students-list':
+        return perms.includes('متابعة الطلاب') || perms.includes('تأكيد الإيصالات');
+      case 'expenses':
+        return perms.includes('البيانات المالية') || perms.includes('تعديل المصروفات');
+      case 'salaries':
+        return perms.includes('البيانات المالية') || perms.includes('إدارة فريق العمل');
+      case 'whatsapp':
+        return perms.includes('إرسال الواتساب');
+      case 'courses':
+        return perms.includes('إدارة الكورسات');
+      case 'staff':
+        return perms.includes('إدارة فريق العمل');
+      case 'audit-log':
+        return false;
+      case 'settings':
+        return false;
+      default:
+        return true;
+    }
+  };
+
   const handleLogin = (user: StaffMember) => {
     setCurrentUser(user);
     try {
@@ -115,19 +169,13 @@ export default function App() {
     } catch (e) {}
 
     // Auto-navigate to their first allowed screen
-    const perms = user.permissions || [];
-    if (user.username === 'admin' || perms.includes('التحكم الكامل')) {
-      setCurrentScreen('analytics');
-    } else if (perms.includes('البيانات المالية')) {
-      setCurrentScreen('analytics');
-    } else if (perms.includes('متابعة الطلاب') || perms.includes('تأكيد الإيصالات')) {
-      setCurrentScreen('students-list');
-    } else if (perms.includes('إرسال الواتساب')) {
-      setCurrentScreen('whatsapp');
-    } else if (perms.includes('إدارة الكورسات')) {
-      setCurrentScreen('courses');
-    } else if (perms.includes('إدارة فريق العمل')) {
-      setCurrentScreen('staff');
+    const screensOrder: NavigationScreen[] = [
+      'analytics', 'new-student', 'students-list', 'expenses', 
+      'salaries', 'whatsapp', 'courses', 'staff', 'audit-log', 'settings'
+    ];
+    const allowed = screensOrder.find(s => hasPermissionForScreen(s, user));
+    if (allowed) {
+      setCurrentScreen(allowed);
     } else {
       setCurrentScreen('analytics');
     }
@@ -1280,125 +1328,150 @@ export default function App() {
 
         {/* Dynamic Center Screen View */}
         <div className="flex-1 flex flex-col min-w-0">
-          {currentScreen === 'new-student' && (
-            <NewStudentScreen
-              courses={courses.filter((c) => c.isActive)}
-              grades={grades}
-              onRegisterStudent={handleRegisterStudent}
-              onQuickViewReceipt={(url) => setViewReceiptUrl(url)}
-              isWhatsConnected={whatsAppConfig.isConnected}
-              onNavigateToWhatsApp={() => setCurrentScreen('whatsapp')}
-            />
-          )}
+          {!hasPermissionForScreen(currentScreen, currentUser) ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[#0b1320] border border-[#192b42] rounded-2xl text-center min-h-[400px] animate-in fade-in max-w-2xl mx-auto my-12 text-right">
+              <div className="w-16 h-16 rounded-full bg-rose-950/40 border border-rose-500/30 flex items-center justify-center mb-4 text-rose-400">
+                <ShieldAlert className="w-8 h-8 text-rose-500 animate-pulse" />
+              </div>
+              <h3 className="text-lg font-black text-white">عذراً، ليس لديك صلاحية الوصول لهذه الشاشة 🛑</h3>
+              <p className="text-xs text-slate-400 mt-2 max-w-sm leading-relaxed">
+                حسابك الحالي لا يمتلك إذن الدخول لصفحة {
+                  currentScreen === 'new-student' ? 'تسجيل طالب جديد' :
+                  currentScreen === 'students-list' ? 'سجل ومدفوعات الطلاب' :
+                  currentScreen === 'expenses' ? 'المصروفات والأرباح' :
+                  currentScreen === 'salaries' ? 'رواتب فريق العمل' :
+                  currentScreen === 'analytics' ? 'الرئيسية ولوحة المؤشرات' :
+                  currentScreen === 'whatsapp' ? 'ربط وتفعيل الواتساب' :
+                  currentScreen === 'courses' ? 'إدارة وتعديل الكورسات' :
+                  currentScreen === 'staff' ? 'فريق العمل والصلاحيات' :
+                  currentScreen === 'audit-log' ? 'سجل الرقابة' :
+                  currentScreen === 'settings' ? 'الإعدادات العامة والتهيئة' : 'هذه الصفحة'
+                }. يرجى التواصل مع مدير النظام أو الأستاذ للحصول على الصلاحيات اللازمة.
+              </p>
+            </div>
+          ) : (
+            <>
+              {currentScreen === 'new-student' && (
+                <NewStudentScreen
+                  courses={courses.filter((c) => c.isActive)}
+                  grades={grades}
+                  onRegisterStudent={handleRegisterStudent}
+                  onQuickViewReceipt={(url) => setViewReceiptUrl(url)}
+                  isWhatsConnected={whatsAppConfig.isConnected}
+                  onNavigateToWhatsApp={() => setCurrentScreen('whatsapp')}
+                />
+              )}
 
-          {currentScreen === 'students-list' && (
-            <StudentsListScreen
-              students={students}
-              courses={courses}
-              grades={grades}
-              initialPaymentFilter={studentsListInitialFilter}
-              onDeleteStudent={handleDeleteStudent}
-              onDeleteAllStudents={handleDeleteAllStudents}
-              onDeleteMultipleStudents={handleDeleteMultipleStudents}
-              onUpdateStudent={handleUpdateStudent}
-              onViewReceipt={(url) => setViewReceiptUrl(url)}
-              onOpenWhatsAppModal={(student) => {
-                setWhatsAppMessageType('registration');
-                setWhatsAppStudent(student);
-              }}
-              onExportExcel={exportStudentsToExcel}
-              onUpdateGradeName={handleUpdateGradeName}
-              onDeleteGrade={handleDeleteGrade}
-            />
-          )}
+              {currentScreen === 'students-list' && (
+                <StudentsListScreen
+                  students={students}
+                  courses={courses}
+                  grades={grades}
+                  initialPaymentFilter={studentsListInitialFilter}
+                  onDeleteStudent={handleDeleteStudent}
+                  onDeleteAllStudents={handleDeleteAllStudents}
+                  onDeleteMultipleStudents={handleDeleteMultipleStudents}
+                  onUpdateStudent={handleUpdateStudent}
+                  onViewReceipt={(url) => setViewReceiptUrl(url)}
+                  onOpenWhatsAppModal={(student) => {
+                    setWhatsAppMessageType('registration');
+                    setWhatsAppStudent(student);
+                  }}
+                  onExportExcel={exportStudentsToExcel}
+                  onUpdateGradeName={handleUpdateGradeName}
+                  onDeleteGrade={handleDeleteGrade}
+                />
+              )}
 
-          {currentScreen === 'expenses' && (
-            <ExpensesScreen
-              expenses={expenses}
-              totalRevenue={totalRevenue}
-              onAddExpense={handleAddExpense}
-              onDeleteExpense={handleDeleteExpense}
-            />
-          )}
+              {currentScreen === 'expenses' && (
+                <ExpensesScreen
+                  expenses={expenses}
+                  totalRevenue={totalRevenue}
+                  onAddExpense={handleAddExpense}
+                  onDeleteExpense={handleDeleteExpense}
+                />
+              )}
 
-          {currentScreen === 'salaries' && (
-            <StaffSalariesScreen
-              staff={staff}
-              onToggleStatus={handleToggleStaffStatus}
-            />
-          )}
+              {currentScreen === 'salaries' && (
+                <StaffSalariesScreen
+                  staff={staff}
+                  onToggleStatus={handleToggleStaffStatus}
+                />
+              )}
 
-          {currentScreen === 'analytics' && (
-            <AnalyticsScreen
-              students={students}
-              courses={courses}
-              totalRevenue={totalRevenue}
-              onNavigateToRegister={() => setCurrentScreen('new-student')}
-              onNavigateToStudentsList={() => {
-                setStudentsListInitialFilter('all');
-                setCurrentScreen('students-list');
-              }}
-            />
-          )}
+              {currentScreen === 'analytics' && (
+                <AnalyticsScreen
+                  students={students}
+                  courses={courses}
+                  totalRevenue={totalRevenue}
+                  onNavigateToRegister={() => setCurrentScreen('new-student')}
+                  onNavigateToStudentsList={() => {
+                    setStudentsListInitialFilter('all');
+                    setCurrentScreen('students-list');
+                  }}
+                />
+              )}
 
-          {currentScreen === 'whatsapp' && (
-            <WhatsAppCampaignsScreen
-              templates={templates}
-              onSaveTemplate={handleSaveTemplate}
-              whatsAppConfig={whatsAppConfig}
-              onUpdateWhatsConfig={handleUpdateWhatsConfig}
-            />
-          )}
+              {currentScreen === 'whatsapp' && (
+                <WhatsAppCampaignsScreen
+                  templates={templates}
+                  onSaveTemplate={handleSaveTemplate}
+                  whatsAppConfig={whatsAppConfig}
+                  onUpdateWhatsConfig={handleUpdateWhatsConfig}
+                />
+              )}
 
-          {currentScreen === 'courses' && (
-            <CoursesManagementScreen
-              courses={courses}
-              grades={grades}
-              students={students}
-              onAddCourse={handleAddCourse}
-              onUpdateCourse={handleUpdateCourse}
-              onDeleteCourse={handleDeleteCourse}
-              onToggleCourseActive={handleToggleCourseActive}
-              onAddGrade={handleAddGrade}
-              onUpdateGradeName={handleUpdateGradeName}
-              onDeleteGrade={handleDeleteGrade}
-            />
-          )}
+              {currentScreen === 'courses' && (
+                <CoursesManagementScreen
+                  courses={courses}
+                  grades={grades}
+                  students={students}
+                  onAddCourse={handleAddCourse}
+                  onUpdateCourse={handleUpdateCourse}
+                  onDeleteCourse={handleDeleteCourse}
+                  onToggleCourseActive={handleToggleCourseActive}
+                  onAddGrade={handleAddGrade}
+                  onUpdateGradeName={handleUpdateGradeName}
+                  onDeleteGrade={handleDeleteGrade}
+                />
+              )}
 
-          {currentScreen === 'staff' && (
-            <StaffPermissionsScreen
-              staff={staff}
-              onAddStaff={handleAddStaff}
-              onUpdateStaff={handleUpdateStaff}
-              onDeleteStaff={handleDeleteStaff}
-            />
-          )}
+              {currentScreen === 'staff' && (
+                <StaffPermissionsScreen
+                  staff={staff}
+                  onAddStaff={handleAddStaff}
+                  onUpdateStaff={handleUpdateStaff}
+                  onDeleteStaff={handleDeleteStaff}
+                />
+              )}
 
-          {currentScreen === 'audit-log' && (
-            <AuditLogScreen
-              logs={logs}
-              onClearLogs={() => setLogs([])}
-            />
-          )}
+              {currentScreen === 'audit-log' && (
+                <AuditLogScreen
+                  logs={logs}
+                  onClearLogs={() => setLogs([])}
+                />
+              )}
 
-          {currentScreen === 'settings' && (
-            <CloudSettingsScreen
-              onExportJson={exportDatabaseToJson}
-              onResetData={() => setShowProductionResetModal(true)}
-              onImportJson={handleImportJson}
-              centerSettings={centerSettings}
-              onUpdateCenterSettings={handleUpdateCenterSettings}
-              supabaseConfig={supabaseConfig}
-              onUpdateSupabaseConfig={handleUpdateSupabaseConfig}
-              initialTab={settingsInitialTab}
-              onOpenProductionReset={() => setShowProductionResetModal(true)}
-              databaseStats={{
-                studentsCount: students.length,
-                coursesCount: courses.length,
-                expensesCount: expenses.length,
-                staffCount: staff.length,
-              }}
-            />
+              {currentScreen === 'settings' && (
+                <CloudSettingsScreen
+                  onExportJson={exportDatabaseToJson}
+                  onResetData={() => setShowProductionResetModal(true)}
+                  onImportJson={handleImportJson}
+                  centerSettings={centerSettings}
+                  onUpdateCenterSettings={handleUpdateCenterSettings}
+                  supabaseConfig={supabaseConfig}
+                  onUpdateSupabaseConfig={handleUpdateSupabaseConfig}
+                  initialTab={settingsInitialTab}
+                  onOpenProductionReset={() => setShowProductionResetModal(true)}
+                  databaseStats={{
+                    studentsCount: students.length,
+                    coursesCount: courses.length,
+                    expensesCount: expenses.length,
+                    staffCount: staff.length,
+                  }}
+                />
+              )}
+            </>
           )}
         </div>
       </main>

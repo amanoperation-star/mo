@@ -126,6 +126,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
+  const SCREEN_PERMISSIONS: Record<NavigationScreen, string> = {
+    'analytics': 'شاشة: الرئيسية',
+    'new-student': 'شاشة: تسجيل طالب',
+    'students-list': 'شاشة: سجل الطلاب',
+    'expenses': 'شاشة: المصروفات',
+    'salaries': 'شاشة: الرواتب',
+    'whatsapp': 'شاشة: الواتساب',
+    'courses': 'شاشة: الكورسات',
+    'staff': 'شاشة: فريق العمل',
+    'audit-log': 'شاشة: سجل الرقابة',
+    'settings': 'شاشة: الإعدادات العامة'
+  };
+
   // Filter navItems based on current user permissions
   const filteredNavItems = navItems.filter((item) => {
     // If no user is logged in, show nothing or fallback (though App handles login first)
@@ -137,7 +150,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return true;
     }
 
-    // Explicit permission mapping per screen
+    // Check if the user has the explicit screen permission
+    if (perms.includes(SCREEN_PERMISSIONS[item.id])) {
+      return true;
+    }
+
+    // Explicit permission mapping per screen (backwards compatibility)
     switch (item.id) {
       case 'analytics':
         return perms.includes('البيانات المالية');

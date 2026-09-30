@@ -260,7 +260,7 @@ export async function fetchAllCloudData() {
       saveStoredStudents(result.students);
     }
 
-    if (!crsRes.error && Array.isArray(crsRes.data) && crsRes.data.length > 0) {
+    if (!crsRes.error && Array.isArray(crsRes.data)) {
       result.courses = crsRes.data.map(courseFromDb);
       saveStoredCourses(result.courses);
     }
@@ -270,17 +270,17 @@ export async function fetchAllCloudData() {
       saveStoredExpenses(result.expenses);
     }
 
-    if (!stfRes.error && Array.isArray(stfRes.data) && stfRes.data.length > 0) {
+    if (!stfRes.error && Array.isArray(stfRes.data)) {
       result.staff = stfRes.data.map(staffFromDb);
       saveStoredStaff(result.staff);
     }
 
-    if (!logRes.error && Array.isArray(logRes.data) && logRes.data.length > 0) {
+    if (!logRes.error && Array.isArray(logRes.data)) {
       result.logs = logRes.data.map(logFromDb);
       saveStoredLogs(result.logs);
     }
 
-    if (!ntfRes.error && Array.isArray(ntfRes.data) && ntfRes.data.length > 0) {
+    if (!ntfRes.error && Array.isArray(ntfRes.data)) {
       result.notifications = ntfRes.data.map(notificationFromDb);
       saveStoredNotifications(result.notifications);
     }

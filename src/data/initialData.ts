@@ -307,35 +307,4 @@ export const initialAuditLogs: AuditLog[] = [
   },
 ];
 
-export const initialNotifications: AppNotification[] = [
-  {
-    id: 'notif-1',
-    title: 'تسجيل اشتراك طالب جديد وتأكيد الدفع',
-    details: 'تم تسجيل الطالب أحمد طارق مصطفى وتفعيل كود CHEM-2025-0841',
-    user: 'أك. محمود عزت',
-    timestamp: 'الآن',
-    type: 'success',
-    read: false,
-    linkScreen: 'students-list',
-  },
-  {
-    id: 'notif-2',
-    title: 'تنبيه استحقاق قسط قادم',
-    details: 'قسط مستحق للطالب يوسف حازم العشري (متبقي 300 ج.م)',
-    user: 'م. سارة أحمد',
-    timestamp: 'منذ 5 دقائق',
-    type: 'installment',
-    read: false,
-    linkScreen: 'students-list',
-  },
-  {
-    id: 'notif-3',
-    title: 'تأكيد اتصال السحابة والواتساب',
-    details: 'بوابة الواتساب وقاعدة بيانات Supabase متصلة ومستقرة',
-    user: 'النظام الآلي',
-    timestamp: 'منذ 15 دقيقة',
-    type: 'info',
-    read: true,
-    linkScreen: 'settings',
-  },
-];
+export const initialNotifications: AppNotification[] = [];

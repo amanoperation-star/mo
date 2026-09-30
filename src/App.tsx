@@ -350,7 +350,13 @@ export default function App() {
         linkScreen,
       };
 
-      setNotifications((prev) => [newNotif, ...prev]);
+      setNotifications((prev) => {
+        const next = [newNotif, ...prev];
+        saveStoredNotifications(next);
+        return next;
+      });
+
+      syncNotificationToCloud(newNotif);
 
       // Broadcast in real-time to all open browsers/devices across the team
       broadcastToCloudTeam({
@@ -493,6 +499,13 @@ export default function App() {
     syncLogToCloud(newLog);
 
     // Broadcast INSTANTLY to all team members across all browsers!
+    triggerRealtimeAction(
+      `طالب جديد مسجل الآن [${generatedCode}] 🚀`,
+      `الطالب: ${newStudent.name} • الكورس: ${newStudent.course} • المبلغ: ${newStudent.amountPaid} ج.م`,
+      'success',
+      'students-list'
+    );
+
     broadcastToCloudTeam({
       type: 'STUDENT_ADDED',
       senderUser: currentUserTitle,

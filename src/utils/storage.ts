@@ -117,7 +117,7 @@ export function saveStoredLogs(logs: AuditLog[]): void {
 
 export function getStoredNotifications(): AppNotification[] {
   const loaded = loadFromStorage<AppNotification[]>(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
-  if (!loaded || loaded.length === 0) return initialNotifications;
+  if (!loaded) return [];
   return loaded;
 }
 

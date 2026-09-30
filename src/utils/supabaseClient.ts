@@ -445,6 +445,17 @@ export async function syncNotificationToCloud(notification: AppNotification) {
   }
 }
 
+export async function deleteAllNotificationsFromCloud() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  try {
+    await supabase.from('notifications').delete().neq('id', 'sentinel_none');
+  } catch (e) {
+    console.error('Error deleting all notifications from Supabase:', e);
+  }
+}
+
 export async function syncCenterSettingsToCloud(settings: CenterSettings) {
   const supabase = getSupabaseClient();
   if (!supabase) return;

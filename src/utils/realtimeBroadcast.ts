@@ -13,7 +13,9 @@ export interface RealtimeSyncPayload {
     | 'STAFF_UPDATED'
     | 'COURSES_UPDATED'
     | 'SETTINGS_UPDATED'
-    | 'NOTIFICATION_ADDED';
+    | 'NOTIFICATION_ADDED'
+    | 'NOTIFICATIONS_CLEARED'
+    | 'NOTIFICATIONS_MARKED_READ';
   senderUser: string;
   actionTitle: string;
   actionDetails: string;

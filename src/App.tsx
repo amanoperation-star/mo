@@ -70,6 +70,7 @@ import {
   deleteStaffFromCloud,
   syncLogToCloud,
   syncNotificationToCloud,
+  deleteAllNotificationsFromCloud,
   syncCenterSettingsToCloud,
   subscribeToSupabaseRealtime,
   broadcastToCloudTeam,
@@ -239,6 +240,15 @@ export default function App() {
       } else if (payload.type === 'STUDENTS_CLEARED') {
         setStudents([]);
         saveStoredStudents([]);
+      } else if (payload.type === 'NOTIFICATIONS_CLEARED') {
+        setNotifications([]);
+        saveStoredNotifications([]);
+      } else if (payload.type === 'NOTIFICATIONS_MARKED_READ') {
+        setNotifications((prev) => {
+          const next = prev.map((n) => ({ ...n, read: true }));
+          saveStoredNotifications(next);
+          return next;
+        });
       } else if (payload.type === 'STUDENT_UPDATED' && payload.data?.student) {
         const updatedStudent = payload.data.student as Student;
         setStudents((prev) => {
@@ -1109,11 +1119,33 @@ export default function App() {
 
   // Notification Handlers
   const handleMarkAllNotificationsAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) => {
+      const next = prev.map((n) => ({ ...n, read: true }));
+      saveStoredNotifications(next);
+      return next;
+    });
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+    broadcastToCloudTeam({
+      type: 'NOTIFICATIONS_MARKED_READ',
+      senderUser: currentUserTitle,
+      actionTitle: 'تحديد كافة التنبيهات كمقروءة ✅',
+      actionDetails: 'تم تعيين جميع الإشعارات كمقروءة',
+      timestamp: 'الآن',
+    });
   };
 
   const handleClearNotifications = () => {
     setNotifications([]);
+    saveStoredNotifications([]);
+    deleteAllNotificationsFromCloud();
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+    broadcastToCloudTeam({
+      type: 'NOTIFICATIONS_CLEARED',
+      senderUser: currentUserTitle,
+      actionTitle: 'مسح وحذف كافة الإشعارات 🗑️',
+      actionDetails: 'تم تفريغ قائمة التنبيهات بالكامل',
+      timestamp: 'الآن',
+    });
   };
 
   const handleNotificationClick = (notif: AppNotification) => {

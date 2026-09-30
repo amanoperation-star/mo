@@ -275,12 +275,12 @@ export async function fetchAllCloudData() {
       saveStoredStaff(result.staff);
     }
 
-    if (!logRes.error && Array.isArray(logRes.data)) {
+    if (!logRes.error && Array.isArray(logRes.data) && logRes.data.length > 0) {
       result.logs = logRes.data.map(logFromDb);
       saveStoredLogs(result.logs);
     }
 
-    if (!ntfRes.error && Array.isArray(ntfRes.data)) {
+    if (!ntfRes.error && Array.isArray(ntfRes.data) && ntfRes.data.length > 0) {
       result.notifications = ntfRes.data.map(notificationFromDb);
       saveStoredNotifications(result.notifications);
     }

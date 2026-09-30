@@ -70,7 +70,9 @@ export function saveStoredStudents(students: Student[]): void {
 }
 
 export function getStoredCourses(): Course[] {
-  return loadFromStorage<Course[]>(STORAGE_KEYS.COURSES, initialCourses);
+  const loaded = loadFromStorage<Course[]>(STORAGE_KEYS.COURSES, initialCourses);
+  if (!loaded || loaded.length === 0) return initialCourses;
+  return loaded;
 }
 
 export function saveStoredCourses(courses: Course[]): void {
@@ -86,7 +88,9 @@ export function saveStoredExpenses(expenses: Expense[]): void {
 }
 
 export function getStoredStaff(): StaffMember[] {
-  return loadFromStorage<StaffMember[]>(STORAGE_KEYS.STAFF, initialStaff);
+  const loaded = loadFromStorage<StaffMember[]>(STORAGE_KEYS.STAFF, initialStaff);
+  if (!loaded || loaded.length === 0) return initialStaff;
+  return loaded;
 }
 
 export function saveStoredStaff(staff: StaffMember[]): void {
@@ -102,7 +106,9 @@ export function saveStoredTemplates(templates: WhatsAppTemplate[]): void {
 }
 
 export function getStoredLogs(): AuditLog[] {
-  return loadFromStorage<AuditLog[]>(STORAGE_KEYS.LOGS, initialAuditLogs);
+  const loaded = loadFromStorage<AuditLog[]>(STORAGE_KEYS.LOGS, initialAuditLogs);
+  if (!loaded || loaded.length === 0) return initialAuditLogs;
+  return loaded;
 }
 
 export function saveStoredLogs(logs: AuditLog[]): void {
@@ -110,7 +116,9 @@ export function saveStoredLogs(logs: AuditLog[]): void {
 }
 
 export function getStoredNotifications(): AppNotification[] {
-  return loadFromStorage<AppNotification[]>(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+  const loaded = loadFromStorage<AppNotification[]>(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+  if (!loaded || loaded.length === 0) return initialNotifications;
+  return loaded;
 }
 
 export function saveStoredNotifications(notifications: AppNotification[]): void {

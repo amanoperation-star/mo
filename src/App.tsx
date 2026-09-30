@@ -548,6 +548,13 @@ export default function App() {
         data: { studentId: id },
         linkScreen: 'students-list',
       });
+
+      triggerRealtimeAction(
+        `حذف اشتراك طالب [${target.code || target.name}] ⚠️`,
+        `تم إلغاء تفعيل وحذف حساب الطالب (${target.name}) من السجل`,
+        'warning',
+        'students-list'
+      );
     }
   };
 
@@ -576,6 +583,13 @@ export default function App() {
       timestamp: 'الآن',
       linkScreen: 'students-list',
     });
+
+    triggerRealtimeAction(
+      `تفريغ ومسح سجل الطلاب بالكامل ⚠️`,
+      `تم مسح وتصفية كافة سجلات الطلاب بواقع (${count}) طالب`,
+      'warning',
+      'students-list'
+    );
   };
 
   // Delete Multiple Selected Students
@@ -604,6 +618,13 @@ export default function App() {
       data: { studentIds: ids },
       linkScreen: 'students-list',
     });
+
+    triggerRealtimeAction(
+      `حذف مجموعة طلاب محددين [${count} طالب] ⚠️`,
+      `تم حذف (${count}) طلاب محددين من السجل`,
+      'warning',
+      'students-list'
+    );
   };
 
   // Update Student (e.g. Settle Installment / Mark as Paid)
@@ -651,6 +672,17 @@ export default function App() {
         data: { student: updatedStudentObj },
         linkScreen: 'students-list',
       });
+
+      triggerRealtimeAction(
+        isSettle
+          ? `سداد قسط وتصفية حساب [${target?.name}] ✅`
+          : `تحديث بيانات واشتراك [${target?.name}] 🔄`,
+        isSettle
+          ? `تم تسوية قسط الطالب ${target?.name} بمبلغ ${updatedData.amountPaid || target?.amountPaid} ج.م`
+          : `تم تعديل بيانات واشتراك الطالب ${target?.name}`,
+        isSettle ? 'success' : 'info',
+        'students-list'
+      );
     }
   };
 
@@ -684,6 +716,13 @@ export default function App() {
       data: { expense: newExpense },
       linkScreen: 'expenses',
     });
+
+    triggerRealtimeAction(
+      `تسجيل مصروف جديد [${newExpense.title}] 💰`,
+      `المبلغ: ${newExpense.amount} ج.م • البند: ${newExpense.category}`,
+      'info',
+      'expenses'
+    );
   };
 
   // Delete Expense
@@ -702,6 +741,13 @@ export default function App() {
       data: { expenseId: id },
       linkScreen: 'expenses',
     });
+
+    triggerRealtimeAction(
+      `حذف بند مصروف [${target?.title || ''}] 🗑️`,
+      `تم حذف بند المصروف من السجل المالي`,
+      'warning',
+      'expenses'
+    );
   };
 
   // Toggle Staff Payment Status
@@ -712,6 +758,12 @@ export default function App() {
           const newStatus: 'مدفوع' | 'معلق' = st.status === 'مدفوع' ? 'معلق' : 'مدفوع';
           const updated: StaffMember = { ...st, status: newStatus };
           syncStaffToCloud(updated);
+          triggerRealtimeAction(
+            `تغيير حالة سداد مرتب الموظف [${st.name}] 💼`,
+            `تم تحديث حالة السداد إلى (${newStatus})`,
+            'info',
+            'staff'
+          );
           return updated;
         }
         return st;
@@ -814,6 +866,12 @@ export default function App() {
     };
     setCourses((prev) => [...prev, newCourse]);
     syncCourseToCloud(newCourse);
+    triggerRealtimeAction(
+      `إضافة كورس ومقرر جديد [${newCourse.name}] 📚`,
+      `المرحلة: ${newCourse.grade} • السعر: ${newCourse.price} ج.م`,
+      'success',
+      'courses'
+    );
   };
 
   // Update Course (Name, Grade, Schedule, Price)
@@ -839,6 +897,13 @@ export default function App() {
       type: 'info',
     };
     setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `تعديل بيانات الكورس [${updatedData.name || target?.name || ''}] 🔄`,
+      `تم تحديث بيانات ومواعيد الكورس بنجاح`,
+      'info',
+      'courses'
+    );
   };
 
   // Toggle Course Active
@@ -848,6 +913,12 @@ export default function App() {
         if (c.id === id) {
           const updated = { ...c, isActive: !c.isActive };
           syncCourseToCloud(updated);
+          triggerRealtimeAction(
+            `تغيير حالة تفعيل الكورس [${c.name}] 🔄`,
+            `تم تبديل حالة التنشيط للكورس إلى (${updated.isActive ? 'مفعل' : 'معطل'})`,
+            'info',
+            'courses'
+          );
           return updated;
         }
         return c;
@@ -872,6 +943,13 @@ export default function App() {
     setLogs((prev) => [newLog, ...prev]);
     setStorageNotification(`تم حذف كورس (${target?.name || 'الكورس'}) بنجاح`);
     setTimeout(() => setStorageNotification(null), 3000);
+
+    triggerRealtimeAction(
+      `حذف كورس ومقرر دراسي [${target?.name || ''}] ⚠️`,
+      `تم حذف الكورس من المنظومة`,
+      'warning',
+      'courses'
+    );
   };
 
   // Add Grade Handler
@@ -891,6 +969,13 @@ export default function App() {
     setLogs((prev) => [newLog, ...prev]);
     setStorageNotification(`تمت إضافة المرحلة الدراسية (${trimmed}) بنجاح`);
     setTimeout(() => setStorageNotification(null), 3000);
+
+    triggerRealtimeAction(
+      `إضافة مرحلة وصف دراسي جديد [${trimmed}] 🎓`,
+      `تمت إضافة الصف الدراسي الجديد للمنظومة`,
+      'success',
+      'settings'
+    );
   };
 
   // Update Grade Name Handler (Cascades across all courses and students!)
@@ -917,6 +1002,13 @@ export default function App() {
     setLogs((prev) => [newLog, ...prev]);
     setStorageNotification(`تم تعديل المرحلة إلى (${trimmedNew}) وتحديث الكورسات والطلاب بنجاح`);
     setTimeout(() => setStorageNotification(null), 3500);
+
+    triggerRealtimeAction(
+      `تعديل وتحديث اسم المرحلة والصف الدراسي 🔄`,
+      `تم تعديل المرحلة من (${oldGrade}) إلى (${trimmedNew})`,
+      'info',
+      'settings'
+    );
   };
 
   // Delete Grade Handler
@@ -934,6 +1026,13 @@ export default function App() {
     setLogs((prev) => [newLog, ...prev]);
     setStorageNotification(`تم حذف المرحلة الدراسية (${gradeToDelete})`);
     setTimeout(() => setStorageNotification(null), 3000);
+
+    triggerRealtimeAction(
+      `حذف مرحلة وصف دراسي [${gradeToDelete}] ⚠️`,
+      `تم حذف الصف الدراسي من المنظومة`,
+      'warning',
+      'settings'
+    );
   };
 
   // Save WhatsApp Template

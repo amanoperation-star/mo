@@ -46,7 +46,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       <button
         id="notification-bell-button"
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const next = !isOpen;
+          setIsOpen(next);
+          if (next && unreadCount > 0) {
+            onMarkAllAsRead();
+          }
+        }}
         title={
           unreadCount > 0
             ? `يوجد ${unreadCount} إشعارات غير مقروءة من فريق العمل`

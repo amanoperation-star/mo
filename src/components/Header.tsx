@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 id="header-center-name" className="text-base md:text-lg font-black text-white tracking-wide">
               {currentCenterName}
             </h1>
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0e1c2e] text-cyan-300 border border-cyan-500/30 text-[11px] font-black font-mono shadow-inner" dir="ltr">
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0e1c2e] text-cyan-300 border border-cyan-500/30 text-[11px] font-black font-sans shadow-inner" dir="ltr">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee] animate-pulse"></span>
               <span>{currentYear}</span>
             </div>
@@ -186,7 +186,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
               title={`الانتقال إلى المنصة: ${currentUrl}`}
             >
-              <span dir="ltr" className="text-[11px] font-mono text-cyan-200">{currentUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+              <span dir="ltr" className="text-[11px] font-sans text-cyan-200">{currentUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
               <Globe className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             </a>
           )}
@@ -201,7 +201,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
               title={`هاتف التواصل: ${currentPhone}`}
             >
-              <span dir="ltr" className="text-[11px] font-mono text-slate-200">{currentPhone}</span>
+              <span dir="ltr" className="text-[11px] font-sans text-slate-200">{currentPhone}</span>
               <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             </a>
           )}

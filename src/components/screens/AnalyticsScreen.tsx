@@ -18,6 +18,8 @@ interface AnalyticsScreenProps {
   courses: Course[];
   totalRevenue: number;
   currentUser?: StaffMember | null;
+  isWhatsConnected?: boolean;
+  isCloudConnected?: boolean;
   onNavigateToRegister?: () => void;
   onNavigateToStudentsList?: () => void;
   onNavigateToExpenses?: () => void;
@@ -30,6 +32,8 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
   courses,
   totalRevenue,
   currentUser,
+  isWhatsConnected = false,
+  isCloudConnected = false,
   onNavigateToRegister,
   onNavigateToStudentsList,
   onNavigateToExpenses,
@@ -120,12 +124,11 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono tracking-tight" dir="ltr">
-              {totalRevenue > 0 ? formatNumber(totalRevenue) : '24,500'}{' '}
-              <span className="text-xs font-black font-sans">ج.م</span>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-sans tracking-tight" dir="ltr">
+              EGP {formatNumber(totalRevenue)}{' '}
             </div>
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
-              <span className="text-emerald-400">تم استلام {students.length > 0 ? students.length * 3 : 45} عملية</span>
+              <span className="text-emerald-400">تم استلام {students.length} عملية</span>
               <span className="text-slate-500 group-hover:text-emerald-400 transition-colors">عرض التفاصيل ←</span>
             </div>
           </div>
@@ -134,23 +137,35 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
         {/* Card 2: WhatsApp status */}
         <div
           onClick={onNavigateToWhatsApp}
-          className="premium-list-card flex flex-col justify-between gap-4 cursor-pointer hover:border-pink-500/50 transition-all group"
+          className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${
+            isWhatsConnected ? 'hover:border-emerald-500/50' : 'hover:border-pink-500/50'
+          }`}
         >
           <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
-            <span className="text-xs text-slate-400 font-extrabold group-hover:text-pink-300 transition-colors">
+            <span className={`text-xs text-slate-400 font-extrabold transition-colors ${
+              isWhatsConnected ? 'group-hover:text-emerald-300' : 'group-hover:text-pink-300'
+            }`}>
               رسائل الواتساب
             </span>
-            <div className="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              isWhatsConnected ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-pink-500/10 border border-pink-500/20 text-pink-400'
+            }`}>
               <MessageCircle className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-pink-400 font-mono tracking-tight">
-              تحتاج ربط
+            <div className={`text-xl sm:text-2xl font-black font-sans tracking-tight ${
+              isWhatsConnected ? 'text-emerald-400' : 'text-pink-400'
+            }`}>
+              {isWhatsConnected ? 'متصل ونشط' : 'تحتاج ربط'}
             </div>
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
-              <span className="text-pink-300">اضغط هنا لإعادة الربط</span>
-              <span className="text-slate-500 group-hover:text-pink-400 transition-colors">إعدادات الواتساب ←</span>
+              <span className={isWhatsConnected ? 'text-emerald-400' : 'text-pink-300'}>
+                {isWhatsConnected ? 'النظام جاهز لإرسال الرسائل' : 'اضغط هنا لإعادة الربط'}
+              </span>
+              <span className={`text-slate-500 transition-colors ${
+                isWhatsConnected ? 'group-hover:text-emerald-400' : 'group-hover:text-pink-400'
+              }`}>إعدادات الواتساب ←</span>
             </div>
           </div>
         </div>
@@ -158,23 +173,35 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
         {/* Card 3: Cloud connection status */}
         <div
           onClick={onNavigateToSettings}
-          className="premium-list-card flex flex-col justify-between gap-4 cursor-pointer hover:border-cyan-500/50 transition-all group"
+          className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${
+            isCloudConnected ? 'hover:border-emerald-500/50' : 'hover:border-cyan-500/50'
+          }`}
         >
           <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
-            <span className="text-xs text-slate-400 font-extrabold group-hover:text-cyan-300 transition-colors">
+            <span className={`text-xs text-slate-400 font-extrabold transition-colors ${
+              isCloudConnected ? 'group-hover:text-emerald-300' : 'group-hover:text-cyan-300'
+            }`}>
               حالة الربط السحابي
             </span>
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              isCloudConnected ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400'
+            }`}>
               <Cloud className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
-              مستقر (99.9%)
+            <div className={`text-xl sm:text-2xl font-black font-sans tracking-tight ${
+              isCloudConnected ? 'text-emerald-400' : 'text-cyan-300'
+            }`}>
+              {isCloudConnected ? 'مستقر (99.9%)' : 'غير متصل بالسحابة'}
             </div>
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
-              <span className="text-cyan-300">آخر مزامنة منذ دقيقة</span>
-              <span className="text-slate-500 group-hover:text-cyan-400 transition-colors">الإعدادات ←</span>
+              <span className={isCloudConnected ? 'text-emerald-400' : 'text-cyan-300'}>
+                {isCloudConnected ? 'آخر مزامنة منذ دقيقة' : 'فشل المزامنة التلقائية'}
+              </span>
+              <span className={`text-slate-500 transition-colors ${
+                isCloudConnected ? 'group-hover:text-emerald-400' : 'group-hover:text-cyan-400'
+              }`}>الإعدادات ←</span>
             </div>
           </div>
         </div>
@@ -193,8 +220,8 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight" dir="ltr">
-              {students.length > 0 ? students.length.toLocaleString('en-US') : '1,482'}
+            <div className="text-2xl sm:text-3xl font-black text-white font-sans tracking-tight" dir="ltr">
+              {students.length.toLocaleString('en-US')}
             </div>
             <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400 mt-2">
               <span className="flex items-center gap-0.5" dir="ltr">

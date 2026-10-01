@@ -1407,6 +1407,8 @@ export default function App() {
                   courses={courses}
                   totalRevenue={totalRevenue}
                   currentUser={currentUser}
+                  isWhatsConnected={whatsAppConfig.isConnected}
+                  isCloudConnected={supabaseConfig.isConnected}
                   onNavigateToRegister={() => setCurrentScreen('new-student')}
                   onNavigateToStudentsList={() => {
                     setStudentsListInitialFilter('all');

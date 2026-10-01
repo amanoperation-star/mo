@@ -50,7 +50,7 @@ interface CloudSettingsScreenProps {
   onUpdateCenterSettings: (newSettings: CenterSettings) => void;
   supabaseConfig?: SupabaseConfig;
   onUpdateSupabaseConfig?: (newConfig: SupabaseConfig) => void;
-  initialTab?: 'header' | 'supabase' | 'reset';
+  initialTab?: 'header' | 'supabase' | 'reset' | 'banner';
   onOpenProductionReset?: () => void;
   databaseStats?: {
     studentsCount: number;
@@ -79,8 +79,8 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Active Tab: 'header' for Center Identity, 'supabase' for Supabase, 'reset' for Production Reset
-  const [activeTab, setActiveTab] = useState<'header' | 'supabase' | 'reset'>(initialTab);
+  // Active Tab: 'header', 'supabase', 'reset', 'banner'
+  const [activeTab, setActiveTab] = useState<'header' | 'supabase' | 'reset' | 'banner'>(initialTab);
 
   useEffect(() => {
     if (initialTab) {
@@ -100,6 +100,35 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     receiptSystemTitle: centerSettings?.receiptSystemTitle || defaultCenterSettings.receiptSystemTitle,
     receiptFooterText: centerSettings?.receiptFooterText || defaultCenterSettings.receiptFooterText,
   });
+
+  // Banner Customization State
+  const [bannerBadge, setBannerBadge] = useState(() => localStorage.getItem('el_saqqa_banner_badge') || 'لوحة التحكم الاحترافية الممتازة');
+  const [bannerTitle, setBannerTitle] = useState(() => localStorage.getItem('el_saqqa_banner_title') || 'مرحباً بك مجدداً، أك. محمود عزت');
+  const [bannerDesc, setBannerDesc] = useState(() => localStorage.getItem('el_saqqa_banner_desc') || 'هذا نموذج المعاينة الخاص بالتصميم الجديد لمنظومة مستر أشرف السقا 2025. تم تصميم الهيدر واللوحة خصيصاً ليوافق مع أحدث معايير تجربة المستخدم (UI/UX) مع تحسين المظهر البصري لبيانات الحالة ومؤشرات الأداء.');
+  const [bannerSavedSuccess, setBannerSavedSuccess] = useState(false);
+
+  const handleBannerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('el_saqqa_banner_badge', bannerBadge);
+    localStorage.setItem('el_saqqa_banner_title', bannerTitle);
+    localStorage.setItem('el_saqqa_banner_desc', bannerDesc);
+    setBannerSavedSuccess(true);
+    setTimeout(() => setBannerSavedSuccess(false), 3500);
+  };
+
+  const handleBannerReset = () => {
+    const defaultBadge = 'لوحة التحكم الاحترافية الممتازة';
+    const defaultTitle = 'مرحباً بك مجدداً، أك. محمود عزت';
+    const defaultDesc = 'هذا نموذج المعاينة الخاص بالتصميم الجديد لمنظومة مستر أشرف السقا 2025. تم تصميم الهيدر واللوحة خصيصاً ليوافق مع أحدث معايير تجربة المستخدم (UI/UX) مع تحسين المظهر البصري لبيانات الحالة ومؤشرات الأداء.';
+    setBannerBadge(defaultBadge);
+    setBannerTitle(defaultTitle);
+    setBannerDesc(defaultDesc);
+    localStorage.removeItem('el_saqqa_banner_badge');
+    localStorage.removeItem('el_saqqa_banner_title');
+    localStorage.removeItem('el_saqqa_banner_desc');
+    setBannerSavedSuccess(true);
+    setTimeout(() => setBannerSavedSuccess(false), 3500);
+  };
 
   // Form State for Supabase Cloud Settings
   const [supabaseForm, setSupabaseForm] = useState<SupabaseConfig>({
@@ -781,6 +810,21 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
           <ShieldAlert className="w-4 h-4 text-rose-300" />
           <span>تهيئة المنظومة والإنتاج 🚀</span>
         </button>
+
+        {/* Tab 4: Dashboard Welcome Banner Customization */}
+        <button
+          id="tab-banner-settings"
+          type="button"
+          onClick={() => setActiveTab('banner')}
+          className={`flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'banner'
+              ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-[#111e30]'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-purple-300" />
+          <span>تخصيص بانر الترحيب</span>
+        </button>
       </div>
 
       {/* TAB 1 CONTENT: Direct Header Binding & Center Identity */}
@@ -797,7 +841,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
           )}
 
           <form onSubmit={handleCenterSubmit} className="space-y-6">
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-5 md:p-6 space-y-6">
+            <div className="premium-list-card space-y-6 !p-5 md:!p-6">
               <div className="flex items-center justify-between border-b border-[#14233a] pb-3.5">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400" />
@@ -1119,7 +1163,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
 
           {/* Supabase Core Configuration Form */}
           <form onSubmit={handleSaveSupabase} className="space-y-6">
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-5 md:p-6 space-y-6">
+            <div className="premium-list-card space-y-6 !p-5 md:!p-6">
               <div className="flex items-center justify-between border-b border-[#14233a] pb-3.5">
                 <div className="flex items-center gap-2">
                   <Cloud className="w-4 h-4 text-emerald-400" />
@@ -1419,7 +1463,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
           </form>
 
           {/* Supabase SQL Schema & Permissions Card for Tickets */}
-          <div className="bg-[#080f1a] border border-[#1b2f4f] rounded-xl overflow-hidden shadow-lg transition-all">
+          <div className="premium-list-card !p-0 overflow-hidden">
             <div className="p-4 md:p-5 flex flex-wrap items-center justify-between gap-3 bg-[#0d1726] border-b border-[#17273f]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
@@ -1508,7 +1552,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
 
           {/* Database Statistics & Synchronization Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-4 flex items-center gap-3.5">
+            <div className="premium-list-card flex items-center gap-3.5 !p-4">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
                 <Users className="w-5 h-5" />
               </div>
@@ -1518,7 +1562,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
               </div>
             </div>
 
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-4 flex items-center gap-3.5">
+            <div className="premium-list-card flex items-center gap-3.5 !p-4">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                 <BookOpen className="w-5 h-5" />
               </div>
@@ -1528,7 +1572,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
               </div>
             </div>
 
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-4 flex items-center gap-3.5">
+            <div className="premium-list-card flex items-center gap-3.5 !p-4">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
                 <DollarSign className="w-5 h-5" />
               </div>
@@ -1538,7 +1582,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
               </div>
             </div>
 
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-4 flex items-center gap-3.5">
+            <div className="premium-list-card flex items-center gap-3.5 !p-4">
               <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
                 <UserCheck className="w-5 h-5" />
               </div>
@@ -1552,7 +1596,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
           {/* Cloud & Local Backup Management Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Local Storage Card */}
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-5 flex flex-col justify-between gap-4">
+            <div className="premium-list-card flex flex-col justify-between gap-4 !p-5">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
                   <Database className="w-4 h-4" />
@@ -1600,7 +1644,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
             </div>
 
             {/* Supabase Architecture Info Card */}
-            <div className="bg-[#080f1a] border border-[#17273f] rounded-xl p-5 flex flex-col justify-between gap-4">
+            <div className="premium-list-card flex flex-col justify-between gap-4 !p-5">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm font-bold text-blue-400">
                   <Server className="w-4 h-4" />
@@ -1641,7 +1685,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
       {/* TAB 3 CONTENT: Production Setup & System Reset */}
       {activeTab === 'reset' && (
         <div id="tab-content-reset" className="space-y-6 animate-fadeIn">
-          <div className="bg-[#080f1a] border border-rose-500/40 rounded-2xl p-5 md:p-7 space-y-6">
+          <div className="premium-list-card space-y-6 !p-5 md:!p-7 border-rose-500/40 hover:border-rose-500">
             <div className="flex items-center gap-3 border-b border-[#17273f] pb-4">
               <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center font-bold shrink-0">
                 <ShieldAlert className="w-5 h-5" />
@@ -1717,6 +1761,84 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TAB 4 CONTENT: Dashboard Welcome Banner Customization */}
+      {activeTab === 'banner' && (
+        <div id="tab-content-banner" className="space-y-6 animate-fadeIn">
+          {bannerSavedSuccess && (
+            <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs px-4 py-2.5 rounded-xl font-bold">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>تم حفظ وتحديث نصوص بانر لوحة التحكم الرئيسية بنجاح في التخزين المحلي!</span>
+            </div>
+          )}
+
+          <form onSubmit={handleBannerSubmit} className="space-y-6">
+            <div className="premium-list-card space-y-6 !p-5 md:!p-6">
+              <div className="flex items-center gap-3 border-b border-[#16273f] pb-4">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">تخصيص بانر الترحيب الرئيسي للوحة التحكم</h3>
+                  <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                    قم بتعديل النصوص والعبارات الترحيبية الظاهرة في بانر الشاشة الرئيسية للمنظومة
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">نص الشارة العليا (Badge):</label>
+                  <input
+                    type="text"
+                    value={bannerBadge}
+                    onChange={(e) => setBannerBadge(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-purple-500 font-bold"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">عنوان الترحيب الرئيسي (Title):</label>
+                  <input
+                    type="text"
+                    value={bannerTitle}
+                    onChange={(e) => setBannerTitle(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-purple-500 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-slate-300 font-bold">النص الوصفي والتفصيلي تحت العنوان (Description):</label>
+                <textarea
+                  rows={3}
+                  value={bannerDesc}
+                  onChange={(e) => setBannerDesc(e.target.value)}
+                  className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-purple-500 font-semibold resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#16273f]">
+                <button
+                  type="button"
+                  onClick={handleBannerReset}
+                  className="bg-[#121c2c] hover:bg-[#1a2940] text-slate-300 hover:text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all border border-slate-700"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>استعادة الافتراضي</span>
+                </button>
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer transition-all shadow-lg shadow-purple-600/30"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>حفظ نصوص البانر</span>
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       )}
     </div>

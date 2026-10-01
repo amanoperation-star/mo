@@ -193,7 +193,7 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
           return (
             <div
               key={member.id}
-              className="bg-[#080f1a] border border-[#17273f] rounded-xl p-5 flex flex-col justify-between gap-4 shadow-sm hover:border-[#1f385c] transition-all text-right"
+              className="premium-list-card flex flex-col justify-between gap-4 text-right"
             >
               <div>
                 {/* Member Top Bar with Action Buttons */}

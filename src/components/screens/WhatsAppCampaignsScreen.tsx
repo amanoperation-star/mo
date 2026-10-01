@@ -19,7 +19,8 @@ import {
   Bot,
   Flame,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Cloud
 } from 'lucide-react';
 import { WhatsAppTemplate, WhatsAppIntegrationConfig } from '../../types';
 
@@ -316,7 +317,33 @@ export const WhatsAppCampaignsScreen: React.FC<WhatsAppCampaignsScreenProps> = (
                   </button>
                 </div>
 
-                {activeQrView === 'qr' ? (
+                {gatewayType !== 'qr_web' ? (
+                  /* Cloud API Session Information */
+                  <div className="mt-3 flex flex-col gap-3.5 text-right animate-in fade-in">
+                    <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/20 flex flex-col gap-2.5">
+                      <div className="flex items-center gap-2 text-blue-400 font-bold">
+                        <Cloud className="w-5 h-5 text-blue-400" />
+                        <span>الربط السحابي المباشر نشط</span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        أنت تعمل حالياً بنظام الإرسال السحابي المبرمج. يتم تشغيل بوابة الاتصال ومعالجة إرسال الرسائل تلقائياً عبر الخادم في الخلفية دون الحاجة لإبقاء المتصفح أو الهاتف متصلاً.
+                      </p>
+                      <div className="p-2.5 bg-[#0d1726] rounded-lg border border-[#1a2d48] text-[11px] text-slate-400 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>رابط الـ Webhook متصل وجاهز لتلقي الحالات</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-[#0d1726] border border-[#17273f] rounded-xl text-xs text-slate-400 leading-relaxed">
+                      <span className="font-bold text-white block mb-1">خطوات التشغيل السحابي:</span>
+                      <ol className="list-decimal list-inside space-y-1 text-[11px]">
+                        <li>املأ بيانات مفتاح الربط والـ Secret Key بالاستمارة المجاورة.</li>
+                        <li>احرص على كتابة رقم هاتف الإرسال المعتمد برمز الدولة.</li>
+                        <li>اضغط على حفظ إعدادات البوابة ليقوم الروبوت بتفعيل الربط الذاتي فوراً.</li>
+                      </ol>
+                    </div>
+                  </div>
+                ) : activeQrView === 'qr' ? (
                   /* Authentic WhatsApp QR Code Display */
                   <div className="mt-3 flex flex-col items-center">
                     <p className="text-xs text-slate-300 leading-relaxed text-right w-full">
@@ -486,7 +513,10 @@ export const WhatsAppCampaignsScreen: React.FC<WhatsAppCampaignsScreenProps> = (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button
                       type="button"
-                      onClick={() => setGatewayType('qr_web')}
+                      onClick={() => {
+                        setGatewayType('qr_web');
+                        onUpdateWhatsConfig({ gatewayType: 'qr_web' });
+                      }}
                       className={`p-3 rounded-xl border text-right transition-all cursor-pointer ${
                         gatewayType === 'qr_web'
                           ? 'bg-blue-600/20 border-blue-500/60 text-white font-bold'
@@ -499,7 +529,10 @@ export const WhatsAppCampaignsScreen: React.FC<WhatsAppCampaignsScreenProps> = (
 
                     <button
                       type="button"
-                      onClick={() => setGatewayType('meta_cloud')}
+                      onClick={() => {
+                        setGatewayType('meta_cloud');
+                        onUpdateWhatsConfig({ gatewayType: 'meta_cloud' });
+                      }}
                       className={`p-3 rounded-xl border text-right transition-all cursor-pointer ${
                         gatewayType === 'meta_cloud'
                           ? 'bg-blue-600/20 border-blue-500/60 text-white font-bold'
@@ -512,7 +545,10 @@ export const WhatsAppCampaignsScreen: React.FC<WhatsAppCampaignsScreenProps> = (
 
                     <button
                       type="button"
-                      onClick={() => setGatewayType('ultra_msg')}
+                      onClick={() => {
+                        setGatewayType('ultra_msg');
+                        onUpdateWhatsConfig({ gatewayType: 'ultra_msg' });
+                      }}
                       className={`p-3 rounded-xl border text-right transition-all cursor-pointer ${
                         gatewayType === 'ultra_msg'
                           ? 'bg-blue-600/20 border-blue-500/60 text-white font-bold'
@@ -523,6 +559,43 @@ export const WhatsAppCampaignsScreen: React.FC<WhatsAppCampaignsScreenProps> = (
                       <p className="text-[10px] text-slate-400 mt-0.5">سيرفر إرسال مخصص</p>
                     </button>
                   </div>
+                </div>
+
+                {/* Gateway Type Selection Info Advice */}
+                <div className="p-3.5 rounded-xl bg-blue-950/20 border border-blue-500/20 text-xs mt-1 animate-in fade-in duration-200">
+                  {gatewayType === 'qr_web' && (
+                    <div className="flex items-start gap-2.5">
+                      <QrCode className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="flex-1 text-right">
+                        <span className="font-bold text-emerald-300">وضع جلسة متصفح (QR Web) نشط:</span>
+                        <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                          هذا الوضع مجاني وسهل الإعداد بالكامل عبر الهاتف. يرجى استخدام كاميرا هاتفك من تطبيق الواتساب لمسح رمز الـ QR الموضح بالجانب لتفعيل الجلسة فوراً.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {gatewayType === 'meta_cloud' && (
+                    <div className="flex items-start gap-2.5">
+                      <Globe className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                      <div className="flex-1 text-right">
+                        <span className="font-bold text-blue-300">وضع WhatsApp Cloud API (البوابة الرسمية من Meta) نشط:</span>
+                        <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                          يتيح لك هذا الوضع إرسالاً موثوقاً وعالي الأمان مباشرة من خوادم فيسبوك الرسمية. يرجى ملء مفتاح الـ API ورقم هاتف الإرسال المعتمد بالأسفل لربطه بالمنظومة سحابياً. لا حاجة لمسح كود الـ QR في هذا الوضع.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {gatewayType === 'ultra_msg' && (
+                    <div className="flex items-start gap-2.5">
+                      <Key className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="flex-1 text-right">
+                        <span className="font-bold text-amber-300">وضع UltraMsg / WPPConnect (سيرفر مخصص) نشط:</span>
+                        <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                          هذا الوضع يربط المنظومة ببوابتك أو سيرفرك المخصص أو اشتراكك الخارجي. يرجى إدخال رابط الويب هوك (Webhook) ومفتاح الاتصال الخاص بسيرفرك بالأسفل لربطه بنجاح.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Instance Name & Phone */}

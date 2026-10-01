@@ -446,7 +446,7 @@ export const CoursesManagementScreen: React.FC<CoursesManagementScreenProps> = (
               return (
                 <div
                   key={course.id}
-                  className="bg-[#080f1a] border border-[#17273f] hover:border-blue-500/40 rounded-2xl p-4 md:p-5 flex flex-col justify-between gap-3.5 shadow-sm transition-all relative group"
+                  className="premium-list-card flex flex-col justify-between gap-3.5 relative group"
                 >
                   <div>
                     {/* Header Badge: Grade with Direct Edit & Delete Stage Buttons & Status */}
@@ -614,7 +614,7 @@ export const CoursesManagementScreen: React.FC<CoursesManagementScreenProps> = (
               return (
                 <div
                   key={gradeItem + idx}
-                  className="bg-[#080f1a] border border-[#17273f] hover:border-emerald-500/40 rounded-2xl p-4 flex flex-col justify-between gap-4 transition-all group"
+                  className="premium-list-card flex flex-col justify-between gap-4 group"
                 >
                   <div>
                     <div className="flex items-center justify-between">

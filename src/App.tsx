@@ -1293,38 +1293,40 @@ export default function App() {
         id="main-app-content"
         className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 lg:p-6 flex flex-col lg:flex-row gap-5"
       >
-        {/* Sidebar (On the Right in RTL) */}
-        <Sidebar
-          currentScreen={currentScreen}
-          onSelectScreen={(screen) => {
-            if (screen === 'students-list') {
-              setStudentsListInitialFilter('all');
-            }
-            if (screen === 'settings') {
-              setSettingsInitialTab('header');
-            }
-            setCurrentScreen(screen);
-          }}
-          studentsCount={students.length}
-          totalRevenue={totalRevenue}
-          isDarkMode={isDarkMode}
-          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
-          onExportJson={exportDatabaseToJson}
-          onExportExcel={exportStudentsToExcel}
-          isWhatsConnected={whatsAppConfig.isConnected}
-          dueInstallments={dueInstallments}
-          onOpenInstallmentSettle={(student) => setSettlingStudentFromSidebar(student)}
-          onOpenWhatsAppReminder={(student) => {
-            setWhatsAppMessageType('installment_reminder');
-            setWhatsAppStudent(student);
-          }}
-          onNavigateToDueInstallments={() => {
-            setStudentsListInitialFilter('due_soon');
-            setCurrentScreen('students-list');
-          }}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-        />
+        {/* Sidebar (On the Right in RTL) - Hidden on initial welcome landing screen, appears when navigating to system screens */}
+        {currentScreen !== 'analytics' && (
+          <Sidebar
+            currentScreen={currentScreen}
+            onSelectScreen={(screen) => {
+              if (screen === 'students-list') {
+                setStudentsListInitialFilter('all');
+              }
+              if (screen === 'settings') {
+                setSettingsInitialTab('header');
+              }
+              setCurrentScreen(screen);
+            }}
+            studentsCount={students.length}
+            totalRevenue={totalRevenue}
+            isDarkMode={isDarkMode}
+            onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+            onExportJson={exportDatabaseToJson}
+            onExportExcel={exportStudentsToExcel}
+            isWhatsConnected={whatsAppConfig.isConnected}
+            dueInstallments={dueInstallments}
+            onOpenInstallmentSettle={(student) => setSettlingStudentFromSidebar(student)}
+            onOpenWhatsAppReminder={(student) => {
+              setWhatsAppMessageType('installment_reminder');
+              setWhatsAppStudent(student);
+            }}
+            onNavigateToDueInstallments={() => {
+              setStudentsListInitialFilter('due_soon');
+              setCurrentScreen('students-list');
+            }}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
+        )}
 
         {/* Dynamic Center Screen View */}
         <div className="flex-1 flex flex-col min-w-0">
@@ -1404,11 +1406,15 @@ export default function App() {
                   students={students}
                   courses={courses}
                   totalRevenue={totalRevenue}
+                  currentUser={currentUser}
                   onNavigateToRegister={() => setCurrentScreen('new-student')}
                   onNavigateToStudentsList={() => {
                     setStudentsListInitialFilter('all');
                     setCurrentScreen('students-list');
                   }}
+                  onNavigateToExpenses={() => setCurrentScreen('expenses')}
+                  onNavigateToWhatsApp={() => setCurrentScreen('whatsapp')}
+                  onNavigateToSettings={() => setCurrentScreen('settings')}
                 />
               )}
 

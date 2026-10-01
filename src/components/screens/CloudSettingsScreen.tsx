@@ -50,7 +50,7 @@ interface CloudSettingsScreenProps {
   onUpdateCenterSettings: (newSettings: CenterSettings) => void;
   supabaseConfig?: SupabaseConfig;
   onUpdateSupabaseConfig?: (newConfig: SupabaseConfig) => void;
-  initialTab?: 'header' | 'supabase' | 'reset' | 'banner';
+  initialTab?: 'header' | 'supabase' | 'reset' | 'banner' | 'cards';
   onOpenProductionReset?: () => void;
   databaseStats?: {
     studentsCount: number;
@@ -79,8 +79,8 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Active Tab: 'header', 'supabase', 'reset', 'banner'
-  const [activeTab, setActiveTab] = useState<'header' | 'supabase' | 'reset' | 'banner'>(initialTab);
+  // Active Tab: 'header', 'supabase', 'reset', 'banner', 'cards'
+  const [activeTab, setActiveTab] = useState<'header' | 'supabase' | 'reset' | 'banner' | 'cards'>(initialTab);
 
   useEffect(() => {
     if (initialTab) {
@@ -128,6 +128,40 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     localStorage.removeItem('el_saqqa_banner_desc');
     setBannerSavedSuccess(true);
     setTimeout(() => setBannerSavedSuccess(false), 3500);
+  };
+
+  // Card KPI Customization State
+  const [cardFontSize, setCardFontSize] = useState(() => localStorage.getItem('el_saqqa_card_font_size') || 'normal');
+  const [card1Color, setCard1Color] = useState(() => localStorage.getItem('el_saqqa_card1_color') || 'amber');
+  const [card2Color, setCard2Color] = useState(() => localStorage.getItem('el_saqqa_card2_color') || 'rose');
+  const [card3Color, setCard3Color] = useState(() => localStorage.getItem('el_saqqa_card3_color') || 'emerald');
+  const [card4Color, setCard4Color] = useState(() => localStorage.getItem('el_saqqa_card4_color') || 'white');
+  const [cardSavedSuccess, setCardSavedSuccess] = useState(false);
+
+  const handleCardSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('el_saqqa_card_font_size', cardFontSize);
+    localStorage.setItem('el_saqqa_card1_color', card1Color);
+    localStorage.setItem('el_saqqa_card2_color', card2Color);
+    localStorage.setItem('el_saqqa_card3_color', card3Color);
+    localStorage.setItem('el_saqqa_card4_color', card4Color);
+    setCardSavedSuccess(true);
+    setTimeout(() => setCardSavedSuccess(false), 3500);
+  };
+
+  const handleCardReset = () => {
+    setCardFontSize('normal');
+    setCard1Color('amber');
+    setCard2Color('rose');
+    setCard3Color('emerald');
+    setCard4Color('white');
+    localStorage.removeItem('el_saqqa_card_font_size');
+    localStorage.removeItem('el_saqqa_card1_color');
+    localStorage.removeItem('el_saqqa_card2_color');
+    localStorage.removeItem('el_saqqa_card3_color');
+    localStorage.removeItem('el_saqqa_card4_color');
+    setCardSavedSuccess(true);
+    setTimeout(() => setCardSavedSuccess(false), 3500);
   };
 
   // Form State for Supabase Cloud Settings
@@ -824,6 +858,21 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
         >
           <Sparkles className="w-4 h-4 text-purple-300" />
           <span>تخصيص بانر الترحيب</span>
+        </button>
+
+        {/* Tab 5: Dashboard KPI Cards Customization */}
+        <button
+          id="tab-cards-settings"
+          type="button"
+          onClick={() => setActiveTab('cards')}
+          className={`flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'cards'
+              ? 'bg-[#1da851] text-white shadow-lg shadow-emerald-600/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-[#111e30]'
+          }`}
+        >
+          <Sliders className="w-4 h-4 text-emerald-300" />
+          <span>تخصيص حجم وألوان أرقام اللوحة</span>
         </button>
       </div>
 
@@ -1835,6 +1884,139 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                 >
                   <Save className="w-4 h-4" />
                   <span>حفظ نصوص البانر</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* TAB 5 CONTENT: Dashboard KPI Cards Customization */}
+      {activeTab === 'cards' && (
+        <div id="tab-content-cards" className="space-y-6 animate-fadeIn">
+          {cardSavedSuccess && (
+            <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs px-4 py-2.5 rounded-xl font-bold">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>تم حفظ وتحديث حجم خط وألوان بطاقات مؤشرات اللوحة بنجاح في التخزين المحلي!</span>
+            </div>
+          )}
+
+          <form onSubmit={handleCardSubmit} className="space-y-6">
+            <div className="premium-list-card space-y-6 !p-5 md:!p-6">
+              <div className="flex items-center gap-3 border-b border-[#16273f] pb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">تخصيص مظهر وحجم ألوان بطاقات مؤشرات الأداء</h3>
+                  <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                    تحكم بشكل دقيق في حجم خط القيم والأرقام وألوان المزامنة والتحصيل المالي في الصفحة الرئيسية
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Font Size Selector */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold flex items-center gap-1">
+                    <span>حجم خط أرقام وقيم البطاقات:</span>
+                  </label>
+                  <select
+                    value={cardFontSize}
+                    onChange={(e) => setCardFontSize(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="small">صغير (text-lg)</option>
+                    <option value="normal">متوسط افتراضي (text-2xl / 3xl)</option>
+                    <option value="large">كبير (text-3xl / 4xl)</option>
+                    <option value="xl">ضخم جداً (text-4xl / 5xl)</option>
+                  </select>
+                </div>
+
+                {/* Card 1 Color (Daily collection) */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">لون أرقام التحصيل المالي اليومي:</label>
+                  <select
+                    value={card1Color}
+                    onChange={(e) => setCard1Color(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="amber">الذهبي / الأصفر (الافتراضي)</option>
+                    <option value="emerald">الأخضر النضر</option>
+                    <option value="rose">الوردي المرجاني</option>
+                    <option value="cyan">السيان المضيء</option>
+                    <option value="blue">الأزرق النيون</option>
+                    <option value="white">الأبيض الناصع</option>
+                  </select>
+                </div>
+
+                {/* Card 2 Color (WhatsApp status) */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">لون حالة رسائل الواتساب (عند الاحتياج لربط):</label>
+                  <select
+                    value={card2Color}
+                    onChange={(e) => setCard2Color(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="rose">الوردي المرجاني (الافتراضي)</option>
+                    <option value="amber">الذهبي / الأصفر</option>
+                    <option value="emerald">الأخضر النضر</option>
+                    <option value="cyan">السيان المضيء</option>
+                    <option value="blue">الأزرق النيون</option>
+                    <option value="white">الأبيض الناصع</option>
+                  </select>
+                </div>
+
+                {/* Card 3 Color (Cloud connection) */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">لون حالة الربط السحابي (عند الاتصال):</label>
+                  <select
+                    value={card3Color}
+                    onChange={(e) => setCard3Color(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="emerald">الأخضر النضر (الافتراضي)</option>
+                    <option value="cyan">السيان المضيء</option>
+                    <option value="blue">الأزرق النيون</option>
+                    <option value="amber">الذهبي / الأصفر</option>
+                    <option value="rose">الوردي المرجاني</option>
+                    <option value="white">الأبيض الناصع</option>
+                  </select>
+                </div>
+
+                {/* Card 4 Color (Total students) */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">لون أرقام إجمالي الطلاب المسجلين:</label>
+                  <select
+                    value={card4Color}
+                    onChange={(e) => setCard4Color(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="white">الأبيض الناصع (الافتراضي)</option>
+                    <option value="cyan">السيان المضيء</option>
+                    <option value="blue">الأزرق النيون</option>
+                    <option value="emerald">الأخضر النضر</option>
+                    <option value="amber">الذهبي / الأصفر</option>
+                    <option value="rose">الوردي المرجاني</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#16273f]">
+                <button
+                  type="button"
+                  onClick={handleCardReset}
+                  className="bg-[#121c2c] hover:bg-[#1a2940] text-slate-300 hover:text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all border border-slate-700"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>استعادة الافتراضي</span>
+                </button>
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-6 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer transition-all shadow-lg shadow-emerald-600/30"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>حفظ ألوان وتنسيقات اللوحة</span>
                 </button>
               </div>
             </div>

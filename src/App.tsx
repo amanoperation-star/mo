@@ -209,7 +209,7 @@ export default function App() {
   const [whatsAppMessageType, setWhatsAppMessageType] = useState<'registration' | 'installment_reminder'>('registration');
   const [settlingStudentFromSidebar, setSettlingStudentFromSidebar] = useState<Student | null>(null);
   const [storageNotification, setStorageNotification] = useState<string | null>(null);
-  const [settingsInitialTab, setSettingsInitialTab] = useState<'header' | 'supabase' | 'reset'>('header');
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'header' | 'supabase' | 'reset' | 'banner' | 'cards'>('header');
   const [showProductionResetModal, setShowProductionResetModal] = useState(false);
 
   // Compute approaching / overdue installments based on registration date

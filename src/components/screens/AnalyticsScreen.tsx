@@ -49,6 +49,69 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
     localStorage.getItem('el_saqqa_banner_desc') ||
     'هذا نموذج المعاينة الخاص بالتصميم الجديد لمنظومة مستر أشرف السقا 2025. تم تصميم الهيدر واللوحة خصيصاً ليوافق مع أحدث معايير تجربة المستخدم (UI/UX) مع تحسين المظهر البصري لبيانات الحالة ومؤشرات الأداء.';
 
+  // Read customized KPI Card styling from localStorage
+  const cardFontSize = localStorage.getItem('el_saqqa_card_font_size') || 'normal';
+  const card1Color = localStorage.getItem('el_saqqa_card1_color') || 'amber';
+  const card2Color = localStorage.getItem('el_saqqa_card2_color') || 'rose';
+  const card3Color = localStorage.getItem('el_saqqa_card3_color') || 'emerald';
+  const card4Color = localStorage.getItem('el_saqqa_card4_color') || 'white';
+
+  const fontSizeClass = {
+    small: 'text-lg sm:text-xl',
+    normal: 'text-2xl sm:text-3xl',
+    large: 'text-3xl sm:text-4xl',
+    xl: 'text-4xl sm:text-5xl',
+  }[cardFontSize] || 'text-2xl sm:text-3xl';
+
+  const colorMap: Record<string, { text: string; bg: string; border: string; hover: string; hoverText: string }> = {
+    amber: {
+      text: 'text-amber-400',
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/20',
+      hover: 'hover:border-amber-500/50',
+      hoverText: 'group-hover:text-amber-300'
+    },
+    emerald: {
+      text: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/20',
+      hover: 'hover:border-emerald-500/50',
+      hoverText: 'group-hover:text-emerald-300'
+    },
+    rose: {
+      text: 'text-rose-400',
+      bg: 'bg-rose-500/10',
+      border: 'border-rose-500/20',
+      hover: 'hover:border-rose-500/50',
+      hoverText: 'group-hover:text-rose-300'
+    },
+    cyan: {
+      text: 'text-cyan-400',
+      bg: 'bg-cyan-500/10',
+      border: 'border-cyan-500/20',
+      hover: 'hover:border-cyan-500/50',
+      hoverText: 'group-hover:text-cyan-300'
+    },
+    blue: {
+      text: 'text-blue-400',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/20',
+      hover: 'hover:border-blue-500/50',
+      hoverText: 'group-hover:text-blue-300'
+    },
+    white: {
+      text: 'text-white',
+      bg: 'bg-slate-500/10',
+      border: 'border-slate-500/20',
+      hover: 'hover:border-slate-500/50',
+      hoverText: 'group-hover:text-slate-300'
+    }
+  };
+
+  const getStyle = (colorName: string, defaultColor: string) => {
+    return colorMap[colorName] || colorMap[defaultColor];
+  };
+
   return (
     <div
       id="analytics-dashboard-screen"
@@ -108,130 +171,130 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
         </div>
       </div>
 
-      {/* 2. Executive KPI & Status Cards (Matching image.png exactly) */}
+      {/* 2. Executive KPI & Status Cards (Matching image.png exactly with fully dynamic style customizers) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
         {/* Card 1: Daily Collection */}
-        <div
-          onClick={onNavigateToExpenses}
-          className="premium-list-card flex flex-col justify-between gap-4 cursor-pointer hover:border-amber-500/50 transition-all group"
-        >
-          <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
-            <span className="text-xs text-slate-400 font-extrabold group-hover:text-amber-300 transition-colors">
-              التحصيل المالي اليومي
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              <Wallet className="w-4 h-4" />
+        {(() => {
+          const style = getStyle(card1Color, 'amber');
+          return (
+            <div
+              onClick={onNavigateToExpenses}
+              className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${style.hover}`}
+            >
+              <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
+                <span className={`text-xs text-slate-400 font-extrabold transition-colors ${style.hoverText}`}>
+                  التحصيل المالي اليومي
+                </span>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${style.bg} ${style.border} ${style.text}`}>
+                  <Wallet className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className={`font-black font-sans tracking-tight ${fontSizeClass} ${style.text}`} dir="ltr">
+                  EGP {formatNumber(totalRevenue)}{' '}
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
+                  <span className="text-emerald-400 font-extrabold">تم استلام {students.length} عملية</span>
+                  <span className={`text-slate-500 transition-colors ${style.hoverText}`}>عرض التفاصيل ←</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-400 font-sans tracking-tight" dir="ltr">
-              EGP {formatNumber(totalRevenue)}{' '}
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
-              <span className="text-emerald-400 font-extrabold">تم استلام {students.length} عملية</span>
-              <span className="text-slate-500 group-hover:text-amber-400 transition-colors">عرض التفاصيل ←</span>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Card 2: WhatsApp status */}
-        <div
-          onClick={onNavigateToWhatsApp}
-          className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${
-            isWhatsConnected ? 'hover:border-emerald-500/50' : 'hover:border-pink-500/50'
-          }`}
-        >
-          <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
-            <span className={`text-xs text-slate-400 font-extrabold transition-colors ${
-              isWhatsConnected ? 'group-hover:text-emerald-300' : 'group-hover:text-pink-300'
-            }`}>
-              رسائل الواتساب
-            </span>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-              isWhatsConnected ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-pink-500/10 border border-pink-500/20 text-pink-400'
-            }`}>
-              <MessageCircle className="w-4 h-4" />
+        {(() => {
+          const style = isWhatsConnected ? getStyle('emerald', 'emerald') : getStyle(card2Color, 'rose');
+          return (
+            <div
+              onClick={onNavigateToWhatsApp}
+              className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${style.hover}`}
+            >
+              <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
+                <span className={`text-xs text-slate-400 font-extrabold transition-colors ${style.hoverText}`}>
+                  رسائل الواتساب
+                </span>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${style.bg} ${style.border} ${style.text}`}>
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className={`font-black font-sans tracking-tight ${fontSizeClass} ${style.text}`}>
+                  {isWhatsConnected ? 'متصل ونشط' : 'تحتاج ربط'}
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
+                  <span className={style.text}>
+                    {isWhatsConnected ? 'النظام جاهز لإرسال الرسائل' : 'اضغط هنا لإعادة الربط'}
+                  </span>
+                  <span className={`text-slate-500 transition-colors ${style.hoverText}`}>إعدادات الواتساب ←</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className={`text-xl sm:text-2xl font-black font-sans tracking-tight ${
-              isWhatsConnected ? 'text-emerald-400' : 'text-pink-400'
-            }`}>
-              {isWhatsConnected ? 'متصل ونشط' : 'تحتاج ربط'}
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
-              <span className={isWhatsConnected ? 'text-emerald-400' : 'text-pink-300'}>
-                {isWhatsConnected ? 'النظام جاهز لإرسال الرسائل' : 'اضغط هنا لإعادة الربط'}
-              </span>
-              <span className={`text-slate-500 transition-colors ${
-                isWhatsConnected ? 'group-hover:text-emerald-400' : 'group-hover:text-pink-400'
-              }`}>إعدادات الواتساب ←</span>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Card 3: Cloud connection status */}
-        <div
-          onClick={onNavigateToSettings}
-          className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${
-            isCloudConnected ? 'hover:border-emerald-500/50' : 'hover:border-cyan-500/50'
-          }`}
-        >
-          <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
-            <span className={`text-xs text-slate-400 font-extrabold transition-colors ${
-              isCloudConnected ? 'group-hover:text-emerald-300' : 'group-hover:text-cyan-300'
-            }`}>
-              حالة الربط السحابي
-            </span>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-              isCloudConnected ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400'
-            }`}>
-              <Cloud className="w-4 h-4" />
+        {(() => {
+          const style = isCloudConnected ? getStyle(card3Color, 'emerald') : getStyle('rose', 'rose');
+          return (
+            <div
+              onClick={onNavigateToSettings}
+              className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${style.hover}`}
+            >
+              <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
+                <span className={`text-xs text-slate-400 font-extrabold transition-colors ${style.hoverText}`}>
+                  حالة الربط السحابي
+                </span>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${style.bg} ${style.border} ${style.text}`}>
+                  <Cloud className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className={`font-black font-sans tracking-tight ${fontSizeClass} ${style.text}`}>
+                  {isCloudConnected ? 'مستقر (99.9%)' : 'غير متصل بالسحابة'}
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
+                  <span className={style.text}>
+                    {isCloudConnected ? 'آخر مزامنة منذ دقيقة' : 'فشل المزامنة التلقائية'}
+                  </span>
+                  <span className={`text-slate-500 transition-colors ${style.hoverText}`}>الإعدادات ←</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className={`text-xl sm:text-2xl font-black font-sans tracking-tight ${
-              isCloudConnected ? 'text-emerald-400' : 'text-cyan-300'
-            }`}>
-              {isCloudConnected ? 'مستقر (99.9%)' : 'غير متصل بالسحابة'}
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
-              <span className={isCloudConnected ? 'text-emerald-400' : 'text-cyan-300'}>
-                {isCloudConnected ? 'آخر مزامنة منذ دقيقة' : 'فشل المزامنة التلقائية'}
-              </span>
-              <span className={`text-slate-500 transition-colors ${
-                isCloudConnected ? 'group-hover:text-emerald-400' : 'group-hover:text-cyan-400'
-              }`}>الإعدادات ←</span>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Card 4: Total registered students */}
-        <div
-          onClick={onNavigateToStudentsList}
-          className="premium-list-card flex flex-col justify-between gap-4 cursor-pointer hover:border-blue-500/50 transition-all group"
-        >
-          <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
-            <span className="text-xs text-slate-400 font-extrabold group-hover:text-blue-300 transition-colors">
-              إجمالي الطلاب المسجلين
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-              <GraduationCap className="w-4 h-4" />
+        {(() => {
+          const style = getStyle(card4Color, 'white');
+          return (
+            <div
+              onClick={onNavigateToStudentsList}
+              className={`premium-list-card flex flex-col justify-between gap-4 cursor-pointer transition-all group ${style.hover}`}
+            >
+              <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
+                <span className={`text-xs text-slate-400 font-extrabold transition-colors ${style.hoverText}`}>
+                  إجمالي الطلاب المسجلين
+                </span>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${style.bg} ${style.border} ${style.text}`}>
+                  <GraduationCap className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className={`font-black font-sans tracking-tight ${fontSizeClass} ${style.text}`} dir="ltr">
+                  {students.length.toLocaleString('en-US')}
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400 mt-2">
+                  <span className="flex items-center gap-0.5" dir="ltr">
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                    <span>+12% هذا الشهر</span>
+                  </span>
+                  <span className={`text-slate-500 transition-colors ${style.hoverText}`}>عرض السجل ←</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-2xl sm:text-3xl font-black text-white font-sans tracking-tight" dir="ltr">
-              {students.length.toLocaleString('en-US')}
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400 mt-2">
-              <span className="flex items-center gap-0.5" dir="ltr">
-                <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>+12% هذا الشهر</span>
-              </span>
-              <span className="text-slate-500 group-hover:text-blue-400 transition-colors">عرض السجل ←</span>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
     </div>
   );

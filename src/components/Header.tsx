@@ -209,6 +209,15 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Box 3: Theme & Notification Bell Pill Container */}
         <div className="flex items-center bg-[#0a1220] border border-[#16273f] rounded-2xl p-1 gap-1 shadow-inner">
+          <div className="p-0.5">
+            <NotificationBell
+              notifications={notifications}
+              onMarkAllAsRead={onMarkAllAsRead}
+              onClearAll={onClearNotifications}
+              onNotificationClick={onNotificationClick}
+              onNavigateToScreen={onNavigateToScreen}
+            />
+          </div>
           <button
             id="theme-toggle-header-button"
             onClick={onToggleTheme}
@@ -222,15 +231,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Sun className="w-4 h-4 text-amber-500 fill-amber-500/20" />
             )}
           </button>
-          <div className="p-0.5">
-            <NotificationBell
-              notifications={notifications}
-              onMarkAllAsRead={onMarkAllAsRead}
-              onClearAll={onClearNotifications}
-              onNotificationClick={onNotificationClick}
-              onNavigateToScreen={onNavigateToScreen}
-            />
-          </div>
         </div>
 
         {/* Box 4: User Profile Badge */}

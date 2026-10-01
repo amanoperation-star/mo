@@ -53,7 +53,9 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
   const cardFontSize = localStorage.getItem('el_saqqa_card_font_size') || 'normal';
   const card1Color = localStorage.getItem('el_saqqa_card1_color') || 'amber';
   const card2Color = localStorage.getItem('el_saqqa_card2_color') || 'rose';
+  const card2ColorConnected = localStorage.getItem('el_saqqa_card2_color_connected') || 'emerald';
   const card3Color = localStorage.getItem('el_saqqa_card3_color') || 'emerald';
+  const card3ColorDisconnected = localStorage.getItem('el_saqqa_card3_color_disconnected') || 'rose';
   const card4Color = localStorage.getItem('el_saqqa_card4_color') || 'white';
 
   const fontSizeClass = {
@@ -204,7 +206,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
 
         {/* Card 2: WhatsApp status */}
         {(() => {
-          const style = isWhatsConnected ? getStyle('emerald', 'emerald') : getStyle(card2Color, 'rose');
+          const style = isWhatsConnected ? getStyle(card2ColorConnected, 'emerald') : getStyle(card2Color, 'rose');
           return (
             <div
               onClick={onNavigateToWhatsApp}
@@ -235,7 +237,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
 
         {/* Card 3: Cloud connection status */}
         {(() => {
-          const style = isCloudConnected ? getStyle(card3Color, 'emerald') : getStyle('rose', 'rose');
+          const style = isCloudConnected ? getStyle(card3Color, 'emerald') : getStyle(card3ColorDisconnected, 'rose');
           return (
             <div
               onClick={onNavigateToSettings}

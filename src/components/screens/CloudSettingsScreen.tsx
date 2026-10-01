@@ -134,7 +134,9 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
   const [cardFontSize, setCardFontSize] = useState(() => localStorage.getItem('el_saqqa_card_font_size') || 'normal');
   const [card1Color, setCard1Color] = useState(() => localStorage.getItem('el_saqqa_card1_color') || 'amber');
   const [card2Color, setCard2Color] = useState(() => localStorage.getItem('el_saqqa_card2_color') || 'rose');
+  const [card2ColorConnected, setCard2ColorConnected] = useState(() => localStorage.getItem('el_saqqa_card2_color_connected') || 'emerald');
   const [card3Color, setCard3Color] = useState(() => localStorage.getItem('el_saqqa_card3_color') || 'emerald');
+  const [card3ColorDisconnected, setCard3ColorDisconnected] = useState(() => localStorage.getItem('el_saqqa_card3_color_disconnected') || 'rose');
   const [card4Color, setCard4Color] = useState(() => localStorage.getItem('el_saqqa_card4_color') || 'white');
   const [cardSavedSuccess, setCardSavedSuccess] = useState(false);
 
@@ -143,7 +145,9 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     localStorage.setItem('el_saqqa_card_font_size', cardFontSize);
     localStorage.setItem('el_saqqa_card1_color', card1Color);
     localStorage.setItem('el_saqqa_card2_color', card2Color);
+    localStorage.setItem('el_saqqa_card2_color_connected', card2ColorConnected);
     localStorage.setItem('el_saqqa_card3_color', card3Color);
+    localStorage.setItem('el_saqqa_card3_color_disconnected', card3ColorDisconnected);
     localStorage.setItem('el_saqqa_card4_color', card4Color);
     setCardSavedSuccess(true);
     setTimeout(() => setCardSavedSuccess(false), 3500);
@@ -153,12 +157,16 @@ export const CloudSettingsScreen: React.FC<CloudSettingsScreenProps> = ({
     setCardFontSize('normal');
     setCard1Color('amber');
     setCard2Color('rose');
+    setCard2ColorConnected('emerald');
     setCard3Color('emerald');
+    setCard3ColorDisconnected('rose');
     setCard4Color('white');
     localStorage.removeItem('el_saqqa_card_font_size');
     localStorage.removeItem('el_saqqa_card1_color');
     localStorage.removeItem('el_saqqa_card2_color');
+    localStorage.removeItem('el_saqqa_card2_color_connected');
     localStorage.removeItem('el_saqqa_card3_color');
+    localStorage.removeItem('el_saqqa_card3_color_disconnected');
     localStorage.removeItem('el_saqqa_card4_color');
     setCardSavedSuccess(true);
     setTimeout(() => setCardSavedSuccess(false), 3500);
@@ -1950,9 +1958,9 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                   </select>
                 </div>
 
-                {/* Card 2 Color (WhatsApp status) */}
+                 {/* Card 2 Color (WhatsApp status - needing connection) */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs text-slate-300 font-bold">لون حالة رسائل الواتساب (عند الاحتياج لربط):</label>
+                  <label className="text-xs text-slate-300 font-bold">لون حالة رسائل الواتساب (عند الاحتياج لربط / غير متصل):</label>
                   <select
                     value={card2Color}
                     onChange={(e) => setCard2Color(e.target.value)}
@@ -1967,9 +1975,26 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                   </select>
                 </div>
 
-                {/* Card 3 Color (Cloud connection) */}
+                {/* Card 2 Color (WhatsApp status - active/connected) */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs text-slate-300 font-bold">لون حالة الربط السحابي (عند الاتصال):</label>
+                  <label className="text-xs text-slate-300 font-bold">لون حالة رسائل الواتساب (عند التوصيل والنشاط):</label>
+                  <select
+                    value={card2ColorConnected}
+                    onChange={(e) => setCard2ColorConnected(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="emerald">الأخضر النضر (الافتراضي)</option>
+                    <option value="cyan">السيان المضيء</option>
+                    <option value="blue">الأزرق النيون</option>
+                    <option value="amber">الذهبي / الأصفر</option>
+                    <option value="rose">الوردي المرجاني</option>
+                    <option value="white">الأبيض الناصع</option>
+                  </select>
+                </div>
+
+                {/* Card 3 Color (Cloud connection - connected) */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">لون حالة الربط السحابي (عند الاتصال والاستقرار):</label>
                   <select
                     value={card3Color}
                     onChange={(e) => setCard3Color(e.target.value)}
@@ -1980,6 +2005,23 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                     <option value="blue">الأزرق النيون</option>
                     <option value="amber">الذهبي / الأصفر</option>
                     <option value="rose">الوردي المرجاني</option>
+                    <option value="white">الأبيض الناصع</option>
+                  </select>
+                </div>
+
+                {/* Card 3 Color (Cloud connection - disconnected) */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-300 font-bold">لون حالة الربط السحابي (عند انقطاع الاتصال بالسحابة):</label>
+                  <select
+                    value={card3ColorDisconnected}
+                    onChange={(e) => setCard3ColorDisconnected(e.target.value)}
+                    className="bg-[#060c15] border border-[#1b2f4f] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="rose">الوردي المرجاني (الافتراضي)</option>
+                    <option value="amber">الذهبي / الأصفر</option>
+                    <option value="emerald">الأخضر النضر</option>
+                    <option value="cyan">السيان المضيء</option>
+                    <option value="blue">الأزرق النيون</option>
                     <option value="white">الأبيض الناصع</option>
                   </select>
                 </div>

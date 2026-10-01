@@ -113,23 +113,23 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
         {/* Card 1: Daily Collection */}
         <div
           onClick={onNavigateToExpenses}
-          className="premium-list-card flex flex-col justify-between gap-4 cursor-pointer hover:border-emerald-500/50 transition-all group"
+          className="premium-list-card flex flex-col justify-between gap-4 cursor-pointer hover:border-amber-500/50 transition-all group"
         >
           <div className="flex items-center justify-between border-b border-[#14233a]/60 pb-2">
-            <span className="text-xs text-slate-400 font-extrabold group-hover:text-emerald-300 transition-colors">
+            <span className="text-xs text-slate-400 font-extrabold group-hover:text-amber-300 transition-colors">
               التحصيل المالي اليومي
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
               <Wallet className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-sans tracking-tight" dir="ltr">
+            <div className="text-2xl sm:text-3xl font-black text-amber-400 font-sans tracking-tight" dir="ltr">
               EGP {formatNumber(totalRevenue)}{' '}
             </div>
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mt-2">
-              <span className="text-emerald-400">تم استلام {students.length} عملية</span>
-              <span className="text-slate-500 group-hover:text-emerald-400 transition-colors">عرض التفاصيل ←</span>
+              <span className="text-emerald-400 font-extrabold">تم استلام {students.length} عملية</span>
+              <span className="text-slate-500 group-hover:text-amber-400 transition-colors">عرض التفاصيل ←</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Lock, User, KeyRound, Eye, EyeOff, LogIn, ShieldCheck, Sparkles, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  Lock,
+  User,
+  KeyRound,
+  Eye,
+  EyeOff,
+  LogIn,
+  ShieldCheck,
+  Sparkles,
+  Send,
+  AlertCircle,
+  ShieldAlert,
+} from 'lucide-react';
 import { StaffMember, CenterSettings } from '../../types';
 
 interface LoginScreenProps {
@@ -34,12 +46,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setIsLoading(true);
 
     setTimeout(() => {
-      // Find matching staff member
+      // Find matching staff member created by the admin
       const matched = staffList.find((member) => {
         const u = (member.username || '').trim().toLowerCase();
         const p = (member.password || '').trim();
         const phone = (member.phone || '').trim();
-        
+
         // Match username OR phone number + password
         return (u === trimmedUser || phone === trimmedUser) && p === trimmedPass;
       });
@@ -47,7 +59,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       if (matched) {
         onLogin(matched);
       } else {
-        // Also check default fallback admin if no username is set
+        // Fallback default admin credentials check
         if (trimmedUser === 'admin' && trimmedPass === '123') {
           const fallbackAdmin: StaffMember = {
             id: 'st-admin',
@@ -63,11 +75,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           };
           onLogin(fallbackAdmin);
         } else {
-          setErrorMsg('اسم المستخدم أو كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.');
+          setErrorMsg('بيانات الدخول غير صحيحة. يرجى مراجعة إدارة المنظومة لتفعيل حسابك وتعيين الصلاحيات.');
           setIsLoading(false);
         }
       }
-    }, 400);
+    }, 350);
   };
 
   const handleQuickFill = (member: StaffMember) => {
@@ -95,7 +107,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </h1>
             <p className="text-xs text-slate-400 font-semibold mt-1 flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>نظام تسجيل الدخول وإدارة الصلاحيات للموظفين</span>
+              <span>بوابة تسجيل دخول فريق العمل والمساعدين</span>
             </p>
           </div>
         </div>
@@ -108,8 +120,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               <h2 className="text-base font-extrabold text-white">تسجيل الدخول إلى حسابك</h2>
             </div>
             <span className="text-[11px] font-bold bg-blue-950/80 text-blue-300 border border-blue-800/50 px-2.5 py-0.5 rounded-full">
-              حساب موظف
+              حساب موظف معتمد
             </span>
+          </div>
+
+          {/* Admin Managed Security Notice */}
+          <div className="p-3 rounded-xl bg-blue-950/30 border border-blue-500/25 text-blue-300 text-xs flex items-center gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>يتم إنشاء وتفعيل حسابات الموظفين وتعيين الصلاحيات من خلال الإدارة فقط.</span>
           </div>
 
           {/* Error Message Alert */}
@@ -135,7 +153,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   type="text"
                   required
                   autoFocus
-                  placeholder="مثال: admin أو sara"
+                  placeholder="مثال: admin أو sara أو 01009988776"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-[#070d17] border border-[#1c2e47] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl pr-10 pl-3.5 py-3 text-xs text-white placeholder-slate-500 outline-none transition-all font-mono"
@@ -194,12 +212,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           {/* Quick Demo Fill Accounts Box */}
           <div className="pt-4 border-t border-[#16253b] flex flex-col gap-2.5">
             <span className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
-              <span>الحسابات التجريبية للتجربة السريعة:</span>
+              <span>الحسابات المعتمدة في النظام:</span>
               <span className="text-blue-400 text-[10px]">انقر للتعبئة والتسجيل المباشر</span>
             </span>
 
-            <div className="grid grid-cols-1 gap-2">
-              {staffList.map((member) => (
+            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
+              {staffList.slice(0, 4).map((member) => (
                 <button
                   key={member.id}
                   type="button"
@@ -211,10 +229,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                       {member.name.trim().split(' ')[0]?.[0] || 'م'}
                     </div>
                     <div className="truncate">
-                      <div className="font-extrabold text-white text-xs group-hover:text-blue-300 transition-colors">
-                        {member.name}
+                      <div className="font-extrabold text-white text-xs group-hover:text-blue-300 transition-colors flex items-center gap-1.5">
+                        <span>{member.name}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">({member.role})</span>
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                         يوزر: <span className="text-amber-400 font-bold">{member.username || 'admin'}</span> | باسورد: <span className="text-emerald-400 font-bold">{member.password || '123'}</span>
                       </div>
                     </div>

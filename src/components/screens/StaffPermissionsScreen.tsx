@@ -11,7 +11,12 @@ import {
   Phone,
   User,
   DollarSign,
-  Monitor
+  Monitor,
+  Share2,
+  Copy,
+  Check,
+  ExternalLink,
+  Users,
 } from 'lucide-react';
 import { StaffMember } from '../../types';
 
@@ -20,6 +25,7 @@ interface StaffPermissionsScreenProps {
   onAddStaff: (newStaff: Omit<StaffMember, 'id'>) => void;
   onUpdateStaff: (id: string, updatedData: Partial<StaffMember>) => void;
   onDeleteStaff: (id: string) => void;
+  onOpenShareTeamModal?: () => void;
 }
 
 const OPERATIONAL_PERMISSIONS = [
@@ -52,9 +58,11 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
   onAddStaff,
   onUpdateStaff,
   onDeleteStaff,
+  onOpenShareTeamModal,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Form states
   const [name, setName] = useState('');
@@ -179,6 +187,68 @@ export const StaffPermissionsScreen: React.FC<StaffPermissionsScreenProps> = ({
           <UserPlus className="w-4 h-4" />
           <span>إضافة عضو جديد وتخصيص صلاحياته</span>
         </button>
+      </div>
+
+      {/* Team Link Invitation Banner */}
+      <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-blue-950/50 via-[#0e1c31] to-cyan-950/40 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-extrabold text-white">رابط تسجيل دخول فريق العمل 🔗</span>
+              <span className="text-[10px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 px-2 py-0.5 rounded-full">
+                يفتح على شاشة الدخول
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              بعد إضافة الموظف وتعيين صلاحياته من قِبل الإدارة، أرسل له هذا الرابط لتسجيل الدخول ببياناته
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenShareTeamModal) {
+                onOpenShareTeamModal();
+              } else {
+                const url = `${window.location.origin}${window.location.pathname}?auth=login`;
+                navigator.clipboard.writeText(url);
+                setCopiedLink(true);
+                setTimeout(() => setCopiedLink(false), 3000);
+              }
+            }}
+            className="flex items-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/20 cursor-pointer"
+          >
+            {copiedLink ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300" />
+                <span>تم نسخ الرابط! ✓</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                <span>مشاركة رابط الدخول للتيم</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const url = `${window.location.origin}${window.location.pathname}?auth=login`;
+              const msg = `مرحباً بك في فريق العمل 🌟\nرابط تسجيل الدخول للمنظومة:\n${url}\nيرجى الدخول باسم المستخدم وكلمة المرور المخصصين لك من قِبل الإدارة.`;
+              window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+            }}
+            className="p-2 rounded-xl bg-[#12233a] hover:bg-emerald-600 hover:text-white text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
+            title="إرسال الرابط للتيم عبر الواتساب"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Staff Cards Grid */}

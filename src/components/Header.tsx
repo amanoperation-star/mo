@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   Activity,
   Crown,
+  Users,
+  Share2,
 } from 'lucide-react';
 import { CenterSettings, StaffMember, AppNotification, NavigationScreen } from '../types';
 import { NotificationBell } from './NotificationBell';
@@ -42,6 +44,7 @@ interface HeaderProps {
   onNotificationClick?: (notification: AppNotification) => void;
   onNavigateToScreen?: (screen: NavigationScreen) => void;
   onOpenProductionReset?: () => void;
+  onOpenShareTeamModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -64,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
   onClearNotifications = () => {},
   onNotificationClick = () => {},
   onNavigateToScreen,
+  onOpenShareTeamModal,
 }) => {
   const currentCenterName = centerSettings?.centerName || 'منظومة مستر أشرف السقا';
   const currentPhone = centerSettings?.phoneNumber || '01029847561';
@@ -205,6 +209,20 @@ export const Header: React.FC<HeaderProps> = ({
               <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             </a>
           )}
+
+          {/* Divider */}
+          <div className="w-[1px] h-4 bg-[#1b2f4f]"></div>
+
+          {/* Team Share Link Button */}
+          <button
+            type="button"
+            onClick={onOpenShareTeamModal}
+            className="flex items-center gap-1.5 text-cyan-300 hover:text-cyan-200 font-bold hover:opacity-90 transition-all cursor-pointer group"
+            title="مشاركة رابط المنظومة للتيم (دخول وتسجيل اليوزر)"
+          >
+            <span className="text-[11px] font-sans">رابط التيم</span>
+            <Users className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+          </button>
         </div>
 
         {/* Box 3: Theme & Notification Bell Pill Container */}
@@ -300,6 +318,17 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Activity className="w-4 h-4 text-purple-400" />
                   <span>سجل النشاطات</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    if (onOpenShareTeamModal) onOpenShareTeamModal();
+                  }}
+                  className="w-full px-3 py-2 rounded-xl text-cyan-300 hover:text-white hover:bg-[#122033] flex items-center gap-2.5 transition-colors cursor-pointer text-right font-bold border-t border-[#16253b] mt-1 pt-2"
+                >
+                  <Users className="w-4 h-4 text-cyan-400" />
+                  <span>مشاركة رابط دخول وتسجيل التيم</span>
                 </button>
               </div>
               {onLogout && (

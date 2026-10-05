@@ -800,6 +800,37 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
         </div>
       </div>
 
+      {/* Instant Backup Highlight Banner */}
+      <div className="bg-gradient-to-r from-blue-950/70 via-[#0e1c31] to-cyan-950/70 border border-blue-500/40 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 shrink-0 ring-1 ring-cyan-400/40">
+            <Download className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm md:text-base font-extrabold text-white">النسخ الاحتياطي الفوري (JSON Backup) 📦</h3>
+              <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                توثيق تلقائي في سجل الرقابة
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+              انقر لتنزيل نسخة JSON شاملة ومؤرخة من قاعدة البيانات المحلية، مع إرسال إشعار فوري وتوثيق العملية بسجل الرقابة.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={onExportJson}
+            className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 active:from-blue-700 active:to-cyan-700 text-white font-black text-xs md:text-sm px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all cursor-pointer ring-1 ring-cyan-400/30 group"
+          >
+            <Download className="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform" />
+            <span>نسخ احتياطي فوري</span>
+          </button>
+        </div>
+      </div>
+
       {/* Tabs Navigation */}
       <div
         id="settings-tabs-container"
@@ -1198,6 +1229,62 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* Team Portal Access Link Card */}
+            <div className="premium-list-card !p-5 md:!p-6 space-y-4 border border-blue-500/30 bg-gradient-to-br from-[#0c1626] to-[#070e1a]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#14233a] pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>رابط بوابة دخول فريق العمل 👥</span>
+                      <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-bold">
+                        يفتح على شاشة الدخول أولاً
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      عند إرسال هذا الرابط للتيم، سيفتح معهم مباشرة على شاشة تسجيل الدخول بحساباتهم المعتمدة من قِبل الإدارة
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex-1 w-full bg-[#070d17] border border-[#172942] rounded-xl p-2.5 font-mono text-xs text-cyan-300 select-all overflow-x-auto" dir="ltr">
+                  {typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?auth=login` : 'https://el-sqqa-chem.online/?auth=login'}
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = `${window.location.origin}${window.location.pathname}?auth=login`;
+                      navigator.clipboard.writeText(url);
+                      setSavedSuccess(true);
+                      setTimeout(() => setSavedSuccess(false), 3000);
+                    }}
+                    className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>نسخ الرابط</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = `${window.location.origin}${window.location.pathname}?auth=login`;
+                      const msg = `مرحباً بك في فريق عمل ${formData.centerName || 'المنظومة'} 🌟\nرابط تسجيل الدخول للمنظومة:\n${url}\nيرجى الدخول باسم المستخدم وكلمة المرور المخصصين لك من قِبل الإدارة.`;
+                      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                    }}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md transition-all"
+                    title="مشاركة عبر الواتساب"
+                  >
+                    <span>واتساب</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             </div>

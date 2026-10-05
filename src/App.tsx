@@ -56,6 +56,7 @@ import { ProductionResetModal, ResetCategories } from './components/modals/Produ
 import { ReceiptViewModal } from './components/modals/ReceiptViewModal';
 import { DirectWhatsAppModal } from './components/modals/DirectWhatsAppModal';
 import { InstallmentSettleModal } from './components/modals/InstallmentSettleModal';
+import { TeamShareModal } from './components/TeamShareModal';
 import { getDueInstallments } from './utils/installmentUtils';
 
 import {
@@ -100,8 +101,28 @@ export default function App() {
   // Real-time Event Toast State
   const [latestRealtimeEvent, setLatestRealtimeEvent] = useState<RealtimeSyncPayload | null>(null);
 
-  // Auth State
+  // Team Share Link Modal State
+  const [showTeamShareModal, setShowTeamShareModal] = useState<boolean>(false);
+
+  // Auth State - Checks URL parameter for shared team links (?auth=login, ?register=1, etc.)
   const [currentUser, setCurrentUser] = useState<StaffMember | null>(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      // If the URL explicitly requests login/register/team/logout, open on login screen
+      if (
+        search.includes('auth=login') ||
+        search.includes('login') ||
+        search.includes('register') ||
+        search.includes('team') ||
+        search.includes('join') ||
+        search.includes('logout') ||
+        hash.includes('login') ||
+        hash.includes('register')
+      ) {
+        return null;
+      }
+    }
     try {
       const saved = localStorage.getItem('el_saqqa_current_user');
       if (saved) return JSON.parse(saved);
@@ -189,6 +210,32 @@ export default function App() {
     try {
       localStorage.removeItem('el_saqqa_current_user');
     } catch (e) {}
+  };
+
+  // Handle Instant Backup & Audit Log Recording
+  const handleInstantBackup = () => {
+    exportDatabaseToJson();
+
+    const currentUserTitle = currentUser?.name || centerSettings.managerName || 'أك. محمود عزت';
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action: 'تنفيذ نسخ احتياطي فوري للبيانات (JSON)',
+      user: currentUserTitle,
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      details: `تم استخراج وتنزيل نسخة احتياطية فورية كملف JSON لـ (${students.length} طالب، ${courses.length} كورس، ${expenses.length} مصروف، ${staff.length} موظف)`,
+      type: 'info',
+    };
+    setLogs((prev) => [newLog, ...prev]);
+
+    triggerRealtimeAction(
+      `نسخ احتياطي فوري للبيانات 📦`,
+      `قام (${currentUserTitle}) بأخذ نسخة احتياطية شاملة بتنسيق JSON`,
+      'info',
+      'settings'
+    );
+
+    setStorageNotification('تم إنشاء وتنزيل النسخة الاحتياطية الفورية وتسجيل العملية في سجل الرقابة بنجاح! 📦');
+    setTimeout(() => setStorageNotification(null), 4000);
   };
 
   // UI States - initialized from localStorage (defaults to true for dark mode)
@@ -1278,6 +1325,7 @@ export default function App() {
         onNotificationClick={handleNotificationClick}
         onNavigateToScreen={(screen) => setCurrentScreen(screen)}
         onOpenProductionReset={() => setShowProductionResetModal(true)}
+        onOpenShareTeamModal={() => setShowTeamShareModal(true)}
       />
 
       {/* Storage Notification Banner */}
@@ -1310,7 +1358,7 @@ export default function App() {
             totalRevenue={totalRevenue}
             isDarkMode={isDarkMode}
             onToggleTheme={() => setIsDarkMode(!isDarkMode)}
-            onExportJson={exportDatabaseToJson}
+            onExportJson={handleInstantBackup}
             onExportExcel={exportStudentsToExcel}
             isWhatsConnected={whatsAppConfig.isConnected}
             dueInstallments={dueInstallments}
@@ -1450,6 +1498,7 @@ export default function App() {
                   onAddStaff={handleAddStaff}
                   onUpdateStaff={handleUpdateStaff}
                   onDeleteStaff={handleDeleteStaff}
+                  onOpenShareTeamModal={() => setShowTeamShareModal(true)}
                 />
               )}
 
@@ -1462,7 +1511,7 @@ export default function App() {
 
               {currentScreen === 'settings' && (
                 <CloudSettingsScreen
-                  onExportJson={exportDatabaseToJson}
+                  onExportJson={handleInstantBackup}
                   onResetData={() => setShowProductionResetModal(true)}
                   onImportJson={handleImportJson}
                   centerSettings={centerSettings}
@@ -1551,6 +1600,13 @@ export default function App() {
           onExecuteReset={handleExecuteProductionReset}
         />
       )}
+
+      {/* Team Link Invitation & Registration Modal */}
+      <TeamShareModal
+        isOpen={showTeamShareModal}
+        onClose={() => setShowTeamShareModal(false)}
+        centerSettings={centerSettings}
+      />
 
       {/* Realtime Action Toast Popup */}
       <RealtimeNotificationToast

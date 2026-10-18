@@ -406,7 +406,9 @@ export default function App() {
         const newNotif = payload.notification;
         setNotifications((prev) => {
           if (prev.some((n) => n.id === newNotif.id)) return prev;
-          return [newNotif, ...prev];
+          const next = [newNotif, ...prev];
+          saveStoredNotifications(next);
+          return next;
         });
       } else if (payload.actionTitle) {
         const genNotif: AppNotification = {
@@ -420,7 +422,11 @@ export default function App() {
           status: 'unread',
           linkScreen: payload.linkScreen,
         };
-        setNotifications((prev) => [genNotif, ...prev]);
+        setNotifications((prev) => {
+          const next = [genNotif, ...prev];
+          saveStoredNotifications(next);
+          return next;
+        });
       }
 
       // Trigger the Instant Cloud Toast Alert
@@ -626,23 +632,43 @@ export default function App() {
     setLogs((prev) => [newLog, ...prev]);
     syncLogToCloud(newLog);
 
-    // Broadcast INSTANTLY to all team members across all browsers!
-    triggerRealtimeAction(
-      `طالب جديد مسجل الآن [${generatedCode}] 🚀`,
-      `الطالب: ${newStudent.name} • الكورس: ${newStudent.course} • المبلغ: ${newStudent.amountPaid} ج.م`,
-      'success',
-      'students-list'
-    );
+    // Create Instant Realtime Notification for this student
+    const studentNotification: AppNotification = {
+      id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      title: `طالب جديد مسجل الآن [${generatedCode}] 🚀`,
+      details: `الطالب: ${newStudent.name} • الكورس: ${newStudent.course} • المبلغ: ${newStudent.amountPaid} ج.م`,
+      user: currentUserTitle,
+      timestamp: 'الآن',
+      type: 'success',
+      read: false,
+      status: 'unread',
+      linkScreen: 'students-list',
+    };
 
-    broadcastToCloudTeam({
+    setNotifications((prev) => {
+      const next = [studentNotification, ...prev];
+      saveStoredNotifications(next);
+      return next;
+    });
+    syncNotificationToCloud(studentNotification);
+
+    // Prepare Unified Realtime Payload with Student Data & Notification
+    const studentPayload: RealtimeSyncPayload = {
       type: 'STUDENT_ADDED',
       senderUser: currentUserTitle,
       actionTitle: `طالب جديد مسجل الآن [${generatedCode}] 🚀`,
       actionDetails: `الطالب: ${newStudent.name} • الكورس: ${newStudent.course} • المبلغ: ${newStudent.amountPaid} ج.م`,
       timestamp: 'الآن',
       data: { student: newStudent },
+      notification: studentNotification,
       linkScreen: 'students-list',
-    });
+    };
+
+    // Broadcast INSTANTLY to all team members across all browsers and devices!
+    broadcastToCloudTeam(studentPayload);
+
+    // Display the instant floating toast alert for current user as well
+    setLatestRealtimeEvent(studentPayload);
 
     // Show Success Modal
     setSuccessStudent(newStudent);

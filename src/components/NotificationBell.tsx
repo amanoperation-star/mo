@@ -58,7 +58,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       >
         <div className="relative">
           <Bell className="w-4 h-4 text-cyan-400" />
-          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]"></span>
+          {unreadCount > 0 ? (
+            <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-black shadow-[0_0_8px_#10b981] animate-pulse">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          ) : (
+            <span className="absolute -top-1 -right-1 flex h-2 w-2 items-center justify-center rounded-full bg-cyan-400/60 shadow-[0_0_4px_#22d3ee]"></span>
+          )}
         </div>
       </button>
 

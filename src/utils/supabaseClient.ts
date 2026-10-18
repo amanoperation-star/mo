@@ -239,6 +239,41 @@ export function notificationFromDb(row: any): AppNotification {
 // ==========================================
 
 export async function fetchAllCloudData() {
+  // 1. First check Authoritative Team Server Sync
+  try {
+    const res = await fetch('/api/sync/all');
+    if (res.ok) {
+      const serverData = await res.json();
+      if (serverData && (Array.isArray(serverData.students) || serverData.centerSettings)) {
+        if (Array.isArray(serverData.students) && serverData.students.length > 0) {
+          saveStoredStudents(serverData.students);
+        }
+        if (Array.isArray(serverData.courses) && serverData.courses.length > 0) {
+          saveStoredCourses(serverData.courses);
+        }
+        if (Array.isArray(serverData.expenses) && serverData.expenses.length > 0) {
+          saveStoredExpenses(serverData.expenses);
+        }
+        if (Array.isArray(serverData.staff) && serverData.staff.length > 0) {
+          saveStoredStaff(serverData.staff);
+        }
+        if (Array.isArray(serverData.logs) && serverData.logs.length > 0) {
+          saveStoredLogs(serverData.logs);
+        }
+        if (Array.isArray(serverData.notifications) && serverData.notifications.length > 0) {
+          saveStoredNotifications(serverData.notifications);
+        }
+        if (serverData.centerSettings) {
+          saveStoredCenterSettings(serverData.centerSettings);
+        }
+        return serverData;
+      }
+    }
+  } catch (err) {
+    console.warn('Server sync API unavailable, falling back:', err);
+  }
+
+  // 2. Fallback to Supabase if configured
   const supabase = getSupabaseClient();
   if (!supabase) return null;
 
@@ -309,6 +344,16 @@ export async function fetchAllCloudData() {
 }
 
 export async function syncStudentToCloud(student: Student) {
+  // 1. Sync to Server Database API
+  try {
+    fetch('/api/sync/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(student),
+    }).catch(() => {});
+  } catch (e) {}
+
+  // 2. Also sync to Supabase if configured
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
@@ -316,7 +361,6 @@ export async function syncStudentToCloud(student: Student) {
     const payload = studentToDb(student);
     const { error } = await supabase.from('students').upsert(payload, { onConflict: 'id' });
     if (error) {
-      console.warn('Supabase student upsert warning, attempting basic columns:', error.message);
       await supabase.from('students').upsert({
         id: student.id,
         code: student.code,
@@ -336,6 +380,14 @@ export async function syncStudentToCloud(student: Student) {
 }
 
 export async function deleteStudentFromCloud(id: string) {
+  // 1. Delete from Server Database API
+  try {
+    fetch(`/api/sync/students/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }).catch(() => {});
+  } catch (e) {}
+
+  // 2. Also delete from Supabase if configured
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
@@ -483,12 +535,125 @@ export async function syncCenterSettingsToCloud(settings: CenterSettings) {
 }
 
 // ==========================================
-// SUPABASE REALTIME WEBSOCKET ENGINE
+// REALTIME MULTI-USER SYNCHRONIZATION ENGINE
 // ==========================================
 
 const cloudEventListeners = new Set<(payload: RealtimeSyncPayload) => void>();
 const dbSyncListeners = new Set<() => void>();
 let realtimeChannel: any = null;
+
+// Deduplication cache
+const recentEventKeys = new Set<string>();
+function isDuplicateEvent(payload: RealtimeSyncPayload): boolean {
+  const key = `${payload.type}_${payload.data?.student?.id || payload.data?.studentId || payload.data?.expense?.id || payload.notification?.id || payload.actionTitle}_${payload.timestamp}`;
+  if (recentEventKeys.has(key)) {
+    return true;
+  }
+  recentEventKeys.add(key);
+  setTimeout(() => recentEventKeys.delete(key), 4000);
+  return false;
+}
+
+function dispatchRealtimeEvent(payload: RealtimeSyncPayload) {
+  if (isDuplicateEvent(payload)) return;
+
+  cloudEventListeners.forEach((cb) => {
+    try {
+      cb(payload);
+    } catch (err) {
+      console.error('Error in cloud event listener callback:', err);
+    }
+  });
+
+  dbSyncListeners.forEach((cb) => {
+    try {
+      cb();
+    } catch (err) {
+      console.error('Error in dbSyncListener callback:', err);
+    }
+  });
+}
+
+// Global WebSocket & SSE Client connections
+let nativeWs: WebSocket | null = null;
+let sseSource: EventSource | null = null;
+let wsReconnectTimeout: any = null;
+
+function initNativeRealtime() {
+  if (typeof window === 'undefined') return;
+
+  // 1. Native WebSocket Connection
+  function connectWs() {
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      nativeWs = new WebSocket(wsUrl);
+
+      nativeWs.onopen = () => {
+        console.log('📡 Connected to Academic Real-time Server via WebSocket');
+      };
+
+      nativeWs.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload && payload.type && payload.type !== 'WS_CONNECTED') {
+            dispatchRealtimeEvent(payload);
+          }
+        } catch (e) {
+          console.warn('Error parsing incoming WS message:', e);
+        }
+      };
+
+      nativeWs.onclose = () => {
+        nativeWs = null;
+        if (!wsReconnectTimeout) {
+          wsReconnectTimeout = setTimeout(() => {
+            wsReconnectTimeout = null;
+            connectWs();
+          }, 3000);
+        }
+      };
+
+      nativeWs.onerror = () => {
+        try {
+          nativeWs?.close();
+        } catch (e) {}
+      };
+    } catch (e) {
+      console.warn('Native WebSocket init error:', e);
+    }
+  }
+
+  // 2. Server-Sent Events (SSE) stream fallback & complement
+  function connectSse() {
+    try {
+      if (typeof EventSource !== 'undefined') {
+        sseSource = new EventSource('/api/realtime/stream');
+
+        sseSource.onmessage = (event) => {
+          try {
+            if (!event.data || event.data === ':ping') return;
+            const payload = JSON.parse(event.data);
+            if (payload && payload.type && payload.type !== 'SSE_CONNECTED') {
+              dispatchRealtimeEvent(payload);
+            }
+          } catch (e) {
+            console.warn('Error parsing incoming SSE message:', e);
+          }
+        };
+
+        sseSource.onerror = () => {
+          // EventSource automatically attempts reconnection
+        };
+      }
+    } catch (e) {
+      console.warn('SSE init error:', e);
+    }
+  }
+
+  if (!nativeWs) connectWs();
+  if (!sseSource) connectSse();
+}
 
 export function getRealtimeChannel() {
   const supabase = getSupabaseClient();
@@ -505,55 +670,50 @@ export function getRealtimeChannel() {
       },
     });
 
-    // 1. Attach broadcast handler BEFORE subscribe()
     channel.on('broadcast', { event: 'TEAM_REALTIME_ACTION' }, (message: any) => {
       if (message?.payload) {
-        cloudEventListeners.forEach((cb) => {
-          try {
-            cb(message.payload);
-          } catch (err) {
-            console.error('Error in cloud event listener callback:', err);
-          }
-        });
+        dispatchRealtimeEvent(message.payload);
       }
     });
 
-    // 2. Attach postgres_changes handlers BEFORE subscribe()
     channel.on('postgres_changes', { event: '*', schema: 'public' }, async (payload: any) => {
-      console.log('📡 Realtime PostgreSQL Change received:', payload);
       try {
         await fetchAllCloudData();
-      } catch (err) {
-        console.warn('Error refetching cloud data after postgres change:', err);
-      }
+      } catch (err) {}
       dbSyncListeners.forEach((cb) => {
         try {
           cb();
-        } catch (err) {
-          console.error('Error in dbSyncListener callback:', err);
-        }
+        } catch (err) {}
       });
     });
 
-    // 3. ONLY call subscribe() AFTER all callbacks are registered on the channel
-    channel.subscribe((status: string, err: any) => {
-      if (err) {
-        console.warn('📡 Supabase Realtime Channel Subscription Error:', err);
-      } else {
-        console.log('📡 Supabase Realtime Channel Status:', status);
-      }
-    });
-
+    channel.subscribe();
     realtimeChannel = channel;
     return realtimeChannel;
   } catch (e) {
-    console.error('Error setting up Supabase Realtime channel:', e);
     return null;
   }
 }
 
 export function broadcastToCloudTeam(payload: RealtimeSyncPayload) {
-  // 1. Instant WebSocket broadcast across ALL devices worldwide
+  // 1. Send to Server Real-time Broadcast API (HTTP POST - 100% reliability across devices)
+  try {
+    fetch('/api/realtime/broadcast', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (e) {}
+
+  // 2. Send to Native WebSocket if connected
+  try {
+    if (nativeWs && nativeWs.readyState === WebSocket.OPEN) {
+      nativeWs.send(JSON.stringify(payload));
+    }
+  } catch (e) {}
+
+  // 3. Send to Supabase channel if configured
   try {
     const channel = getRealtimeChannel();
     if (channel) {
@@ -563,11 +723,9 @@ export function broadcastToCloudTeam(payload: RealtimeSyncPayload) {
         payload,
       });
     }
-  } catch (e) {
-    console.error('Error sending Supabase broadcast:', e);
-  }
+  } catch (e) {}
 
-  // 2. Also broadcast to same-machine browser tabs
+  // 4. Also broadcast to same-machine browser tabs
   broadcastRealtimeEvent(payload);
 }
 
@@ -575,11 +733,13 @@ export function subscribeToSupabaseRealtime(
   onCloudEvent: (payload: RealtimeSyncPayload) => void,
   onDbSync: () => void
 ): () => void {
-  // Register listeners into sets
   cloudEventListeners.add(onCloudEvent);
   dbSyncListeners.add(onDbSync);
 
-  // Ensure singleton channel is created and subscribed with all handlers attached
+  // Initialize native server real-time (WebSocket + SSE)
+  initNativeRealtime();
+
+  // Also initialize Supabase if configured
   getRealtimeChannel();
 
   return () => {

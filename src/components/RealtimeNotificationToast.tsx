@@ -52,7 +52,7 @@ export const RealtimeNotificationToast: React.FC<RealtimeNotificationToastProps>
   useEffect(() => {
     if (latestEvent) {
       setVisible(true);
-      // playNotificationChime(); // Disabled audio chime sound as requested
+      playNotificationChime();
 
       const timer = setTimeout(() => {
         setVisible(false);
